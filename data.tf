@@ -1,0 +1,66 @@
+
+## Find the current AWS account ID 
+data "aws_caller_identity" "current" {}
+## Find the current AWS region
+data "aws_region" "current" {}
+
+## Provision an SQS IAM policy allowing the account root 
+data "aws_iam_policy_document" "current" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = [format("arn:aws:iam::%s:root", local.account_id)]
+    }
+    actions = [
+      "sns:Publish"
+    ]
+    resources = ["*"]
+  }
+
+  dynamic "statement" {
+    for_each = var.allowed_aws_services
+
+    content {
+      effect = "Allow"
+      principals {
+        type        = "Service"
+        identifiers = [statement.value]
+      }
+      actions = [
+        "sns:Publish"
+      ]
+      resources = ["*"]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.allowed_aws_principals
+
+    content {
+      effect = "Allow"
+      principals {
+        type        = "AWS"
+        identifiers = [statement.value]
+      }
+      actions = [
+        "sns:Publish"
+      ]
+      resources = ["*"]
+    }
+  }
+}
+
+## Find the slack secret if required 
+data "aws_secretsmanager_secret" "slack" {
+  count = local.enable_slack_secret ? 1 : 0
+
+  name = var.slack.secret_name
+}
+
+## Find the latest version of the slack secret if required 
+data "aws_secretsmanager_secret_version" "slack" {
+  count = local.enable_slack_secret ? 1 : 0
+
+  secret_id = data.aws_secretsmanager_secret.slack[0].id
+}
