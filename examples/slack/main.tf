@@ -7,7 +7,7 @@
 module "notifications" {
   source = "../.."
 
-  allowed_aws_services = ["cloudwatch.amazonaws.com"]
+  allowed_aws_services = ["cloudwatch.amazonaws.com", "cloudtrail.amazonaws.com"]
   create_sns_topic     = true
   sns_topic_name       = var.sns_topic_name
   tags                 = var.tags

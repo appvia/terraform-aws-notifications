@@ -7,6 +7,7 @@ data "aws_region" "current" {}
 ## Provision an SQS IAM policy allowing the account root 
 data "aws_iam_policy_document" "current" {
   statement {
+    sid    = "AllowAccountRoot"
     effect = "Allow"
     principals {
       type        = "AWS"
@@ -22,6 +23,7 @@ data "aws_iam_policy_document" "current" {
     for_each = var.allowed_aws_services
 
     content {
+      sid    = "AllowService${index(var.allowed_aws_services, statement.value)}"
       effect = "Allow"
       principals {
         type        = "Service"
@@ -38,6 +40,7 @@ data "aws_iam_policy_document" "current" {
     for_each = var.allowed_aws_principals
 
     content {
+      sid    = "AllowPrincipal${index(var.allowed_aws_principals, statement.value)}"
       effect = "Allow"
       principals {
         type        = "AWS"
