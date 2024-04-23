@@ -56,7 +56,7 @@ The `terraform-docs` utility is used to generate this README. Follow the below s
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_notifications"></a> [notifications](#module\_notifications) | terraform-aws-modules/sns/aws | v6.0.1 |
-| <a name="module_slack"></a> [slack](#module\_slack) | terraform-aws-modules/notify-slack/aws | 6.1.1 |
+| <a name="module_slack"></a> [slack](#module\_slack) | terraform-aws-modules/notify-slack/aws | 6.3.0 |
 
 ## Resources
 
