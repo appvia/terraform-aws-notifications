@@ -6,9 +6,9 @@ module "notifications" {
   version = "v6.0.1"
   count   = var.create_sns_topic ? 1 : 0
 
-  name                    = var.sns_topic_name
-  tags                    = var.tags
-  topic_policy_statements = local.sns_topic_policy
+  name                          = var.sns_topic_name
+  source_topic_policy_documents = [local.sns_topic_policy]
+  tags                          = var.tags
 }
 
 ## Provision any email notifications if required 
