@@ -36,6 +36,18 @@ The `terraform-docs` utility is used to generate this README. Follow the below s
 2. Fetch the `terraform-docs` binary (https://terraform-docs.io/user-guide/installation/)
 3. Run `terraform-docs markdown table --output-file ${PWD}/README.md --output-mode inject .`
 
+## Using Secrets Manager
+
+The `slack` configuration can be sourced from AWS Secrets Manager, using the `var.slack.secret_name`. The secret should be a JSON object reassembling the `slack` configuration.
+
+```json
+{
+  "channel": "#channel",
+  "username": "username",
+  "webhook_url": "https://hooks.slack.com/services/..."
+}
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

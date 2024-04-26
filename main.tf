@@ -47,7 +47,7 @@ module "slack" {
   lambda_function_tags     = var.tags
   recreate_missing_package = false
   slack_channel            = local.slack_channel
-  slack_username           = var.slack.username
+  slack_username           = local.slack_username
   slack_webhook_url        = local.slack_webhook_url
   sns_topic_name           = var.sns_topic_name
   tags                     = var.tags
