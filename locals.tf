@@ -22,4 +22,6 @@ locals {
   slack_webhook_url = local.enable_slack_secret ? jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["webhook_url"] : try(var.slack.webhook_url, null)
   ## The slack channel to post to 
   slack_channel = local.enable_slack_secret ? jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["channel"] : try(var.slack.channel, null)
+  ## slack_username to use  
+  slack_username = local.enable_slack_secret ? jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["username"] : try(var.slack.username, null)
 }
