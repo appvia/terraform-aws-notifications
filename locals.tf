@@ -10,7 +10,7 @@ locals {
   ## Expected sns topic arn, assuming we are not creating the sns topic
   expected_sns_topic_arn = format("arn:aws:sns:%s::%s", local.region, local.account_id)
   ## Is the arn of the sns topic to use 
-  sns_topic_arn = var.create_sns_topic ? module.notifications[0].topic_arn : format("arn:aws:sns:%s::%s", local.expected_sns_topic_arn)
+  sns_topic_arn = var.create_sns_topic ? module.sns[0].topic_arn : format("arn:aws:sns:%s::%s", local.expected_sns_topic_arn)
   ## Is the SNS topic policy to use 
   sns_topic_policy = var.sns_topic_policy != null ? var.sns_topic_policy : data.aws_iam_policy_document.current.json
 

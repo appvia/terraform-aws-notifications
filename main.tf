@@ -2,9 +2,9 @@
 ## Provision a SQS queue if required 
 ## Provision the SNS topic for the budgets 
 module "sns" {
+  count   = var.create_sns_topic ? 1 : 0
   source  = "terraform-aws-modules/sns/aws"
   version = "v6.0.1"
-  count   = var.create_sns_topic ? 1 : 0
 
   name                          = var.sns_topic_name
   source_topic_policy_documents = [local.sns_topic_policy]
