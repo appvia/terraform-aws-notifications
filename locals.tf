@@ -19,9 +19,9 @@ locals {
   ## Indicates if we are looking up the slack secret 
   enable_slack_secret = local.enable_slack && try(var.slack.secret_name, null) != null ? true : false
   ## The webhook url for slack 
-  slack_webhook_url = local.enable_slack_secret ? jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["webhook_url"] : try(var.slack.webhook_url, null)
+  slack_webhook_url = local.enable_slack_secret ? try(jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["webhook_url"], var.slack.webhook_url) : try(var.slack.webhook_url, null)
   ## The slack channel to post to 
-  slack_channel = local.enable_slack_secret ? jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["channel"] : try(var.slack.channel, null)
+  slack_channel = local.enable_slack_secret ? try(jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["channel"], var.slack.channel) : try(var.slack.channel, null)
   ## slack_username to use  
-  slack_username = local.enable_slack_secret ? jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["username"] : try(var.slack.username, null)
+  slack_username = local.enable_slack_secret ? try(jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["username"], var.slack.username) : try(var.slack.username, null)
 }
