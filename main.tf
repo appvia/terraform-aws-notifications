@@ -1,7 +1,7 @@
 
 ## Provision a SQS queue if required 
 ## Provision the SNS topic for the budgets 
-module "notifications" {
+module "sns" {
   source  = "terraform-aws-modules/sns/aws"
   version = "v6.0.1"
   count   = var.create_sns_topic ? 1 : 0
@@ -18,6 +18,8 @@ resource "aws_sns_topic_subscription" "email" {
   topic_arn = local.sns_topic_arn
   protocol  = "email"
   endpoint  = each.value
+
+  depends_on = [module.sns]
 }
 
 ## Provision the sns topic subscriptions if required 
@@ -29,6 +31,8 @@ resource "aws_sns_topic_subscription" "subscribers" {
   protocol               = each.value.protocol
   raw_message_delivery   = each.value.raw_message_delivery
   topic_arn              = local.sns_topic_arn
+
+  depends_on = [module.sns]
 }
 
 #
@@ -51,4 +55,6 @@ module "slack" {
   slack_webhook_url        = local.slack_webhook_url
   sns_topic_name           = var.sns_topic_name
   tags                     = var.tags
+
+  depends_on = [module.sns]
 }
