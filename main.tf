@@ -43,7 +43,7 @@ resource "aws_sns_topic_subscription" "subscribers" {
 module "slack" {
   count   = local.enable_slack ? 1 : 0
   source  = "terraform-aws-modules/notify-slack/aws"
-  version = "6.3.0"
+  version = "6.4.0"
 
   create_sns_topic         = false
   lambda_description       = "Lambda function to send slack notifications, for sns topic ${var.sns_topic_name}"
