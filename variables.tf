@@ -37,6 +37,18 @@ variable "sns_topic_policy" {
   default     = null
 }
 
+variable "cloudwatch_log_group_retention" {
+  description = "The retention period for the cloudwatch log group (for lambda function logs) in days"
+  type        = string
+  default     = "3"
+}
+
+variable "cloudwatch_log_group_kms_key_id" {
+  description = "The KMS key id to use for encrypting the cloudwatch log group (default is none)"
+  type        = string
+  default     = null
+}
+
 variable "slack" {
   description = "The configuration for Slack notifications"
   type = object({
