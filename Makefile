@@ -1,6 +1,4 @@
 #
-# Copyright (C) 2024  Appvia Ltd <info@appvia.io>
-#  
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -14,15 +12,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-AUTHOR_EMAIL=info@appvia.io
-
-.PHONY: all security lint format documentation documentation-examples validate-all validate validate-examples init examples
+.PHONY: all security lint format documentation documentation-examples validate-all validate validate-examples init examples tests
 
 default: all
 
 all: 
 	$(MAKE) init
 	$(MAKE) validate
+	$(MAKE) tests
 	$(MAKE) lint
 	$(MAKE) security
 	$(MAKE) format
@@ -30,6 +27,7 @@ all:
 
 examples:
 	$(MAKE) validate-examples
+	$(MAKE) tests
 	$(MAKE) lint-examples
 	$(MAKE) lint
 	$(MAKE) security
@@ -69,7 +67,7 @@ security-modules:
 	@if [ -d modules ]; then \
 		find modules -type d -mindepth 1 -maxdepth 1 | while read -r dir; do \
 			echo "--> Validating $$dir"; \
-			trivy config $$dir; \
+			trivy config  --format table --exit-code  1 --severity  CRITICAL,HIGH --ignorefile .trivyignore $$dir; \
 		done; \
 	fi
 
@@ -78,9 +76,13 @@ security-examples:
 	@if [ -d examples ]; then \
 		find examples -type d -mindepth 1 -maxdepth 1 | while read -r dir; do \
 			echo "--> Validating $$dir"; \
-			trivy config $$dir; \
+			trivy config  --format table --exit-code  1 --severity  CRITICAL,HIGH --ignorefile .trivyignore $$dir; \
 		done; \
 	fi
+
+tests: 
+	@echo "--> Running Terraform Tests" 
+	@terraform test
 
 validate:
 	@echo "--> Running terraform validate"
