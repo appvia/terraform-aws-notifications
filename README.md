@@ -48,6 +48,10 @@ The `slack` configuration can be sourced from AWS Secrets Manager, using the `va
 }
 ```
 
+## Acknowledgements
+- [notify-teams](https://github.com/teamclairvoyant/terraform-aws-notify-teams/releases/tag/v4.12.0.6) - distributed under Apache 2.0 license; obligations met under this GNU V3 license
+- [terraform-aws-notify-slack](https://github.com/terraform-aws-modules/terraform-aws-notify-slack/releases/tag/v6.4.0) - distributed under Apache 2.0 license; obligations met under this GNU V3 license
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

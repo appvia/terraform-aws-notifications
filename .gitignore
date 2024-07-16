@@ -28,6 +28,9 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+# ignore local tfvars
+*.tfvars
+
 # Other
 .DS_Store
 todo.md
