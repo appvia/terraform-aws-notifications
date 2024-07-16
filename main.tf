@@ -42,8 +42,7 @@ resource "aws_sns_topic_subscription" "subscribers" {
 # tfsec:ignore:aws-lambda-restrict-source-arn
 module "slack" {
   count   = local.enable_slack ? 1 : 0
-  source  = "terraform-aws-modules/notify-slack/aws"
-  version = "6.4.0"
+  source  = "./modules/notify"
 
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention

@@ -12,3 +12,16 @@ variable "sns_topic_name" {
   type        = string
   default     = "my-topic"
 }
+
+
+variable "slack_webhook" {
+  description = "The URL of the slack webhook"
+  type = string
+  default = null
+}
+
+variable "slack_channel" {
+  description = "The name of the channel in slack associated with the webhook"
+  type = string
+  default = null
+}

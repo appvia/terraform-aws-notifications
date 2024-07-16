@@ -1,3 +1,23 @@
+To run:
+```
+terraform init
+TF_VAR_sns_topic_name="<your SNS topic name>" TF_VAR_slack_webhook="<your url>" TF_VAR_slack_channel="<your slack channel name>" terraform plan
+TF_VAR_sns_topic_name="<your SNS topic name>" TF_VAR_slack_webhook="<your url>" TF_VAR_slack_channel="<your slack channel name>" terraform apply
+```
+
+Or create a `local.tfvars` with:
+```
+slack_webhook="<your url>
+slack_channel="<your slack channel name>"
+sns_topic_name="<your SNS topic name>"
+```
+And run with:
+```
+terraform init
+terraform plan --var-file=./local.tfvars
+terraform apply--var-file=./local.tfvars
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
