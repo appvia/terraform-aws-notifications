@@ -12,23 +12,49 @@ variable "email" {
     # The email addresses to send notifications to
   })
   default = null
+
+  validation {
+    condition = alltrue([
+      for e in coalesce(var.email, { addresses = [] }).addresses : can(regex("^.+@.+$", e))
+    ])
+    error_message = "Invalid email address"
+  }
 }
 
 variable "sns_topic_name" {
   description = "The name of the source sns topic where events are published"
   type        = string
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9_-]{1,256}$", var.sns_topic_name))
+    error_message = "Invalid SNS topic name"
+  }
 }
 
 variable "allowed_aws_services" {
   description = "Optional, list of AWS services able to publish via the SNS topic (when creating topic) e.g cloudwatch.amazonaws.com"
   type        = list(string)
   default     = []
+
+  validation {
+    condition = alltrue([
+      for s in var.allowed_aws_services : can(regex(".+.amazonaws.com$", s))
+    ])
+    error_message = "List must be a valid set of AWS services"
+  }
 }
 
 variable "allowed_aws_principals" {
   description = "Optional, list of AWS accounts able to publish via the SNS topic (when creating topic) e.g 123456789012"
   type        = list(string)
   default     = []
+
+  validation {
+    condition = alltrue([
+      for p in var.allowed_aws_principals : can(regex("^[0-9]{6,}$", p))
+    ])
+    error_message = "List must be a valid set of AWS account ids - only the ID not the iam"
+  }
 }
 
 variable "sns_topic_policy" {
