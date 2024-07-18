@@ -28,7 +28,7 @@ module "notify_slack" {
   # Specify the ARN of the pre-defined feedback role or leave blank to have the module create it
   #sns_topic_lambda_feedback_role_arn = "arn:aws:iam::111122223333:role/sns-delivery-status"
 
-  lambda_function_name = "notify_slack_${each.value}"
+  slack_lambda_function_name = "notify_slack_${each.value}"
 
   slack_webhook_url = aws_kms_ciphertext.slack_url.ciphertext_blob
   slack_channel     = "aws-notification"
@@ -36,7 +36,7 @@ module "notify_slack" {
 
   kms_key_arn = aws_kms_key.this.arn
 
-  lambda_description = "Lambda function which sends notifications to Slack"
+  slack_lambda_description = "Lambda function which sends notifications to Slack"
   log_events         = true
 
   # VPC
@@ -62,7 +62,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   alarm_actions = [module.notify_slack["develop"].slack_topic_arn]
 
   dimensions = {
-    FunctionName = module.notify_slack["develop"].notify_slack_lambda_function_name
+    FunctionName = module.notify_slack["develop"].notify_slack_slack_lambda_function_name
   }
 }
 

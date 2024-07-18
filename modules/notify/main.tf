@@ -13,10 +13,18 @@ locals {
 
   sns_feedback_role = local.create_sns_feedback_role ? aws_iam_role.sns_feedback_role[0].arn : var.sns_topic_lambda_feedback_role_arn
   lambda_policy_document = {
-    sid       = "AllowWriteToCloudwatchLogs"
-    effect    = "Allow"
-    actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
-    resources = [replace("${try(aws_cloudwatch_log_group.lambda[0].arn, "")}:*", ":*:*", ":*")]
+    "slack" = {
+      sid       = "AllowWriteToCloudwatchLogsSlack"
+      effect    = "Allow"
+      actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+      resources = [replace("${try(aws_cloudwatch_log_group.lambda["slack"].arn, "")}:*", ":*:*", ":*")]
+    },
+    "teams" = {
+      sid       = "AllowWriteToCloudwatchLogsTeams"
+      effect    = "Allow"
+      actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+      resources = [replace("${try(aws_cloudwatch_log_group.lambda["teams"].arn, "")}:*", ":*:*", ":*")]
+    }
   }
 
   lambda_policy_document_kms = {
@@ -26,14 +34,17 @@ locals {
     resources = [var.kms_key_arn]
   }
 
-  lambda_handler = try(split(".", basename(var.lambda_source_path))[0], "notify_slack")
+  lambda_handler = {
+    "slack" = try(split(".", basename(var.lambda_source_path))[0], "notify_slack"),
+    "teams" = try(split(".", basename(var.lambda_source_path))[0], "notify_teams")
+  }
 }
 
 data "aws_iam_policy_document" "lambda" {
-  count = var.create ? 1 : 0
+  for_each = toset(["slack", "teams"])
 
   dynamic "statement" {
-    for_each = concat([local.lambda_policy_document], var.kms_key_arn != "" ? [local.lambda_policy_document_kms] : [])
+    for_each = concat([local.lambda_policy_document[each.value]], var.kms_key_arn != "" ? [local.lambda_policy_document_kms] : [])
     content {
       sid       = statement.value.sid
       effect    = statement.value.effect
@@ -44,9 +55,9 @@ data "aws_iam_policy_document" "lambda" {
 }
 
 resource "aws_cloudwatch_log_group" "lambda" {
-  count = var.create ? 1 : 0
+  for_each = toset(["slack"])
 
-  name              = "/aws/lambda/${var.lambda_function_name}"
+  name              = "/aws/lambda/${var.slack_lambda_function_name}"
   retention_in_days = var.cloudwatch_log_group_retention_in_days
   kms_key_id        = var.cloudwatch_log_group_kms_key_id
 
@@ -69,27 +80,29 @@ resource "aws_sns_topic" "this" {
 
 
 resource "aws_sns_topic_subscription" "sns_notify_slack" {
-  count = var.create ? 1 : 0
+  count = var.create && var.send_to_slack ? 1 : 0
 
   topic_arn           = local.sns_topic_arn
   protocol            = "lambda"
-  endpoint            = module.lambda.lambda_function_arn
+  endpoint            = module.lambda["slack"].lambda_function_arn
   filter_policy       = var.subscription_filter_policy
   filter_policy_scope = var.subscription_filter_policy_scope
 }
 
 module "lambda" {
+  for_each = toset(["slack"])
+
   source  = "terraform-aws-modules/lambda/aws"
   version = "3.2.0"
 
   create = var.create
 
-  function_name = var.lambda_function_name
-  description   = var.lambda_description
+  function_name = try(var.delivery_channels["slack"].lambda_name, "notify_slack")
+  description   = try(var.delivery_channels["slack"].lambda_description, "")
 
   hash_extra                     = var.hash_extra
-  handler                        = "${local.lambda_handler}.lambda_handler"
-  source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/notify_slack.py"
+  handler                        = "${local.lambda_handler[each.value]}.lambda_handler"
+  source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/notify_${each.value}.py"
   recreate_missing_package       = var.recreate_missing_package
   runtime                        = "python3.11"
   architectures                  = var.architectures
@@ -98,21 +111,21 @@ module "lambda" {
   reserved_concurrent_executions = var.reserved_concurrent_executions
   ephemeral_storage_size         = var.lambda_function_ephemeral_storage_size
 
-  # If publish is disabled, there will be "Error adding new Lambda Permission for notify_slack:
+  # If publish is disabled, there will be "Error adding new Lambda Permission for notify_xxxxx:
   # InvalidParameterValueException: We currently do not support adding policies for $LATEST."
   publish = true
 
   environment_variables = {
-    SLACK_WEBHOOK_URL = var.slack_webhook_url
-    SLACK_CHANNEL     = var.slack_channel
-    SLACK_USERNAME    = var.slack_username
+    SLACK_WEBHOOK_URL = try(var.delivery_channels["slack"].webhook_url, "https://null")
+    SLACK_CHANNEL     = try(var.delivery_channels["slack"].channel, "")
+    SLACK_USERNAME    = try(var.delivery_channels["slack"].username, "")
     SLACK_EMOJI       = var.slack_emoji
     LOG_EVENTS        = var.log_events ? "True" : "False"
   }
 
   create_role               = var.lambda_role == ""
   lambda_role               = var.lambda_role
-  role_name                 = "${var.iam_role_name_prefix}-${var.lambda_function_name}"
+  role_name                 = "${var.iam_role_name_prefix}-${var.slack_lambda_function_name}"
   role_permissions_boundary = var.iam_role_boundary_policy_arn
   role_tags                 = var.iam_role_tags
   role_path                 = var.iam_role_path
@@ -123,7 +136,7 @@ module "lambda" {
   # the value of presense of KMS. Famous "computed values in count" bug...
   attach_cloudwatch_logs_policy = false
   attach_policy_json            = true
-  policy_json                   = try(data.aws_iam_policy_document.lambda[0].json, "")
+  policy_json                   = try(data.aws_iam_policy_document.lambda[each.value].json, "")
 
   use_existing_cloudwatch_log_group = true
   attach_network_policy             = var.lambda_function_vpc_subnet_ids != null

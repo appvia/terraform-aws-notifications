@@ -46,7 +46,7 @@ resource "local_file" "integration_testing" {
   filename = "${path.module}/../../functions/.int.env"
   content  = <<-EOT
     REGION=${local.region}
-    LAMBDA_FUNCTION_NAME=${module.notify_slack.notify_slack_lambda_function_name}
+    slack_lambda_function_name=${module.notify_slack.notify_slack_slack_lambda_function_name}
     SNS_TOPIC_ARN=${aws_sns_topic.example.arn}
     EOT
 }

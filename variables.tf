@@ -82,6 +82,27 @@ variable "slack" {
     # The channel to post to 
     lambda_name = optional(string, "slack-notify")
     # The name of the lambda function to create 
+    lambda_description = optional(string, "Lambda function to send slack notifications")
+    # The description for the slack lambda
+    secret_name = optional(string)
+    # An optional secret name in secrets manager to use for the slack configuration 
+    username = optional(string, ":aws: Notification")
+    # The username to post as 
+    webhook_url = optional(string)
+    # The webhook url to post to
+  })
+  default = null
+}
+
+variable "teams" {
+  description = "The configuration for teams notifications"
+  type = object({
+    channel = optional(string)
+    # The channel to post to 
+    lambda_name = optional(string, "teams-notify")
+    # The name of the lambda function to create 
+    lambda_description = optional(string, "Lambda function to send teams notifications")
+    # The description for the teams lambda
     secret_name = optional(string)
     # An optional secret name in secrets manager to use for the slack configuration 
     username = optional(string, ":aws: Notification")

@@ -18,9 +18,9 @@ output "notify_slack_lambda_function_arn" {
   value       = module.notify_slack.notify_slack_lambda_function_arn
 }
 
-output "notify_slack_lambda_function_name" {
+output "notify_slack_slack_lambda_function_name" {
   description = "The name of the Lambda function"
-  value       = module.notify_slack.notify_slack_lambda_function_name
+  value       = module.notify_slack.notify_slack_slack_lambda_function_name
 }
 
 output "notify_slack_lambda_function_invoke_arn" {

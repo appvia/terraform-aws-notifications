@@ -21,7 +21,7 @@ resource "aws_sns_topic" "custom_lambda" {
 module "custom_lambda" {
   source = "../../"
 
-  lambda_function_name = "custom_lambda"
+  slack_lambda_function_name = "custom_lambda"
   lambda_source_path   = "../../functions/mylambda.py"
 
   iam_role_name_prefix = "custom"

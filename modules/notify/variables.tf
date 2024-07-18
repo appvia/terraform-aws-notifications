@@ -34,14 +34,14 @@ variable "lambda_role" {
   default     = ""
 }
 
-variable "lambda_function_name" {
-  description = "The name of the Lambda function to create"
+variable "slack_lambda_function_name" {
+  description = "The name of the slack Lambda function to create"
   type        = string
   default     = "notify_slack"
 }
 
-variable "lambda_description" {
-  description = "The description of the Lambda function"
+variable "slack_lambda_description" {
+  description = "The description of the slack Lambda function"
   type        = string
   default     = null
 }
@@ -280,4 +280,35 @@ variable "subscription_filter_policy_scope" {
   description = "(Optional) A valid filter policy scope MessageAttributes|MessageBody"
   type        = string
   default     = null
+}
+
+variable "send_to_slack" {
+  description = "To send to slack, set to true"
+  type        = bool
+  default     = false
+}
+
+variable "send_to_teams" {
+  description = "To send to teams, set to true"
+  type        = bool
+  default     = false
+}
+
+variable "delivery_channels" {
+  description = "The configuration for Slack notifications"
+  type = map(object({
+    channel = optional(string)
+    # The channel to post to 
+    lambda_name = optional(string, "slack-notify")
+    # The name of the lambda function to create
+    lambda_description = optional(string, "Lambda function to send notifications")
+    # The description for the lambda
+    secret_name = optional(string)
+    # An optional secret name in secrets manager to use for the slack configuration 
+    username = optional(string, ":aws: Notification")
+    # The username to post as 
+    webhook_url = optional(string)
+    # The webhook url to post to
+  }))
+  default = null
 }
