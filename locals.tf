@@ -43,18 +43,18 @@ locals {
 
   channels_config = {
     "slack" = {
-      channel = local.slack_channel
-      webhook_url = local.slack_webhook_url
-      username = local.slack_username
-      lambda_name = var.slack.lambda_name
-      lambda_description = var.slack.lambda_description
+      channel            = local.slack_channel
+      webhook_url        = local.slack_webhook_url
+      username           = try(local.slack_username, null)
+      lambda_name        = try(var.slack.lambda_name, null)
+      lambda_description = try(var.slack.lambda_description, null)
     },
     "teams" = {
-      channel = local.teams_channel
-      webhook_url = local.teams_webhook_url
-      username = local.teams_username
-      lambda_name = var.slack.lambda_name
-      lambda_description = var.slack.lambda_description
+      channel            = local.teams_channel
+      webhook_url        = local.teams_webhook_url
+      username           = try(local.teams_username, null)
+      lambda_name        = try(var.teams.lambda_name, null)
+      lambda_description = try(var.teams.lambda_description, null)
     }
   }
 }

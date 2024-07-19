@@ -38,6 +38,20 @@ locals {
     "slack" = try(split(".", basename(var.lambda_source_path))[0], "notify_slack"),
     "teams" = try(split(".", basename(var.lambda_source_path))[0], "notify_teams")
   }
+
+  lambda_env_vars = {
+    "slack" = {
+      SLACK_WEBHOOK_URL = try(var.delivery_channels["slack"].webhook_url, "https://null")
+      SLACK_CHANNEL     = try(var.delivery_channels["slack"].channel, "")
+      SLACK_USERNAME    = try(var.delivery_channels["slack"].username, "")
+      SLACK_EMOJI       = var.slack_emoji
+      LOG_EVENTS        = var.log_events ? "True" : "False"
+    },
+    "teams" = {
+      TEAMS_WEBHOOK_URL = try(var.delivery_channels["teams"].webhook_url, "https://null")
+      LOG_EVENTS        = var.log_events ? "True" : "False"
+    }
+  }
 }
 
 data "aws_iam_policy_document" "lambda" {
@@ -55,9 +69,9 @@ data "aws_iam_policy_document" "lambda" {
 }
 
 resource "aws_cloudwatch_log_group" "lambda" {
-  for_each = toset(["slack"])
+  for_each = toset(["slack", "teams"])
 
-  name              = "/aws/lambda/${var.slack_lambda_function_name}"
+  name              = "/aws/lambda/${var.delivery_channels[each.value].lambda_name}"
   retention_in_days = var.cloudwatch_log_group_retention_in_days
   kms_key_id        = var.cloudwatch_log_group_kms_key_id
 
@@ -89,16 +103,26 @@ resource "aws_sns_topic_subscription" "sns_notify_slack" {
   filter_policy_scope = var.subscription_filter_policy_scope
 }
 
+resource "aws_sns_topic_subscription" "sns_notify_teams" {
+  count = var.create && var.send_to_teams ? 1 : 0
+
+  topic_arn           = local.sns_topic_arn
+  protocol            = "lambda"
+  endpoint            = module.lambda["teams"].lambda_function_arn
+  filter_policy       = var.subscription_filter_policy
+  filter_policy_scope = var.subscription_filter_policy_scope
+}
+
 module "lambda" {
-  for_each = toset(["slack"])
+  for_each = toset(["slack", "teams"])
 
   source  = "terraform-aws-modules/lambda/aws"
   version = "3.2.0"
 
   create = var.create
 
-  function_name = try(var.delivery_channels["slack"].lambda_name, "notify_slack")
-  description   = try(var.delivery_channels["slack"].lambda_description, "")
+  function_name = try(var.delivery_channels[each.value].lambda_name, "notify_slack")
+  description   = try(var.delivery_channels[each.value].lambda_description, "")
 
   hash_extra                     = var.hash_extra
   handler                        = "${local.lambda_handler[each.value]}.lambda_handler"
@@ -115,17 +139,16 @@ module "lambda" {
   # InvalidParameterValueException: We currently do not support adding policies for $LATEST."
   publish = true
 
-  environment_variables = {
-    SLACK_WEBHOOK_URL = try(var.delivery_channels["slack"].webhook_url, "https://null")
-    SLACK_CHANNEL     = try(var.delivery_channels["slack"].channel, "")
-    SLACK_USERNAME    = try(var.delivery_channels["slack"].username, "")
-    SLACK_EMOJI       = var.slack_emoji
-    LOG_EVENTS        = var.log_events ? "True" : "False"
-  }
+  environment_variables = (merge(
+    local.lambda_env_vars[each.value],
+    {
+      LOG_EVENTS = var.log_events ? "True" : "False"
+    }
+  ))
 
   create_role               = var.lambda_role == ""
   lambda_role               = var.lambda_role
-  role_name                 = "${var.iam_role_name_prefix}-${var.slack_lambda_function_name}"
+  role_name                 = "${var.iam_role_name_prefix}-${var.delivery_channels[each.value].lambda_name}"
   role_permissions_boundary = var.iam_role_boundary_policy_arn
   role_tags                 = var.iam_role_tags
   role_path                 = var.iam_role_path

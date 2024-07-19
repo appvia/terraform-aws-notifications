@@ -41,7 +41,7 @@ resource "aws_sns_topic_subscription" "subscribers" {
 # tfsec:ignore:aws-lambda-enable-tracing
 # tfsec:ignore:aws-lambda-restrict-source-arn
 module "notify" {
-  source  = "./modules/notify"
+  source = "./modules/notify"
 
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention
@@ -50,10 +50,8 @@ module "notify" {
   iam_role_tags                          = var.tags
   lambda_function_tags                   = var.tags
   recreate_missing_package               = false
-  send_to_slack                          = local.enable_slack
+  send_to_slack                          = false
   send_to_teams                          = true
-  slack_lambda_description               = "Lambda function to send slack notifications, for sns topic ${var.sns_topic_name}"
-  slack_lambda_function_name             = var.slack.lambda_name
   slack_channel                          = local.slack_channel
   slack_username                         = local.slack_username
   slack_webhook_url                      = local.slack_webhook_url
@@ -61,6 +59,9 @@ module "notify" {
   sns_topic_name                         = var.sns_topic_name
   sns_topic_tags                         = var.tags
   tags                                   = var.tags
+
+  log_events = true
+
 
   depends_on = [module.sns]
 }

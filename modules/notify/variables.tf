@@ -34,18 +34,6 @@ variable "lambda_role" {
   default     = ""
 }
 
-variable "slack_lambda_function_name" {
-  description = "The name of the slack Lambda function to create"
-  type        = string
-  default     = "notify_slack"
-}
-
-variable "slack_lambda_description" {
-  description = "The description of the slack Lambda function"
-  type        = string
-  default     = null
-}
-
 variable "lambda_source_path" {
   description = "The source path of the custom Lambda function"
   type        = string
