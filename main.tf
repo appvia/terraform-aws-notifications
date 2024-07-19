@@ -52,13 +52,6 @@ module "notify" {
   recreate_missing_package               = false
   send_to_slack                          = var.send_to_slack
   send_to_teams                          = var.send_to_teams
-
-  # SA-251 - delete these
-  slack_channel                          = local.slack_channel
-  slack_username                         = local.slack_username
-  slack_webhook_url                      = local.slack_webhook_url
-
-
   delivery_channels                      = local.channels_config
   sns_topic_name                         = var.sns_topic_name
   sns_topic_tags                         = var.tags
