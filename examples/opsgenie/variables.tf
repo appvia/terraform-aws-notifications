@@ -12,3 +12,9 @@ variable "sns_topic_name" {
   type        = string
   default     = "my-topic"
 }
+
+variable "opsgenie_endpoint" {
+  description = "The opsgenie api endpoint url"
+  type = string
+  default = null
+}

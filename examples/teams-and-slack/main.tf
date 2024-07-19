@@ -7,17 +7,20 @@
 module "notifications" {
   source = "../.."
 
-  allowed_aws_services = ["cloudwatch.amazonaws.com"]
+  allowed_aws_services = ["cloudwatch.amazonaws.com", "cloudtrail.amazonaws.com"]
   create_sns_topic     = true
   sns_topic_name       = var.sns_topic_name
   tags                 = var.tags
 
-  subscribers = {
-    "opsgenie" = {
-      protocol               = "https"
-      endpoint               = var.opsgenie_endpoint
-      endpoint_auto_confirms = true
-      raw_message_delivery   = true
-    }
+  teams = {
+    channel     = var.teams_channel
+    webhook_url = var.teams_webhook
   }
+  slack = {
+    channel     = var.slack_channel
+    webhook_url = var.slack_webhook
+  }
+
+  send_to_slack = true
+  send_to_teams = true
 }

@@ -133,3 +133,14 @@ variable "tags" {
   type        = map(string)
 }
 
+variable "send_to_slack" {
+  description = "To send to slack, set to true"
+  type        = bool
+  default     = false
+}
+
+variable "send_to_teams" {
+  description = "To send to teams, set to true"
+  type        = bool
+  default     = false
+}

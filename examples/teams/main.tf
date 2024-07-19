@@ -16,4 +16,7 @@ module "notifications" {
     channel     = var.teams_channel
     webhook_url = var.teams_webhook
   }
+
+  send_to_slack = false
+  send_to_teams = true
 }

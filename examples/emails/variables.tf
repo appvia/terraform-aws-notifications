@@ -12,3 +12,9 @@ variable "sns_topic_name" {
   type        = string
   default     = "my-topic"
 }
+
+variable "email_addresses" {
+  description = "A list of target email addresses"
+  type = list(string)
+  default = []
+}

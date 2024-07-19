@@ -13,6 +13,6 @@ module "notifications" {
   tags                 = var.tags
 
   email = {
-    addresses = ["alerts@_example.com"]
+    addresses = var.email_addresses
   }
 }
