@@ -272,7 +272,7 @@ variable "delivery_channels" {
   type = map(object({
     channel = optional(string)
     # The channel to post to 
-    lambda_name = optional(string, "slack-notify")
+    lambda_name = optional(string, "delivery_channel")
     # The name of the lambda function to create
     lambda_description = optional(string, "Lambda function to send notifications")
     # The description for the lambda
