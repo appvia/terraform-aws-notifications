@@ -20,4 +20,7 @@ module "notifications" {
       raw_message_delivery   = true
     }
   }
+
+  send_to_slack = false
+  send_to_teams = false
 }

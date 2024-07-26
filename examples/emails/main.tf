@@ -15,4 +15,7 @@ module "notifications" {
   email = {
     addresses = var.email_addresses
   }
+
+  send_to_slack = false
+  send_to_teams = false
 }
