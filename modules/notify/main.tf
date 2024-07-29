@@ -126,7 +126,10 @@ module "lambda" {
 
   hash_extra                     = var.hash_extra
   handler                        = "${local.lambda_handler[each.value]}.lambda_handler"
-  source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/notify_${each.value}.py"
+
+  # source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/notify_${each.value}.py"
+  source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/src"
+
   recreate_missing_package       = var.recreate_missing_package
   runtime                        = "python3.11"
   architectures                  = var.architectures

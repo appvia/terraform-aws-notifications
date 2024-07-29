@@ -10,7 +10,11 @@
 import ast
 import os
 
+import sys
+sys.path.append('src')
+
 import notify_slack
+import msgParser
 import pytest
 
 
@@ -27,7 +31,7 @@ def test_sns_get_slack_message_payload_snapshots(snapshot, monkeypatch):
 
     # These are SNS messages that invoke the lambda handler; the event payload is in the
     # `message` field
-    _dir = "./messages"
+    _dir = "./tests/messages"
     messages = [f for f in os.listdir(_dir) if os.path.isfile(os.path.join(_dir, f))]
 
     for file in messages:
@@ -64,7 +68,7 @@ def test_event_get_slack_message_payload_snapshots(snapshot, monkeypatch):
 
     # These are just the raw events that will be converted to JSON string and
     # sent via SNS message
-    _dir = "./events"
+    _dir = "./tests/events"
     events = [f for f in os.listdir(_dir) if os.path.isfile(os.path.join(_dir, f))]
 
     for file in events:
@@ -92,7 +96,7 @@ def test_environment_variables_set(monkeypatch):
         "SLACK_WEBHOOK_URL", "https://hooks.slack.com/services/YOUR/WEBOOK/URL"
     )
 
-    with open(os.path.join("./messages/text_message.json"), "r") as efile:
+    with open(os.path.join("./tests/messages/text_message.json"), "r") as efile:
         event = ast.literal_eval(efile.read())
 
         for record in event["Records"]:
@@ -113,7 +117,7 @@ def test_environment_variables_missing():
     """
     with pytest.raises(KeyError):
         # will raise before parsing/validation
-        notify_slack.get_slack_message_payload(message={}, region="foo", subject="bar")
+        notify_slack.get_slack_message_payload(parsedMsg={}, originalMessage={}, subject="bar")
 
 
 @pytest.mark.parametrize(
@@ -142,7 +146,7 @@ def test_environment_variables_missing():
     ],
 )
 def test_get_service_url(region, service, expected):
-    assert notify_slack.get_service_url(region=region, service=service) == expected
+    assert msgParser.get_service_url(region=region, service=service) == expected
 
 
 def test_get_service_url_exception():
@@ -150,4 +154,4 @@ def test_get_service_url_exception():
     Should raise error since service is not defined in enum
     """
     with pytest.raises(KeyError):
-        notify_slack.get_service_url(region="us-east-1", service="athena")
+        msgParser.get_service_url(region="us-east-1", service="athena")
