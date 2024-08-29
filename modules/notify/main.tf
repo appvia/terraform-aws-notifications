@@ -133,7 +133,7 @@ module "lambda" {
   recreate_missing_package       = var.recreate_missing_package
   runtime                        = "python3.11"
   architectures                  = var.architectures
-  timeout                        = 30
+  timeout                        = 10
   kms_key_arn                    = var.kms_key_arn
   reserved_concurrent_executions = var.reserved_concurrent_executions
   ephemeral_storage_size         = var.lambda_function_ephemeral_storage_size
