@@ -16,7 +16,7 @@ from typing import Any, Dict
 from urllib.error import HTTPError
 
 import msg_parser as parser
-import slack_msg_render as render
+import msg_render_slack as render
 
 def send_slack_notification(payload: Dict[str, Any]) -> str:
     """

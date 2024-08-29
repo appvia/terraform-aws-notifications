@@ -121,14 +121,29 @@ module "lambda" {
 
   create = var.create
 
-  function_name = try(var.delivery_channels[each.value].lambda_name, "notify_slack")
+  function_name = try(var.delivery_channels[each.value].lambda_name, "notify_${each.value}")
   description   = try(var.delivery_channels[each.value].lambda_description, "")
 
-  hash_extra                     = var.hash_extra
+  hash_extra                     = each.value
   handler                        = "${local.lambda_handler[each.value]}.lambda_handler"
 
-  # source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/notify_${each.value}.py"
-  source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/src"
+  # source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/src/notify_${each.value}.py"
+  # source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/src"
+  # very bizarre behaviour on patterns filter - to only include the slack/teams specific code
+  #  first have to exclude all variations on implementation and then include on the specific vendor implementations
+  source_path                    = [
+    {
+      path = "${path.module}/functions/src"
+      pip_requirements = false
+      prefix_in_zip = ""
+      patterns = <<END
+        msg_parser\.py
+        !.*msg_render_.*\.py
+        !.*notify_.*\.py
+        .*${each.value}\.py
+      END
+    }
+  ]
 
   recreate_missing_package       = var.recreate_missing_package
   runtime                        = "python3.11"

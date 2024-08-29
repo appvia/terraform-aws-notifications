@@ -19,7 +19,7 @@ from urllib.error import HTTPError
 LOG_EVENTS = os.environ['LOG_EVENTS']   # Log only if "True"
 
 import msg_parser as parser
-import teams_msg_render as render
+import msg_render_teams as render
 
 def send_teams_notification(payload: Dict[str, Any]) -> str:
     """
