@@ -18,6 +18,7 @@ metrics = Metrics(namespace=powertools_namespace)
 from aws_lambda_powertools.metrics import MetricUnit
 
 from render import Render
+from account_id_name_mappings import ACCOUNT_ID_TO_NAME
 
 # Set default region if not provided
 REGION = os.environ.get("AWS_REGION", "us-east-1")
@@ -95,6 +96,7 @@ def parse_cloudwatch_alarm(message: Dict[str, Any], region: str) -> Dict[str, An
     atEpoch = atDT.timestamp()
     description = message["AlarmDescription"]
     account_id = message["AWSAccountId"]
+    account_name = ACCOUNT_ID_TO_NAME.get(account_id, '')
     reason = message["NewStateReason"]
     state = message["NewStateValue"]
     old_state = message["OldStateValue"]
@@ -113,6 +115,7 @@ def parse_cloudwatch_alarm(message: Dict[str, Any], region: str) -> Dict[str, An
         "at": at,
         "at_epoch": floor(atEpoch),
         "account_id": account_id,
+        "account_name": account_name,
         "reason": reason,
         "state": state,
         "old_state": old_state,
@@ -159,6 +162,7 @@ def parse_guardduty_finding(message: Dict[str, Any], region: str) -> Dict[str, A
     first_seen = service['eventFirstSeen']
     last_seen = service['eventLastSeen']
     account_id = detail['accountId']
+    account_name = ACCOUNT_ID_TO_NAME.get(account_id, '')
     count = service['count']
     guard_duty_id = detail['id']
 
@@ -176,6 +180,7 @@ def parse_guardduty_finding(message: Dict[str, Any], region: str) -> Dict[str, A
         "last_seen": last_seen,         # ISO timestamp
         "severity": severity,
         "account_id": account_id,
+        "account_name": account_name,
         "count": count,
         "url": guardduty_url,
         "id": guard_duty_id,
@@ -206,6 +211,7 @@ def parse_aws_health(message: Dict[str, Any], region: str) -> Dict[str, Any]:
     resources = ",".join(message.setdefault("resources", ["<unknown>"]))
     service = detail.get("service", "<unknown>")
     account_id = message["account"]
+    account_name = ACCOUNT_ID_TO_NAME.get(account_id, '')
     category = detail["eventTypeCategory"]
     code = detail.get('eventTypeCode')
     description = detail['eventDescription'][0]['latestDescription']
@@ -224,6 +230,7 @@ def parse_aws_health(message: Dict[str, Any], region: str) -> Dict[str, Any]:
         "region": message['region'],
         "category": category,
         "account_id": account_id,
+        "account_name": account_name,
         "url": aws_health_url,
         "at_epoch": atEpoch,
         "start_time": start_time,   # Locale timestamp TZ=GMT
@@ -281,6 +288,7 @@ def parse_aws_backup(message: str, messageAttributes: Dict[str, Any]) -> Dict[st
 
     start_time = messageAttributes["StartTime"]["Value"]       # ISO timestamp
     account_id = messageAttributes["AccountId"]["Value"]
+    account_name = ACCOUNT_ID_TO_NAME.get(account_id, '')
     backup_id = messageAttributes["Id"]["Value"]
     status = messageAttributes["State"]["Value"]
     region = backup_fields["Resource ARN"].split(":")[3]
@@ -298,6 +306,7 @@ def parse_aws_backup(message: str, messageAttributes: Dict[str, Any]) -> Dict[st
         "status": status,
         "region": region,
         "account_id": account_id,
+        "account_name": account_name,
         "backup_id": backup_id,
         "start_time": start_time,
         "backup_fields": backup_fields,

@@ -298,3 +298,9 @@ variable "aws_powertools_log_level" {
     error_message = "Valid values are TRACE, DEBUG, INFO, WARNING, ERROR"
   }
 }
+
+variable "accounts_id_to_name" {
+  description = "A mapping of account id and account name - used by notification lamdba to map an account ID to a human readable name"
+  type        = map(string)
+  default     = {}
+}

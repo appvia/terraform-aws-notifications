@@ -43,6 +43,11 @@ class SlackRender(Render):
           {
             "title": "When",
             "value": f"`{alarm['at']}`",
+            "short": False,
+          },
+          {
+            "title": "Account Name",
+            "value": f"`{alarm['account_name']}`",
             "short": True,
           },
           {
@@ -113,13 +118,18 @@ class SlackRender(Render):
           "short": True,
         },
         {
-          "title": "Account ID",
-          "value": f"`{finding['account_id']}`",
+          "title": "Count",
+          "value": f"`{finding['count']}`",
           "short": True,
         },
         {
-          "title": "Count",
-          "value": f"`{finding['count']}`",
+          "title": "Account Name",
+          "value": f"`{finding['account_name']}`",
+          "short": True,
+        },
+        {
+          "title": "Account ID",
+          "value": f"`{finding['account_id']}`",
           "short": True,
         },
         {
@@ -150,18 +160,18 @@ class SlackRender(Render):
           "short": True,
         },
         {
-          "title": "Account Id",
-          "value": f"`{alert['account_id']}`",
-          "short": True,
-        },
-        {
           "title": "Category",
           "value": f"`{alert['category']}`",
           "short": True,
         },
         {
-          "title": "Region",
-          "value": f"`{alert['region']}`",
+          "title": "Account Name",
+          "value": f"`{alert['account_name']}`",
+          "short": True,
+        },
+        {
+          "title": "Account Id",
+          "value": f"`{alert['account_id']}`",
           "short": True,
         },
         {
@@ -177,6 +187,11 @@ class SlackRender(Render):
         {
           "title": "Code",
           "value": f"`{alert['code']}`",
+          "short": False,
+        },
+        {
+          "title": "Region",
+          "value": f"`{alert['region']}`",
           "short": False,
         },
         {
@@ -217,6 +232,11 @@ class SlackRender(Render):
           "short": False,
         },
         {
+          "title": "Account Name",
+          "value": f"`{status['account_name']}`",
+          "short": True,
+        },
+        {
           "title": "Account Id",
           "value": f"`{status['account_id']}`",
           "short": True,
@@ -227,19 +247,19 @@ class SlackRender(Render):
           "short": True,
         },
         {
-          "title": "Region",
-          "value": f"`{status['region']}`",
-          "short": True,
-        },
-        {
           "title": "Priority",
           "value": f"`{status['priority']}`",
           "short": True,
         },
         {
+          "title": "Region",
+          "value": f"`{status['region']}`",
+          "short": True,
+        },
+        {
           "title": "Start Time",
           "value": f"`{status['start_time']}`",
-          "short": False,
+          "short": True,
         },
       ] + fields,
     }

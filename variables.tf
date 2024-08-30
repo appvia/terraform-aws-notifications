@@ -134,3 +134,9 @@ variable "send_to_teams" {
   description = "To send to teams, set to true"
   type        = bool
 }
+
+variable "accounts_id_to_name" {
+  description = "A mapping of account id and account name - used by notification lamdba to map an account ID to a human readable name"
+  type        = map(string)
+  default     = {}
+}

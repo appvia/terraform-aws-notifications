@@ -57,5 +57,7 @@ module "notify" {
   sns_topic_tags                         = var.tags
   tags                                   = var.tags
 
+  accounts_id_to_name                    = var.accounts_id_to_name
+
   depends_on = [module.sns]
 }

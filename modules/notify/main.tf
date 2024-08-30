@@ -47,6 +47,13 @@ locals {
       TEAMS_WEBHOOK_URL = try(var.delivery_channels["teams"].webhook_url, "https://null")
     }
   }
+
+  accounts_id_to_name_python_dictonary = templatefile(
+    "${path.module}/mapAccountIdToName-python-dict.tftpl",
+    {
+      accounts_id_to_name = var.accounts_id_to_name
+    }
+  )
 }
 
 data "aws_iam_policy_document" "lambda" {
@@ -108,6 +115,11 @@ resource "aws_sns_topic_subscription" "sns_notify_teams" {
   filter_policy_scope = var.subscription_filter_policy_scope
 }
 
+resource "local_file" "notify_account_names_dict_python" {
+  content = local.accounts_id_to_name_python_dictonary
+  filename = "${path.module}/functions/src/account_id_name_mappings.py"
+}
+
 module "lambda" {
   for_each = toset(["slack", "teams"])
 
@@ -133,6 +145,7 @@ module "lambda" {
       prefix_in_zip    = ""
       patterns         = <<END
         msg_parser\.py
+        account_id_name_mappings\.py
         !.*msg_render_.*\.py
         !.*notify_.*\.py
         .*${each.value}\.py
@@ -202,5 +215,8 @@ module "lambda" {
 
   tags = merge(var.tags, var.lambda_function_tags)
 
-  depends_on = [aws_cloudwatch_log_group.lambda]
+  depends_on = [
+    aws_cloudwatch_log_group.lambda,
+    local_file.notify_account_names_dict_python
+  ]
 }

@@ -59,6 +59,10 @@ class TeamsRender(Render):
                         "value": f"`{alarm['at']}`"
                       },
                       {
+                        "title": "Account Name",
+                        "value": f"`{alarm['account_name']}`"
+                      },
+                      {
                         "title": "Account Id",
                         "value": f"`{alarm['account_id']}`"
                       },
@@ -141,6 +145,10 @@ class TeamsRender(Render):
                       {
                         "title": "Severity",
                         "value": f"`{finding['severity']}`"
+                      },
+                      {
+                        "title": "Account Name",
+                        "value": f"`{finding['account_name']}`"
                       },
                       {
                         "title": "Account Id",
@@ -227,6 +235,10 @@ class TeamsRender(Render):
                         "value": f"`{alert['code']}`"
                       },
                       {
+                        "title": "Account Name",
+                        "value": f"`{alert['account_name']}`"
+                      },
+                      {
                         "title": "Account Id",
                         "value": f"`{alert['account_id']}`"
                       },
@@ -311,6 +323,10 @@ class TeamsRender(Render):
                       {
                         "title": "Backup Id",
                         "value": f"`{status['backup_id']}`"
+                      },
+                      {
+                        "title": "Account Name",
+                        "value": f"`{status['account_name']}`"
                       },
                       {
                         "title": "Account Id",
