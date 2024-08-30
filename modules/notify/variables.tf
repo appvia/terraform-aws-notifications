@@ -4,10 +4,16 @@ variable "putin_khuylo" {
   default     = true
 }
 
-variable "architectures" {
-  description = "Instruction set architecture for your Lambda function. Valid values are [\"x86_64\"] and [\"arm64\"]."
-  type        = list(string)
-  default     = ["arm64"]
+variable "architecture" {
+  description = "Instruction set architecture for your Lambda function. Valid values are \"x86_64\" or \"arm64\"."
+  type        = string
+  default     = "arm64"
+}
+
+variable "powertools_layer_arn_suffix" {
+  description = "The suffix of the ARN to use for AWS Powertools lambda layer (must match the architecture:https://docs.powertools.aws.dev/lambda/python/latest/."
+  type        = string
+  default     = "AWSLambdaPowertoolsPythonV2-Arm64:79"
 }
 
 variable "create" {

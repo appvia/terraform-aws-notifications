@@ -147,7 +147,7 @@ module "lambda" {
 
   recreate_missing_package       = var.recreate_missing_package
   runtime                        = "python3.11"
-  architectures                  = var.architectures
+  architectures                  = [var.architecture]
   timeout                        = 10
   kms_key_arn                    = var.kms_key_arn
   reserved_concurrent_executions = var.reserved_concurrent_executions
@@ -156,6 +156,13 @@ module "lambda" {
   # If publish is disabled, there will be "Error adding new Lambda Permission for notify_xxxxx:
   # InvalidParameterValueException: We currently do not support adding policies for $LATEST."
   publish = true
+
+  # utilise the AWS lambda PowerTools layer - must match the lamdba architecture
+  #  using the Powertools for logging, supports managing the log level via standard Layer monitoring
+  #  & logging log levels.
+  layers = [
+    "arn:aws:lambda:${data.aws_region.current.name}:017000801446:layer:${var.powertools_layer_arn_suffix}"
+  ]
 
   environment_variables = (merge(
     local.lambda_env_vars[each.value],
