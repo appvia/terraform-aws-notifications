@@ -353,7 +353,9 @@ def get_message_payload(
         parsedMsg = {
             "action": AwsAction.UNKNOWN.value,
         }
-
+    metricType = parsedMsg["action"]
+    metrics.add_metric(name=f"{metricType}", unit=MetricUnit.Count, value=1)
+                       
     return AwsParsedMessage(parsed=parsedMsg, original=message)
 
 def parse_sns(
