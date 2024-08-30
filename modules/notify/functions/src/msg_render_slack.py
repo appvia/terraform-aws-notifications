@@ -19,13 +19,13 @@ class SlackRender(Render):
     """
     Render for slack payload
     """
-    logExtra: bool = False
+    __logExtra: bool = False
 
     def __init__(self: Self, logExtra: bool):
       super(SlackRender, self).__init__()
-      self.logExtra = logExtra
+      self.__logExtra = logExtra
     
-    def format_cloudwatch_alarm(self: Self, alarm: Dict[str, Any]) -> Dict[str, Any]:
+    def __format_cloudwatch_alarm(self: Self, alarm: Dict[str, Any]) -> Dict[str, Any]:
       """Format CloudWatch alarm facts into Slack message format
 
       :params message: CloudWatch facts
@@ -77,7 +77,7 @@ class SlackRender(Render):
           ],
       }
 
-    def format_guard_duty_finding(self: Self, finding: Dict[str, Any]) -> Dict[str, Any]:
+    def __format_guard_duty_finding(self: Self, finding: Dict[str, Any]) -> Dict[str, Any]:
       """Format GuardDuty alarm facts into Slack message format
 
       :params message: GuardDuty facts
@@ -129,7 +129,7 @@ class SlackRender(Render):
         ]
       }
 
-    def format_health_check_alert(self: Self, alert: Dict[str, Any]) -> Dict[str, Any]:
+    def __format_health_check_alert(self: Self, alert: Dict[str, Any]) -> Dict[str, Any]:
       """Format AWS Healthcheck facts into Slack message format
 
       :params message: HealthCheck facts
@@ -186,7 +186,7 @@ class SlackRender(Render):
         ],
       }
 
-    def format_backup_status(self: Self, status: Dict[str, Any]) -> Dict[str, Any]:
+    def __format_backup_status(self: Self, status: Dict[str, Any]) -> Dict[str, Any]:
       """Format AWS Backup facts into teams message format
 
       :params finding: Backup facts
@@ -243,7 +243,7 @@ class SlackRender(Render):
         ] + fields,
       }
 
-    def format_default(self: Self, message: Union[str, Dict], subject: Optional[str] = None) -> Dict[str, Any]:
+    def __format_default(self: Self, message: Union[str, Dict], subject: Optional[str] = None) -> Dict[str, Any]:
       """
       Default formatter, converting event into Slack message format
 
@@ -272,44 +272,44 @@ class SlackRender(Render):
       return attachments
 
     def payload(
-        self: Self,
-        parsedMessage: Union[str, Dict],
-        originalMessage: Union[str, Dict],
-        subject: Optional[str] = None
+      self: Self,
+      parsedMessage: Union[str, Dict],
+      originalMessage: Union[str, Dict],
+      subject: Optional[str] = None
     ) -> Dict:
-        """
-        Given the parsed AWS message, format into Slack message payload
+      """
+      Given the parsed AWS message, format into Slack message payload
 
-        Note - uses legacy attachments: https://api.slack.com/reference/messaging/attachments.
-        Should migrate to newer "blocks".
+      Note - uses legacy attachments: https://api.slack.com/reference/messaging/attachments.
+      Should migrate to newer "blocks".
 
-        :params parsedMessage: the parsed message with "action" detailing message type
-        :returns: Slack message payload
-        """
+      :params parsedMessage: the parsed message with "action" detailing message type
+      :returns: Slack message payload
+      """
 
-        if self.logExtra == True:
-          logging.info({
-            "message": "XTRA: Parsed SNS record",
-            "type": parsedMessage['action'],
-          })
+      if self.__logExtra == True:
+        logging.info({
+          "message": "XTRA: Parsed SNS record",
+          "type": parsedMessage['action'],
+        })
 
-        payload = {
-        }
+      payload = {
+      }
 
-        attachment = None
-        match (parsedMessage['action']):
-          case "cloudwatch":
-            attachment = self.format_cloudwatch_alarm(alarm=parsedMessage)
-          case "guardduty":
-            attachment = self.format_guard_duty_finding(finding=parsedMessage)
-          case "health":
-            attachment = self.format_health_check_alert(alert=parsedMessage)
-          case "backup":
-            attachment = self.format_backup_status(status=parsedMessage)
-          case "unknown":
-            attachment = self.format_default(message=originalMessage, subject=subject)
+      attachment = None
+      match (parsedMessage['action']):
+        case "cloudwatch":
+          attachment = self.__format_cloudwatch_alarm(alarm=parsedMessage)
+        case "guardduty":
+          attachment = self.__format_guard_duty_finding(finding=parsedMessage)
+        case "health":
+          attachment = self.__format_health_check_alert(alert=parsedMessage)
+        case "backup":
+          attachment = self.__format_backup_status(status=parsedMessage)
+        case "unknown":
+          attachment = self.__format_default(message=originalMessage, subject=subject)
 
-        if attachment:
-            payload["attachments"] = [attachment]  # type: ignore
+      if attachment:
+          payload["attachments"] = [attachment]  # type: ignore
 
-        return payload
+      return payload

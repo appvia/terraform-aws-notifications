@@ -15,13 +15,13 @@ class TeamsRender(Render):
   """
   Render for Teams payload
   """
-  logExtra: bool = False
+  __logExtra: bool = False
 
   def __init__(self: Self, logExtra: bool):
     super(TeamsRender, self).__init__()
-    self.logExtra = logExtra
+    self.__logExtra = logExtra
 
-  def format_cloudwatch_alarm(self: Self, alarm: Dict[str, Any]) -> Dict[str, Any]:
+  def __format_cloudwatch_alarm(self: Self, alarm: Dict[str, Any]) -> Dict[str, Any]:
     """Format CloudWatch alarm facts into teams message format
 
     :params alarm: CloudWatch facts
@@ -100,7 +100,7 @@ class TeamsRender(Render):
       ]
     }
 
-  def format_guard_duty_finding(self: Self, finding: Dict[str, Any]) -> Dict[str, Any]:
+  def __format_guard_duty_finding(self: Self, finding: Dict[str, Any]) -> Dict[str, Any]:
     """Format GuardDuty facts into teams message format
 
     :params finding: GuardDuty facts
@@ -180,7 +180,7 @@ class TeamsRender(Render):
       ]
     }
 
-  def format_health_check_alert(self: Self, alert: Dict[str, Any]) -> Dict[str, Any]:
+  def __format_health_check_alert(self: Self, alert: Dict[str, Any]) -> Dict[str, Any]:
     """Format AWS HealthCheck facts into teams message format
 
     :params finding: Healthcheck facts
@@ -264,7 +264,7 @@ class TeamsRender(Render):
       ]
     }
 
-  def format_backup_status(self: Self, status: Dict[str, Any]) -> Dict[str, Any]:
+  def __format_backup_status(self: Self, status: Dict[str, Any]) -> Dict[str, Any]:
     """Format AWS Backup facts into teams message format
 
     :params finding: Backup facts
@@ -342,7 +342,7 @@ class TeamsRender(Render):
     }
 
 
-  def format_default(self: Self, message: Union[str, Dict], subject: Optional[str] = None) -> Dict[str, Any]:
+  def __format_default(self: Self, message: Union[str, Dict], subject: Optional[str] = None) -> Dict[str, Any]:
     """
     Default formatter, converting event into teams message format
 
@@ -392,11 +392,14 @@ class TeamsRender(Render):
     }
 
 
+  # on quick inspection it looks as though this method content is duplicated and can be moved into
+  #  the base class. However, formatting is very specific to each provider and thus it is not
+  #  abstracted here.
   def payload(
-      self: Self,
-      parsedMessage: Union[str, Dict],
-      originalMessage: Union[str, Dict],
-      subject: Optional[str] = None
+    self: Self,
+    parsedMessage: Union[str, Dict],
+    originalMessage: Union[str, Dict],
+    subject: Optional[str] = None
   ) -> Dict:
     """
     Given the parsed AWS message, format into teams message payload
@@ -405,7 +408,7 @@ class TeamsRender(Render):
     :returns: teams message payload
     """
 
-    if self.logExtra == True:
+    if self.__logExtra == True:
       logging.info({
         "message": "XTRA: Parsed SNS record",
         "type": parsedMessage['action'],
@@ -413,14 +416,14 @@ class TeamsRender(Render):
 
     match (parsedMessage['action']):
       case "cloudwatch":
-        payload = self.format_cloudwatch_alarm(alarm=parsedMessage)
+        payload = self.__format_cloudwatch_alarm(alarm=parsedMessage)
       case "guardduty":
-        payload = self.format_guard_duty_finding(finding=parsedMessage)
+        payload = self.__format_guard_duty_finding(finding=parsedMessage)
       case "health":
-        payload = self.format_health_check_alert(alert=parsedMessage)
+        payload = self.__format_health_check_alert(alert=parsedMessage)
       case "backup":
-        payload = self.format_backup_status(status=parsedMessage)
+        payload = self.__format_backup_status(status=parsedMessage)
       case "unknown":
-        payload = self.format_default(message=originalMessage, subject=subject)
+        payload = self.__format_default(message=originalMessage, subject=subject)
 
     return payload
