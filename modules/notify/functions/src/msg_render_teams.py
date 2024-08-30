@@ -1,15 +1,27 @@
-import os
+import json
+import logging
 from enum import Enum
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, Self
+from render import Render
 
 class TeamsPriorityColor(Enum):
-    """Maps Aws  notification state to teams message format color"""
+  """Maps Aws  notification state to teams message format color"""
 
-    NO_ERROR = "good"
-    WARNING = "warning"
-    ERROR = "danger"
+  NO_ERROR = "good"
+  WARNING = "warning"
+  ERROR = "danger"
 
-def format_cloudwatch_alarm(alarm: Dict[str, Any]) -> Dict[str, Any]:
+class TeamsRender(Render):
+  """
+  Render for Teams payload
+  """
+  logExtra: bool = False
+
+  def __init__(self: Self, logExtra: bool):
+    super(TeamsRender, self).__init__()
+    self.logExtra = logExtra
+
+  def format_cloudwatch_alarm(self: Self, alarm: Dict[str, Any]) -> Dict[str, Any]:
     """Format CloudWatch alarm facts into teams message format
 
     :params alarm: CloudWatch facts
@@ -88,7 +100,7 @@ def format_cloudwatch_alarm(alarm: Dict[str, Any]) -> Dict[str, Any]:
       ]
     }
 
-def format_guard_duty_finding(finding: Dict[str, Any]) -> Dict[str, Any]:
+  def format_guard_duty_finding(self: Self, finding: Dict[str, Any]) -> Dict[str, Any]:
     """Format GuardDuty facts into teams message format
 
     :params finding: GuardDuty facts
@@ -168,7 +180,7 @@ def format_guard_duty_finding(finding: Dict[str, Any]) -> Dict[str, Any]:
       ]
     }
 
-def format_health_check_alert(alert: Dict[str, Any]) -> Dict[str, Any]:
+  def format_health_check_alert(self: Self, alert: Dict[str, Any]) -> Dict[str, Any]:
     """Format AWS HealthCheck facts into teams message format
 
     :params finding: Healthcheck facts
@@ -252,7 +264,7 @@ def format_health_check_alert(alert: Dict[str, Any]) -> Dict[str, Any]:
       ]
     }
 
-def format_backup_status(status: Dict[str, Any]) -> Dict[str, Any]:
+  def format_backup_status(self: Self, status: Dict[str, Any]) -> Dict[str, Any]:
     """Format AWS Backup facts into teams message format
 
     :params finding: Backup facts
@@ -330,9 +342,7 @@ def format_backup_status(status: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def format_default(
-    message: Union[str, Dict], subject: Optional[str] = None
-) -> Dict[str, Any]:
+  def format_default(self: Self, message: Union[str, Dict], subject: Optional[str] = None) -> Dict[str, Any]:
     """
     Default formatter, converting event into teams message format
 
@@ -382,11 +392,12 @@ def format_default(
     }
 
 
-def render_payload(
-    parsedMessage: Union[str, Dict],
-    originalMessage: Union[str, Dict],
-    subject: Optional[str] = None
-) -> Dict:
+  def payload(
+      self: Self,
+      parsedMessage: Union[str, Dict],
+      originalMessage: Union[str, Dict],
+      subject: Optional[str] = None
+  ) -> Dict:
     """
     Given the parsed AWS message, format into teams message payload
 
@@ -394,16 +405,22 @@ def render_payload(
     :returns: teams message payload
     """
 
+    if self.logExtra == True:
+      logging.info({
+        "message": "XTRA: Parsed SNS record",
+        "type": parsedMessage['action'],
+      })
+
     match (parsedMessage['action']):
-        case "cloudwatch":
-            payload = format_cloudwatch_alarm(alarm=parsedMessage)
-        case "guardduty":
-            payload = format_guard_duty_finding(finding=parsedMessage)
-        case "health":
-            payload = format_health_check_alert(alert=parsedMessage)
-        case "backup":
-            payload = format_backup_status(status=parsedMessage)
-        case "unknown":
-            payload = format_default(message=originalMessage, subject=subject)
+      case "cloudwatch":
+        payload = self.format_cloudwatch_alarm(alarm=parsedMessage)
+      case "guardduty":
+        payload = self.format_guard_duty_finding(finding=parsedMessage)
+      case "health":
+        payload = self.format_health_check_alert(alert=parsedMessage)
+      case "backup":
+        payload = self.format_backup_status(status=parsedMessage)
+      case "unknown":
+        payload = self.format_default(message=originalMessage, subject=subject)
 
     return payload

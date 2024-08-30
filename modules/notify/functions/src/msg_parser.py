@@ -6,9 +6,10 @@ import urllib.parse
 import re
 from math import floor
 from enum import Enum
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict, Optional, Union, cast, Callable
 from datetime import datetime
 import boto3
+from render import Render
 
 # Set default region if not provided
 REGION = os.environ.get("AWS_REGION", "us-east-1")
@@ -269,12 +270,8 @@ def parse_aws_backup(message: str, messageAttributes: Dict[str, Any]) -> Dict[st
     :returns: formatted Slack message payload
     """
 
-    print(f"WA DEBUG: parse_aws_backup - message: {message}")
-
     description = message.split(".")[0]   
     backup_fields = aws_backup_field_parser(message)
-
-    print(f"WA DEBUG: parse_aws_backup - backup_fields: {(backup_fields)}")
 
     start_time = messageAttributes["StartTime"]["Value"]       # ISO timestamp
     account_id = messageAttributes["AccountId"]["Value"]
@@ -283,8 +280,6 @@ def parse_aws_backup(message: str, messageAttributes: Dict[str, Any]) -> Dict[st
     region = backup_fields["Resource ARN"].split(":")[3]
 
     priority = AwsBackupPriroity[status].value
-
-    print(f"WA DEBUG: parse_aws_backup - account_id: {(account_id)}")
 
     # note - no epoch_at because there is no timestamp when the event occured at message level
     #        or message attributes
@@ -330,14 +325,13 @@ def get_message_payload(
         try:
             message = json.loads(message)
         except json.JSONDecodeError:
-            logging.info("Not a structured payload, just a string message")
-            print(f"WA DEBUG: get_message_payload - message: {str(message)}")
+            pass
+            # logging.info("Not a structured payload, just a string message")
 
     message = cast(Dict[str, Any], message)
 
     if "AlarmName" in message:
         parsedMsg = parse_cloudwatch_alarm(message, region)
-        logging.info(f"parsedMsg: `{json.dumps(parsedMsg)}`")
 
     elif (isinstance(message, Dict) and message.get("detail-type") == "GuardDuty Finding"):
         parsedMsg = parse_guardduty_finding(message=message, region=message["region"])
@@ -355,3 +349,47 @@ def get_message_payload(
 
     return AwsParsedMessage(parsed=parsedMsg, original=message)
 
+def parse_sns(
+    snsRecords: Union[str, Dict],
+    vendor_send_to_function: Callable,
+    renderer: Render,
+    rendererSuccessCode: int,
+    logExtra: bool
+) -> bool:
+    is_no_error = True
+
+    if logExtra == True:
+        logging.info({
+            "message": "XTRA: Number of records",
+            "count": len(snsRecords),
+        })
+
+    for record in snsRecords:
+        sns = record["Sns"]
+        subject = sns["Subject"]
+        message = sns["Message"]
+        region = sns["TopicArn"].split(":")[3]
+        messageAttributes = sns["MessageAttributes"]
+
+        parserResults = get_message_payload(
+          message=message,
+          region=region,
+          messageAttributes=messageAttributes,
+          subject=subject,
+        )
+        payload = renderer.payload(
+          parsedMessage=parserResults.parsedMsg,
+          originalMessage=message,
+          subject=subject,
+        )
+        response = vendor_send_to_function(payload=payload)
+
+        response_code = json.loads(response)["code"]
+        if response_code != rendererSuccessCode:
+            is_no_error = False
+            response_info = json.loads(response)["info"]
+            logging.error(
+                f"Error: received status code '{response_code}' but expected '{rendererSuccessCode}': `{response_info}` using record `{record}`"
+            )
+    
+    return is_no_error
