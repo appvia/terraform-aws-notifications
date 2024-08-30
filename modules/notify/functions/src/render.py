@@ -13,7 +13,6 @@ class Render:
   def payload(
     parsedMessage: Union[str, Dict],
     originalMessage: Union[str, Dict],
-    logExtra: bool,
     subject: Optional[str] = None,
 ) -> Dict:
     raise NotImplementedError

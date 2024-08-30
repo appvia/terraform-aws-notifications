@@ -1,6 +1,5 @@
 import base64
 import json
-import logging
 import os
 import urllib.parse
 import re
@@ -8,7 +7,16 @@ from math import floor
 from enum import Enum
 from typing import Any, Dict, Optional, Union, cast, Callable
 from datetime import datetime
+
 import boto3
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools import Metrics
+from aws_lambda_powertools.utilities.typing import LambdaContext
+logger = Logger()
+powertools_namespace = os.environ["POWERTOOLS_SERVICE_NAME"]
+metrics = Metrics(namespace=powertools_namespace)
+from aws_lambda_powertools.metrics import MetricUnit
+
 from render import Render
 
 # Set default region if not provided
@@ -35,10 +43,8 @@ def decrypt_url(encrypted_url: str) -> str:
             CiphertextBlob=base64.b64decode(encrypted_url)
         )
         return decrypted_payload["Plaintext"].decode()
-    except Exception:
-        logging.exception("Failed to decrypt URL with KMS")
-        return ""
-
+    except Exception as e:
+        raise e
 
 def get_service_url(region: str, service: str) -> str:
     """Get the appropriate service URL for the region
@@ -325,8 +331,9 @@ def get_message_payload(
         try:
             message = json.loads(message)
         except json.JSONDecodeError:
+            # logger.debug("SNS Record 'message' is not a structured (JSON) payload; it's just a string message")
             pass
-            # logging.info("Not a structured payload, just a string message")
+            
 
     message = cast(Dict[str, Any], message)
 
@@ -354,15 +361,10 @@ def parse_sns(
     vendor_send_to_function: Callable,
     renderer: Render,
     rendererSuccessCode: int,
-    logExtra: bool
 ) -> bool:
     is_no_error = True
 
-    if logExtra == True:
-        logging.info({
-            "message": "XTRA: Number of records",
-            "count": len(snsRecords),
-        })
+    logger.debug("Number of SNS records", num_records=len(snsRecords))
 
     for record in snsRecords:
         sns = record["Sns"]
@@ -388,8 +390,14 @@ def parse_sns(
         if response_code != rendererSuccessCode:
             is_no_error = False
             response_info = json.loads(response)["info"]
-            logging.error(
-                f"Error: received status code '{response_code}' but expected '{rendererSuccessCode}': `{response_info}` using record `{record}`"
+            logger.error(
+                "Unexpected vendor response",
+                code={
+                    "expected": rendererSuccessCode,
+                    "received": response_code
+                },
+                info=response_info,
+                record=record,
             )
     
     return is_no_error

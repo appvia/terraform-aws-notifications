@@ -1,7 +1,10 @@
 import json
-import logging
 from enum import Enum
 from typing import Any, Dict, Optional, Union, Self
+
+from aws_lambda_powertools import Logger
+logger = Logger()
+
 from render import Render
 
 class TeamsPriorityColor(Enum):
@@ -15,11 +18,9 @@ class TeamsRender(Render):
   """
   Render for Teams payload
   """
-  __logExtra: bool = False
 
-  def __init__(self: Self, logExtra: bool):
+  def __init__(self: Self):
     super(TeamsRender, self).__init__()
-    self.__logExtra = logExtra
 
   def __format_cloudwatch_alarm(self: Self, alarm: Dict[str, Any]) -> Dict[str, Any]:
     """Format CloudWatch alarm facts into teams message format
@@ -408,12 +409,7 @@ class TeamsRender(Render):
     :returns: teams message payload
     """
 
-    if self.__logExtra == True:
-      logging.info({
-        "message": "XTRA: Parsed SNS record",
-        "type": parsedMessage['action'],
-      })
-
+    logger.debug('Successfully parsed SNS record', parsed=parsedMessage)
     match (parsedMessage['action']):
       case "cloudwatch":
         payload = self.__format_cloudwatch_alarm(alarm=parsedMessage)

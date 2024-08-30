@@ -141,12 +141,6 @@ variable "recreate_missing_package" {
   default     = true
 }
 
-variable "log_events" {
-  description = "Boolean flag to enabled/disable logging of incoming events"
-  type        = bool
-  default     = false
-}
-
 variable "reserved_concurrent_executions" {
   description = "The amount of reserved concurrent executions for this lambda function. A value of 0 disables lambda from being triggered and -1 removes any concurrency limitations"
   type        = number
@@ -297,10 +291,10 @@ variable "aws_powertools_service_name" {
 variable "aws_powertools_log_level" {
   description = "The log level for aws powertools"
   type        = string
-  default     = "INFO"
+  default     = "DEBUG"
 
   validation {
-    condition     = contains(["DEBUG", "INFO", "WARNING", "ERROR"], var.aws_powertools_log_level)
-    error_message = "Valid values are DEBUG, INFO, WARNING, ERROR"
+    condition     = contains(["TRACE", "DEBUG", "INFO", "WARNING", "ERROR"], var.aws_powertools_log_level)
+    error_message = "Valid values are TRACE, DEBUG, INFO, WARNING, ERROR"
   }
 }

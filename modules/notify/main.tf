@@ -42,11 +42,9 @@ locals {
   lambda_env_vars = {
     "slack" = {
       SLACK_WEBHOOK_URL = try(var.delivery_channels["slack"].webhook_url, "https://null")
-      LOG_EVENTS        = var.log_events ? "True" : "False"
     },
     "teams" = {
       TEAMS_WEBHOOK_URL = try(var.delivery_channels["teams"].webhook_url, "https://null")
-      LOG_EVENTS        = var.log_events ? "True" : "False"
     }
   }
 }
@@ -164,9 +162,7 @@ module "lambda" {
   environment_variables = (merge(
     local.lambda_env_vars[each.value],
     {
-      LOG_EVENTS              = var.log_events ? "True" : "False"
       POWERTOOLS_SERVICE_NAME = var.aws_powertools_service_name
-      POWERTOOLS_LOG_LEVEL    = var.aws_powertools_log_level
     }
   ))
 

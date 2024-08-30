@@ -8,13 +8,20 @@
 """
 
 import json
-import logging
 import os
 from urllib.error import URLError, HTTPError
 from urllib.request import Request, urlopen
 from enum import Enum
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict
 from urllib.error import HTTPError
+
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools import Metrics
+from aws_lambda_powertools.utilities.typing import LambdaContext
+logger = Logger()
+powertools_namespace = os.environ["POWERTOOLS_SERVICE_NAME"]
+metrics = Metrics(namespace=powertools_namespace)
+from aws_lambda_powertools.metrics import MetricUnit
 
 from msg_parser import parse_sns, decrypt_url
 from msg_render_teams import TeamsRender
@@ -33,22 +40,24 @@ def send_teams_notification(payload: Dict[str, Any]) -> str:
   if not teams_url.startswith("http"):
     teams_url = decrypt_url(teams_url)
   
-  if LOG_EVENTS == True:
-    logging.info(f"XTRA: Event logging enabled (teams payload) to {teams_url}: `{payload}`")
+  logger.debug(
+    "Teams endpoint payload",
+    endpoint_url=teams_url,
+    payload=payload,
+  )
 
   req = Request(teams_url, json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
   try:
     response = urlopen(req)
     response.read()
-    logging.info(f"Message posted: code({response.getcode()})")
+    logger.debug("Successfully posted to slack with response", code=response.getcode())
     return json.dumps({"code": response.getcode(), "info": response.info().as_string()})
   except HTTPError as e:
-    logging.error("Request failed: %d %s", e.code, e.reason)
+    logger.error("Failed to post to teams", code=e.code, reason=e.reason, response=response)
     return json.dumps({"code": e.getcode(), "info": e.info().as_string()})
-  except URLError as e:
-    logging.error("Server connection failed: %s", e.reason)
-    return json.dumps({"code": 500, "info": "Unexpected error"})
 
+# note - this lambda is invoked as event from SNS - no sensible correlation id to assume
+@metrics.log_metrics(capture_cold_start_metric=True)
 def lambda_handler(event: Dict[str, Any], context: Dict[str, Any]) -> str:
     """
     Lambda function to parse notification events and forward to teams
@@ -57,13 +66,11 @@ def lambda_handler(event: Dict[str, Any], context: Dict[str, Any]) -> str:
     :param context: lambda expected context object
     :returns: none
     """
+    metrics.add_metric(name="NotificationsInvocations", unit=MetricUnit.Count, value=1)
 
-    if LOG_EVENTS == True:
-      logging.info(f"XTRA: Event logging enabled (Event): `{json.dumps(event)}`")
+    logger.debug("The event", event=event)
 
-    renderer: Render = TeamsRender(
-      logExtra=LOG_EVENTS
-    )
+    renderer: Render = TeamsRender()
 
     # Teams will return HTTP(202) on success - or will it?
     parse_sns_status: bool = parse_sns(
@@ -71,11 +78,12 @@ def lambda_handler(event: Dict[str, Any], context: Dict[str, Any]) -> str:
       send_teams_notification,
       renderer,
       202,
-      logExtra=LOG_EVENTS
     )
     if not parse_sns_status:
-      logging.error(
-        f"Error: processing event `{event}` and context `{context}`"
+      logger.error(
+        "Failed to process event",
+        event=event,
+        context=context,
       )
       raise Exception('Failed to process all SNS records')
     

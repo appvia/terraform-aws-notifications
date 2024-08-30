@@ -57,8 +57,5 @@ module "notify" {
   sns_topic_tags                         = var.tags
   tags                                   = var.tags
 
-  log_events = true
-
-
   depends_on = [module.sns]
 }

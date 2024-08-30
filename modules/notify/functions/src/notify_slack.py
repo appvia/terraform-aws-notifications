@@ -8,18 +8,23 @@
 """
 
 import json
-import logging
 import os
 import urllib.parse
 import urllib.request
 from typing import Any, Dict
 from urllib.error import HTTPError
 
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools import Metrics
+from aws_lambda_powertools.utilities.typing import LambdaContext
+logger = Logger()
+powertools_namespace = os.environ["POWERTOOLS_SERVICE_NAME"]
+metrics = Metrics(namespace=powertools_namespace)
+from aws_lambda_powertools.metrics import MetricUnit
+
 from msg_parser import parse_sns, decrypt_url
 from msg_render_slack import SlackRender
 from render import Render
-
-LOG_EVENTS = True if os.environ.get("LOG_EVENTS", "False") == "True" else False
 
 def send_slack_notification(payload: Dict[str, Any]) -> str:
   """
@@ -36,20 +41,24 @@ def send_slack_notification(payload: Dict[str, Any]) -> str:
   data = urllib.parse.urlencode({"payload": json.dumps(payload)}).encode("utf-8")
   req = urllib.request.Request(slack_url)
 
-  if LOG_EVENTS == True:
-    logging.info(f"XTRA: Event logging enabled (slack payload): `{json.dumps(payload)}`")
+  logger.debug(
+    "Slack endpoint payload",
+    endpoint_url=slack_url,
+    payload=payload,
+  )
 
   try:
     result = urllib.request.urlopen(req, data)
-    logging.info(f"Message posted: code(${result.getcode()})")
+    logger.debug("Successfully posted to slack with response", code=result.getcode())
     return json.dumps({"code": result.getcode(), "info": result.info().as_string()})
 
   except HTTPError as e:
-    logging.error(f"{e}: result")
+    logger.error("Failed to post to slack", code=e.code, reason=e.reason, response=result)
     return json.dumps({"code": e.getcode(), "info": e.info().as_string()})
 
-
-def lambda_handler(event: Dict[str, Any], context: Dict[str, Any]) -> str:
+# note - this lambda is invoked as event from SNS - no sensible correlation id to assume
+@metrics.log_metrics(capture_cold_start_metric=True)
+def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
   """
   Lambda function to parse notification events and forward to Slack
 
@@ -57,13 +66,11 @@ def lambda_handler(event: Dict[str, Any], context: Dict[str, Any]) -> str:
   :param context: lambda expected context object
   :returns: none
   """
+  metrics.add_metric(name="Invocations", unit=MetricUnit.Count, value=1)
 
-  if LOG_EVENTS == True:
-    logging.info(f"XTRA: Event logging enabled (Event): `{json.dumps(event)}`")
+  logger.debug("The event", event=event)
 
-  renderer: Render = SlackRender(
-    logExtra=LOG_EVENTS
-  )
+  renderer: Render = SlackRender()
 
   # Slack will return HTTP(200) on success
   parse_sns_status: bool = parse_sns(
@@ -71,11 +78,12 @@ def lambda_handler(event: Dict[str, Any], context: Dict[str, Any]) -> str:
     vendor_send_to_function=send_slack_notification,
     renderer=renderer,
     rendererSuccessCode=200,
-    logExtra=LOG_EVENTS
   )
   if not parse_sns_status:
-    logging.error(
-      f"Error: processing event `{event}` and context `{context}`"
+    logger.error(
+      "Failed to process event",
+      event=event,
+      context=context,
     )
     raise Exception('Failed to process all SNS records')
   
