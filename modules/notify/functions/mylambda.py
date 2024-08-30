@@ -12,8 +12,6 @@ http = urllib3.PoolManager()
 def lambda_handler(event, context):
     url = os.environ["SLACK_WEBHOOK_URL"]
     msg = {
-        "channel": "#channel-name",
-        "username": "Prometheus",
         "text": event["Records"][0]["Sns"]["Message"],
         "icon_emoji": "",
     }

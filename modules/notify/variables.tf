@@ -276,18 +276,31 @@ variable "send_to_teams" {
 variable "delivery_channels" {
   description = "The configuration for Slack notifications"
   type = map(object({
-    channel = optional(string)
-    # The channel to post to 
     lambda_name = optional(string, "delivery_channel")
     # The name of the lambda function to create
     lambda_description = optional(string, "Lambda function to send notifications")
     # The description for the lambda
     secret_name = optional(string)
     # An optional secret name in secrets manager to use for the slack configuration 
-    username = optional(string, ":aws: Notification")
-    # The username to post as 
     webhook_url = optional(string)
     # The webhook url to post to
   }))
   default = null
+}
+
+variable "aws_powertools_service_name" {
+  description = "The service name to use"
+  type        = string
+  default     = "appvia-notifications"
+}
+
+variable "aws_powertools_log_level" {
+  description = "The log level for aws powertools"
+  type        = string
+  default     = "INFO"
+
+  validation {
+    condition     = contains(["DEBUG", "INFO", "WARNING", "ERROR"], var.aws_powertools_log_level)
+    error_message = "Valid values are DEBUG, INFO, WARNING, ERROR"
+  }
 }

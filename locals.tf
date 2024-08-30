@@ -20,12 +20,8 @@ locals {
   enable_slack_secret = local.enable_slack_config && try(var.slack.secret_name, null) != null ? true : false
   ## The webhook url for slack 
   slack_webhook_url = local.enable_slack_secret ? try(jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["webhook_url"], var.slack.webhook_url) : try(var.slack.webhook_url, null)
-  ## The slack channel to post to 
-  slack_channel = local.enable_slack_secret ? try(jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["channel"], var.slack.channel) : try(var.slack.channel, null)
-  ## slack_username to use  
-  slack_username = local.enable_slack_secret ? try(jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["username"], var.slack.username) : try(var.slack.username, null)
   ## Indicates slack has all the configuration needed 
-  enable_slack = local.enable_slack_config && local.slack_channel != null && local.slack_webhook_url != null
+  enable_slack = local.enable_slack_config && local.slack_webhook_url != null
 
   ## Indicates if we are enabling teams notifications 
   enable_teams_config = var.teams != null ? true : false
@@ -33,26 +29,18 @@ locals {
   enable_teams_secret = local.enable_teams_config && try(var.teams.secret_name, null) != null ? true : false
   ## The webhook url for teams 
   teams_webhook_url = local.enable_teams_secret ? try(jsondecode(data.aws_secretsmanager_secret_version.teams[0].secret_string)["webhook_url"], var.teams.webhook_url) : try(var.teams.webhook_url, null)
-  ## The teams channel to post to 
-  teams_channel = local.enable_teams_secret ? try(jsondecode(data.aws_secretsmanager_secret_version.teams[0].secret_string)["channel"], var.teams.channel) : try(var.teams.channel, null)
-  ## teams_username to use  
-  teams_username = local.enable_teams_secret ? try(jsondecode(data.aws_secretsmanager_secret_version.teams[0].secret_string)["username"], var.teams.username) : try(var.teams.username, null)
   ## Indicates teams has all the configuration needed 
-  enable_teams = local.enable_teams_config && local.teams_channel != null && local.teams_webhook_url != null
+  enable_teams = local.enable_teams_config && local.teams_webhook_url != null
 
 
   channels_config = {
     "slack" = {
-      channel            = local.slack_channel
       webhook_url        = local.slack_webhook_url
-      username           = try(local.slack_username, null)
       lambda_name        = try(var.slack.lambda_name, "slack-notify")
       lambda_description = try(var.slack.lambda_description, "Sends posts to slack")
     },
     "teams" = {
-      channel            = local.teams_channel
       webhook_url        = local.teams_webhook_url
-      username           = try(local.teams_username, null)
       lambda_name        = try(var.teams.lambda_name, "teams-notify")
       lambda_description = try(var.teams.lambda_description, "Sends posts to teams")
     }

@@ -13,7 +13,6 @@ module "notifications" {
   tags                 = var.tags
 
   slack = {
-    channel     = var.slack_channel
     webhook_url = var.slack_webhook
   }
 

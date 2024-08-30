@@ -45,7 +45,6 @@ run "unit_test_create_sns_topic" {
     allowed_aws_services = ["cloudwatch.amazonaws.com", "cloudtrail.amazonaws.com"]
     create_sns_topic     = true
     slack = {
-      channel     = "my-channel"
       webhook_url = "https://hooks.slack.com/services/..."
     }
   }

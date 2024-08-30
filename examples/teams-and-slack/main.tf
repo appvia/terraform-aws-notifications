@@ -13,11 +13,9 @@ module "notifications" {
   tags                 = var.tags
 
   teams = {
-    channel     = var.teams_channel
     webhook_url = var.teams_webhook
   }
   slack = {
-    channel     = var.slack_channel
     webhook_url = var.slack_webhook
   }
 

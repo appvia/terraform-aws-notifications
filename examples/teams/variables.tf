@@ -19,9 +19,3 @@ variable "teams_webhook" {
   type        = string
   default     = null
 }
-
-variable "teams_channel" {
-  description = "The name of the channel in teams associated with the webhook"
-  type        = string
-  default     = null
-}

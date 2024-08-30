@@ -42,9 +42,6 @@ locals {
   lambda_env_vars = {
     "slack" = {
       SLACK_WEBHOOK_URL = try(var.delivery_channels["slack"].webhook_url, "https://null")
-      SLACK_CHANNEL     = try(var.delivery_channels["slack"].channel, "")
-      SLACK_USERNAME    = try(var.delivery_channels["slack"].username, "")
-      SLACK_EMOJI       = var.slack_emoji
       LOG_EVENTS        = var.log_events ? "True" : "False"
     },
     "teams" = {
@@ -124,19 +121,19 @@ module "lambda" {
   function_name = try(var.delivery_channels[each.value].lambda_name, "notify_${each.value}")
   description   = try(var.delivery_channels[each.value].lambda_description, "")
 
-  hash_extra                     = each.value
-  handler                        = "${local.lambda_handler[each.value]}.lambda_handler"
+  hash_extra = each.value
+  handler    = "${local.lambda_handler[each.value]}.lambda_handler"
 
   # source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/src/notify_${each.value}.py"
   # source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/src"
   # very bizarre behaviour on patterns filter - to only include the slack/teams specific code
   #  first have to exclude all variations on implementation and then include on the specific vendor implementations
-  source_path                    = [
+  source_path = [
     {
-      path = "${path.module}/functions/src"
+      path             = "${path.module}/functions/src"
       pip_requirements = false
-      prefix_in_zip = ""
-      patterns = <<END
+      prefix_in_zip    = ""
+      patterns         = <<END
         msg_parser\.py
         !.*msg_render_.*\.py
         !.*notify_.*\.py
@@ -167,7 +164,9 @@ module "lambda" {
   environment_variables = (merge(
     local.lambda_env_vars[each.value],
     {
-      LOG_EVENTS = var.log_events ? "True" : "False"
+      LOG_EVENTS              = var.log_events ? "True" : "False"
+      POWERTOOLS_SERVICE_NAME = var.aws_powertools_service_name
+      POWERTOOLS_LOG_LEVEL    = var.aws_powertools_log_level
     }
   ))
 
