@@ -3,6 +3,7 @@ import json
 import os
 import urllib.parse
 import re
+import array
 from math import floor
 from enum import Enum
 from typing import Any, Dict, Optional, Union, cast, Callable
@@ -31,6 +32,7 @@ class AwsService(Enum):
 
     cloudwatch = "cloudwatch"
     guardduty = "guardduty"
+    securityhub = "securityhub"
 
 
 def decrypt_url(encrypted_url: str) -> str:
@@ -67,11 +69,13 @@ def get_service_url(region: str, service: str) -> str:
 
 class AwsAction(Enum):
     """The individual AWS service types parsed"""
-    CLOUDWATCH = "cloudwatch"
-    GUARDDUTY = "guardduty"
-    HEALTH_CHECK = "health"
-    BACKUP = "backup"
-    UNKNOWN = "unknown"
+    CLOUDWATCH = "CloudWatch"
+    GUARDDUTY = "GuardDuty"
+    HEALTH_CHECK = "Health"
+    BACKUP = "Backup"
+    BUDGET = "Budget"
+    SECURITY_HUB = "SecurityHub"
+    UNKNOWN = "Unknown"
 
 class CloudWatchAlarmPriority(Enum):
     """Maps CloudWatch notification state to a normalised priority"""
@@ -80,8 +84,8 @@ class CloudWatchAlarmPriority(Enum):
     INSUFFICIENT_DATA = "WARNING"
     ALARM = "ERROR"
 
-def parse_cloudwatch_alarm(message: Dict[str, Any], region: str) -> Dict[str, Any]:
-    """Format CloudWatch alarm event into CloudWatch facts format
+def parse_cloudwatch_alarm(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
+    """Parse CloudWatch alarm event into CloudWatch facts format
 
     :params message: SNS message body containing CloudWatch alarm event
     :region: AWS region where the event originated from
@@ -120,7 +124,7 @@ def parse_cloudwatch_alarm(message: Dict[str, Any], region: str) -> Dict[str, An
         "state": state,
         "old_state": old_state,
         "region": alarmRegion,
-        "topic_region": region,
+        "topic_region": snsRegion,
         "alarm_arn": alarm_arn,
         "alarm_arn_region": alarm_arn_region
     }
@@ -134,18 +138,19 @@ class GuardDutylarmPriority(Enum):
     High = "HIGH"
 
 
-def parse_guardduty_finding(message: Dict[str, Any], region: str) -> Dict[str, Any]:
+def parse_guardduty_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
     """
-    Format GuardDuty finding event into Slack message format
+    Parse GuardDuty finding event into Slack message format
 
     :params message: SNS message body containing GuardDuty finding event
     :params region: AWS region where the event originated from
     :returns: formatted Slack message payload
     """
 
-    guardduty_url = get_service_url(region=region, service="guardduty")
     detail = message["detail"]
     service = detail.get("service", {})
+    region =  message['region']
+    guardduty_url = get_service_url(region=region, service="guardduty")
     
     severity_score = detail.get("severity")
     if severity_score < 4.0:
@@ -174,7 +179,7 @@ def parse_guardduty_finding(message: Dict[str, Any], region: str) -> Dict[str, A
         "priority": priority,
         "title": title,
         "description": description,
-        "region": message['region'],
+        "region": region,
         "type": type,
         "first_seen": first_seen,       # ISO timestamp
         "last_seen": last_seen,         # ISO timestamp
@@ -195,9 +200,9 @@ class AwsHealthCategoryPriroity(Enum):
     issue = "HIGH"
 
 
-def parse_aws_health(message: Dict[str, Any], region: str) -> Dict[str, Any]:
+def parse_aws_health(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
     """
-    Format AWS Health event into Slack message format
+    Parse AWS Health event into Slack message format
 
     :params message: SNS message body containing AWS Health event
     :params region: AWS region where the event originated from
@@ -277,10 +282,10 @@ class AwsBackupPriroity(Enum):
 
 def parse_aws_backup(message: str, messageAttributes: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Format AWS Backup event into Slack message format
+    ForParsemat AWS Backup event into normalised facts
 
     :params message: SNS message body containing AWS Backup event
-    :returns: formatted Slack message payload
+    :returns: set of normalised parameters
     """
 
     description = message.split(".")[0]   
@@ -313,6 +318,100 @@ def parse_aws_backup(message: str, messageAttributes: Dict[str, Any]) -> Dict[st
         "description": description,
     }
 
+
+class SecurityHubPriority(Enum):
+    """Maps SecurityHub severity state to a normalised 3 level priority"""
+
+    INFO = "INFO"
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+def parse_security_hub_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
+    """Format CloudWatch alarm event into CloudWatch facts format
+
+    :params message: SNS message body containing Security Hub event
+    :region: AWS region where the event originated from
+    :returns: Security Hub facts
+    """
+
+    severity: string = message["Severity"]
+    priority = SecurityHubPriority[severity].value
+
+    # GeneratorId includes the source of the description
+    source = message["GeneratorId"]
+    description = message["Description"]
+
+    """
+    The format of the finding - following subscription within the ARN split by “/”:
+
+        [0] - Provider
+
+        [1] - always 'v'
+
+        [2] - version
+
+        [3] - category
+
+        [4]  - always finding
+
+        [5] - Rule ID
+
+        0, 1, 2 and 3 is tge “GeneratorID”.
+    """
+    findingIdParts = (message["FindingId"].split(":")[5]).split("/")
+    provider = findingIdParts[1]
+    version = findingIdParts[3]
+    category = findingIdParts[4]
+    rule_id = findingIdParts[6]
+
+    # an oversight from AWS is that none of the events include a timestamp for when the event occurred
+    # at = message["StateChangeTime"]
+    # atDT = datetime.fromisoformat(message["StateChangeTime"])
+    # atEpoch = atDT.timestamp()
+
+    # Security Hub event includes the account name (no need to map)
+    #  but it doesn't include the account ID - take from the finding id
+    account_id = message["FindingId"].split(":")[4]
+    account_name = message["AccountName"]
+    region = message["FindingId"].split(":")[3]
+
+    # not done any real investigztion into the service url yet!!!!!!
+    service_url = get_service_url(region=region, service="securityhub")
+    url = f"{service_url}#finding:findindFilter=ANY;rule={urllib.parse.quote(rule_id)}"
+    
+    # light touch parse on each resource
+    resources:list[Dict[str, Any]] = []
+    for resource in message["Resources"]:
+        resources.append({
+            "type": resource["Type"],
+            "id": resource["Id"],
+        })
+
+    return {
+        "action": AwsAction.SECURITY_HUB.value,
+        "priority": priority,
+        "source": source,
+        "description": description,
+
+        "account_id": account_id,
+        "account_name": account_name,
+        "region": region,
+
+        "ruleProvider": provider,
+        "providerVersion": version,
+        "providerCategory": category,
+        "ruleId": rule_id,
+
+        "resources": resources,
+
+        "url": url,
+        # "at": at,
+        # "at_epoch": floor(atEpoch),
+    }
+
+
 class AwsParsedMessage:
     parsedMsg: Dict[str, Any]
     originalMsg: Dict[str, Any]
@@ -343,17 +442,19 @@ def get_message_payload(
             # logger.debug("SNS Record 'message' is not a structured (JSON) payload; it's just a string message")
             pass
             
-
     message = cast(Dict[str, Any], message)
 
     if "AlarmName" in message:
-        parsedMsg = parse_cloudwatch_alarm(message, region)
+        parsedMsg = parse_cloudwatch_alarm(message, snsRegion=region)
+
+    elif subject == "Security Hub Finding":
+        parsedMsg = parse_security_hub_finding(message=message, snsRegion=region)
 
     elif (isinstance(message, Dict) and message.get("detail-type") == "GuardDuty Finding"):
-        parsedMsg = parse_guardduty_finding(message=message, region=message["region"])
+        parsedMsg = parse_guardduty_finding(message=message, snsRegion=region)
 
     elif isinstance(message, Dict) and message.get("detail-type") == "AWS Health Event":
-        parsedMsg = parse_aws_health(message=message, region=message["region"])
+        parsedMsg = parse_aws_health(message=message, snsRegion=region)
 
     elif subject == "Notification from AWS Backup":
         parsedMsg = parse_aws_backup(message=str(message), messageAttributes=messageAttributes)

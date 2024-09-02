@@ -11,12 +11,14 @@ class SlackPriorityColor(Enum):
   """Maps Aws  notification state to Slack message format color"""
 
   NO_ERROR = "good"
+  INFO = "good"
   LOW = "#777777"
   ADVISORY = "#777777"
   WARNING = "warning"
   MEDIUM = "warning"
   ERROR = "danger"
   HIGH = "danger"
+  CRITICAL = "danegr"
 
 class SlackRender(Render):
   """
@@ -264,6 +266,127 @@ class SlackRender(Render):
       ] + fields,
     }
 
+  def __format_budget_status(self: Self, alarm: Dict[str, Any]) -> Dict[str, Any]:
+    """Format AWS Budget alarm facts into Slack message format
+
+    :params message: budget facts
+    :returns: formatted Slack message payload
+    """
+    return {
+        "color": SlackPriorityColor[alarm["priority"]].value,
+        "fallback": "Alarm %s triggered" % (alarm["name"]),
+        "title": f"CloudWatch Alarm: {alarm['name']}",
+        "title_link": f"{alarm['url']}",
+        "text": f"{alarm['description']}",
+        "ts": alarm['at_epoch'],
+        "fields": [
+          {
+            "title": "When",
+            "value": f"`{alarm['at']}`",
+            "short": False,
+          },
+          {
+            "title": "Account Name",
+            "value": f"`{alarm['account_name']}`",
+            "short": True,
+          },
+          {
+            "title": "Account ID",
+            "value": f"`{alarm['account_id']}`",
+            "short": True,
+          },
+          {
+            "title": "Region",
+            "value": f"`{alarm['alarm_arn_region']}`",
+            "short": True,
+          },
+          {
+            "title": "Region Locale",
+            "value": f"`{alarm['region']}`",
+            "short": True,
+          },
+          {
+            "title": "Alarm reason",
+            "value": f"{alarm['reason']}",
+            "short": False,
+          },
+          {
+            "title": "Old State",
+            "value": f"`{alarm['old_state']}`",
+            "short": True,
+          },
+          {
+            "title": "Current State",
+            "value": f"`{alarm['state']}`",
+            "short": True,
+          }
+        ],
+    }
+
+  def __format_security_hub_status(self: Self, finding: Dict[str, Any]) -> Dict[str, Any]:
+    """Format Seucrity Hub finding  facts into Slack message format
+
+    :params finding: Security Hub facts
+    :returns: formatted Slack message payload
+    """
+    resourcesField: list[Dict[str, Any]] = []
+    idx = 1
+    for  resource in finding['resources']:
+      resourceId = resource["id"]
+      resourceType = resource["type"]
+      resourcesField.append({
+        "title": f"Type {idx}",
+        "value": f"`{resourceType}`",
+        "short": True,
+      })
+      resourcesField.append({
+        "title": f"Arn {idx}",
+        "value": f"`{resourceId}`",
+        "short": False,
+      })
+      idx += 1
+
+    return {
+        "color": SlackPriorityColor[finding["priority"]].value,
+        "fallback": "Security Hub finding %s triggered" % (finding["source"]),
+        "title": f"Security Hub finding: {finding['source']}",
+        "title_link": f"{finding['url']}",
+        "text": f"{finding['description']}",
+        # "ts": alarm['at_epoch'],
+        "fields": [
+          {
+            "title": "Account Name",
+            "value": f"`{finding['account_name']}`",
+            "short": True,
+          },
+          {
+            "title": "Account ID",
+            "value": f"`{finding['account_id']}`",
+            "short": True,
+          },
+          {
+            "title": "Region",
+            "value": f"`{finding['region']}`",
+            "short": False,
+          },
+          {
+            "title": "Provider",
+            "value": f"`{finding['ruleProvider']} v{finding['providerVersion']}`",
+            "short": True,
+          },
+          {
+            "title": "Category",
+            "value": f"`{finding['providerCategory']}`",
+            "short": True,
+          },
+          {
+            "title": "Rule Id",
+            "value": f"`{finding['ruleId']}`",
+            "short": False,
+          },
+        ] + resourcesField,
+    }
+
   def __format_default(self: Self, message: Union[str, Dict], subject: Optional[str] = None) -> Dict[str, Any]:
     """
     Default formatter, converting event into Slack message format
@@ -314,15 +437,19 @@ class SlackRender(Render):
     attachment = None
     logger.debug('Successfully parsed SNS record', parsed=parsedMessage)
     match (parsedMessage['action']):
-      case "cloudwatch":
+      case "CloudWatch":
         attachment = self.__format_cloudwatch_alarm(alarm=parsedMessage)
-      case "guardduty":
+      case "GuardDuty":
         attachment = self.__format_guard_duty_finding(finding=parsedMessage)
-      case "health":
+      case "Health":
         attachment = self.__format_health_check_alert(alert=parsedMessage)
-      case "backup":
+      case "Backup":
         attachment = self.__format_backup_status(status=parsedMessage)
-      case "unknown":
+      case "Budget":
+        attachment = self.__format_budget_status(status=parsedMessage)
+      case "SecurityHub":
+        attachment = self.__format_security_hub_status(finding=parsedMessage)
+      case "Unknown":
         attachment = self.__format_default(message=originalMessage, subject=subject)
 
     if attachment:
