@@ -18,4 +18,9 @@ module "notifications" {
 
   send_to_slack = false
   send_to_teams = true
+
+  accounts_id_to_name = {
+    "12345678" = "mgmt",
+    "123456789" = "audit"
+  }
 }
