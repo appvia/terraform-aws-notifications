@@ -362,6 +362,43 @@ class SlackRender(Render):
         "text": f"{alarm['info']}",
     }
   
+  def __format_DMS_notification(self: Self, event: Dict[str, Any]) -> Dict[str, Any]:
+    """Format DMS notification facts into Slack message format
+
+    :params message: DMS notificatoin facts
+    :returns: formatted Slack message payload
+    """
+    return {
+        "color": SlackPriorityColor.WARNING.value,
+        "fallback": "DMS Notification %s triggered" % (event["title"]),
+        "title": f"DMS Notification: {event['title']}",
+        "title_link": f"{event['url']}",
+        "text": f"{event['documentation']}",
+        "ts": event['at_epoch'],
+        "fields": [
+          {
+            "title": "When",
+            "value": f"`{event['at']}`",
+            "short": True,
+          },
+          {
+            "title": "When (Epoch)",
+            "value": f"`{event['at_epoch']}`",
+            "short": True,
+          },
+          {
+            "title": "Source",
+            "value": f"`{event['source']}`",
+            "short": True,
+          },
+          {
+            "title": "Source ID",
+            "value": f"`{event['source_id']}`",
+            "short": True,
+          }
+        ]
+    }
+
   def __format_default(self: Self, message: Union[str, Dict], subject: Optional[str] = None) -> Dict[str, Any]:
     """
     Default formatter, converting event into Slack message format
@@ -426,6 +463,8 @@ class SlackRender(Render):
         attachment = self.__format_budget_alert(alarm=parsedMessage)
       case "SavingsPlan":
         attachment = self.__format_savings_plan_alert(alarm=parsedMessage)
+      case "DMS":
+        attachment = self.__format_DMS_notification(event=parsedMessage)
       case "Unknown":
         attachment = self.__format_default(message=originalMessage, subject=subject)
 

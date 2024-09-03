@@ -528,6 +528,73 @@ class TeamsRender(Render):
       ]
     }
   
+  def __format_DMS_notification(self: Self, event: Dict[str, Any]) -> Dict[str, Any]:
+    """Format DMS notificatoin facts into teams message format
+
+    :params alarm: DMS notification facts
+    :returns: formatted teams message payload
+    """
+    return {
+      "type": "message",
+      "attachments": [
+        {
+          "contentType": "application/vnd.microsoft.card.adaptive",
+          "content": {
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "type": "AdaptiveCard",
+            "version": "1.2",
+            "body": [
+              {
+                "type": "Container",
+                "items": [
+                  {
+                    "type": "TextBlock",
+                    "text": f"DMS Notification: {event['title']}",
+                    "weight": "bolder",
+                    "size": "medium"
+                  },
+                  {
+                    "type": "FactSet",
+                    "facts": [
+                      {
+                        "title": "At",
+                        "value": f"`{event['at']}`"
+                      },
+                      {
+                        "title": "At (Epoch)",
+                        "value": f"`{event['at_epoch']}`"
+                      },
+                      {
+                        "title": "Source",
+                        "value": f"`{event['source']}`"
+                      },
+                      {
+                        "title": "Source Id",
+                        "value": f"`{event['source_id']}`"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "TextBlock",
+                    "text": f"`{event['documentation']}`"
+                  }
+                ]
+              },
+              {
+                "type": "Container",
+                "items": [
+                  {
+                    "type": "TextBlock",
+                    "text": f"[The Event]({event['url']})"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+
   def __format_default(self: Self, message: Union[str, Dict], subject: Optional[str] = None) -> Dict[str, Any]:
     """
     Default formatter, converting event into teams message format
@@ -610,6 +677,8 @@ class TeamsRender(Render):
         payload = self.__format_budget_alert(alarm=parsedMessage)
       case "SavingsPlan":
         payload = self.__format_savings_plan_alert(alarm=parsedMessage)
+      case "DMS":
+        payload = self.__format_DMS_notification(event=parsedMessage)
       case "Unknown":
         payload = self.__format_default(message=originalMessage, subject=subject)
 

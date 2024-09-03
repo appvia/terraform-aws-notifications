@@ -76,6 +76,7 @@ class AwsAction(Enum):
     BUDGET = "Budget"
     SAVINGS_PLAN = "SavingsPlan"
     SECURITY_HUB = "SecurityHub"
+    DMS = "DMS"
     UNKNOWN = "Unknown"
 
 class CloudWatchAlarmPriority(Enum):
@@ -89,7 +90,7 @@ def parse_cloudwatch_alarm(message: Dict[str, Any], snsRegion: str) -> Dict[str,
     """Parse CloudWatch alarm event into CloudWatch facts format
 
     :params message: SNS message body containing CloudWatch alarm event
-    :region: AWS region where the event originated from
+    :snsRegion: AWS region of the SNS topic
     :returns: CloudWatch facts
     """
     action = AwsAction.CLOUDWATCH.value
@@ -144,7 +145,7 @@ def parse_guardduty_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str
     Parse GuardDuty finding event into Slack message format
 
     :params message: SNS message body containing GuardDuty finding event
-    :params region: AWS region where the event originated from
+    :snsRegion: AWS region of the SNS topic
     :returns: formatted Slack message payload
     """
 
@@ -206,7 +207,7 @@ def parse_aws_health(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
     Parse AWS Health event into Slack message format
 
     :params message: SNS message body containing AWS Health event
-    :params region: AWS region where the event originated from
+    :snsRegion: AWS region of the SNS topic
     :returns: formatted Slack message payload
     """
 
@@ -368,7 +369,7 @@ class SecurityHubPriority(Enum):
     CRITICAL = "CRITICAL"
 
 def parse_security_hub_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
-    """Format CloudWatch alarm event into CloudWatch facts format
+    """Format Secuirty Hub finding event into Security Hub finding facts format
 
     :params message: SNS message body containing Security Hub event
     :region: AWS region where the event originated from
@@ -450,6 +451,39 @@ def parse_security_hub_finding(message: Dict[str, Any], snsRegion: str) -> Dict[
         # "at_epoch": floor(atEpoch),
     }
 
+def parse_dms_notification(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
+    """Format DMS notification event into DMS Notification facts format
+
+    :params message: SNS message body containing DMS notification event
+    :snsRegion: AWS region of the SNS topic
+    :returns: DMS notification facts
+    """
+
+    title = message["Event Message"]
+    documentation = message["Event ID"]
+    source = message["Event Source"]
+    source_id = message["SourceId"]
+    url = message["Identifier Link"]
+
+    at = message["Event Time"]
+    atDT = datetime.fromisoformat(at)
+    atEpoch = atDT.timestamp()
+
+    # DMS notificatoin has zero identification of the account!!!!!!
+    # account_id = message["FindingId"].split(":")[4]
+    # account_name = message["AccountName"]
+    # region = message["FindingId"].split(":")[3]
+
+    return {
+        "action": AwsAction.DMS.value,
+        "title": title,
+        "source": source,
+        "source_id": source_id,
+        "documentation": documentation,
+        "url": url,
+        "at": at,
+        "at_epoch": floor(atEpoch),
+    }
 
 class AwsParsedMessage:
     parsedMsg: Dict[str, Any]
@@ -488,6 +522,9 @@ def get_message_payload(
 
     elif subject == "Security Hub Finding":
         parsedMsg = parse_security_hub_finding(message=message, snsRegion=region)
+
+    elif subject == "DMS Notification Message":
+        parsedMsg = parse_dms_notification(message=message, snsRegion=region)
 
     elif (isinstance(message, Dict) and message.get("detail-type") == "GuardDuty Finding"):
         parsedMsg = parse_guardduty_finding(message=message, snsRegion=region)
