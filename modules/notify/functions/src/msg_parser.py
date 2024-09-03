@@ -74,6 +74,7 @@ class AwsAction(Enum):
     HEALTH_CHECK = "Health"
     BACKUP = "Backup"
     BUDGET = "Budget"
+    SAVINGS_PLAN = "SavingsPlan"
     SECURITY_HUB = "SecurityHub"
     UNKNOWN = "Unknown"
 
@@ -282,13 +283,14 @@ class AwsBackupPriroity(Enum):
 
 def parse_aws_backup(message: str, messageAttributes: Dict[str, Any]) -> Dict[str, Any]:
     """
-    ForParsemat AWS Backup event into normalised facts
+    Parse AWS Backup event into normalised facts
 
     :params message: SNS message body containing AWS Backup event
+    :params messageAttributes: SNS message attributes containing AWS Backup additional info
     :returns: set of normalised parameters
     """
 
-    description = message.split(".")[0]   
+    description = message.split(".")[0]
     backup_fields = aws_backup_field_parser(message)
 
     start_time = messageAttributes["StartTime"]["Value"]       # ISO timestamp
@@ -318,6 +320,43 @@ def parse_aws_backup(message: str, messageAttributes: Dict[str, Any]) -> Dict[st
         "description": description,
     }
 
+def parse_aws_budget(subject: str, message: str) -> Dict[str, Any]:
+    """
+    Parse AWS Budget alert into normalised facts
+
+    :params subject: SNS subject body containing AWS Budget alert
+    :params message: SNS message body containing AWS Budget alert
+    :returns: set of normalised parameters
+    """
+    subjectPrefix = len("AWS Budgets:")
+    parsedSubject = subject[subjectPrefix:]
+
+    # the message is already a formatted message using newlines for separation
+    #  little to gain from parsing the message details
+    return {
+        "action": AwsAction.BUDGET.value,
+        "subject": parsedSubject,
+        "info": message,
+    }
+
+def parse_aws_savings_plan(subject: str, message: str) -> Dict[str, Any]:
+    """
+    Parse AWS Savings Plan alert into normalised facts
+
+    :params subject: SNS subject body containing AWS Savings Plan alert
+    :params message: SNS message body containing AWS Savings Plan alert
+    :returns: set of normalised parameters
+    """
+    subjectPrefix = len("Savings Plans Coverage Alert:")
+    parsedSubject = subject[subjectPrefix:]
+
+    # the message is already a formatted message using newlines for separation
+    #  little to gain from parsing the message details
+    return {
+        "action": AwsAction.SAVINGS_PLAN.value,
+        "subject": parsedSubject,
+        "info": message,
+    }
 
 class SecurityHubPriority(Enum):
     """Maps SecurityHub severity state to a normalised 3 level priority"""
@@ -459,6 +498,12 @@ def get_message_payload(
     elif subject == "Notification from AWS Backup":
         parsedMsg = parse_aws_backup(message=str(message), messageAttributes=messageAttributes)
 
+    elif subject.startswith("AWS Budgets:"):
+        parsedMsg = parse_aws_budget(subject=subject, message=str(message))
+
+    elif subject.startswith("Savings Plans Coverage Alert:"):
+        parsedMsg = parse_aws_savings_plan(subject=subject, message=str(message))
+    
     else:
         parsedMsg = {
             "action": AwsAction.UNKNOWN.value,

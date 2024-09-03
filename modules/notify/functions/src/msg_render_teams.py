@@ -356,89 +356,6 @@ class TeamsRender(Render):
       ]
     }
 
-  def __format_budget_status(self: Self, alarm: Dict[str, Any]) -> Dict[str, Any]:
-    """Format AWS Budget alarm facts into teams message format
-
-    :params alarm: budget facts
-    :returns: formatted teams message payload
-    """
-    return {
-      "type": "message",
-      "attachments": [
-        {
-          "contentType": "application/vnd.microsoft.card.adaptive",
-          "content": {
-            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-            "type": "AdaptiveCard",
-            "version": "1.2",
-            "body": [
-              {
-                "type": "Container",
-                "items": [
-                  {
-                    "type": "TextBlock",
-                    "text": f"`{alarm['name']}`",
-                    "weight": "bolder",
-                    "size": "medium"
-                  },
-                  {
-                    "type": "TextBlock",
-                    "text": f"`{alarm['description']}`"
-                  },
-                  {
-                    "type": "FactSet",
-                    "facts": [
-                      {
-                        "title": "At",
-                        "value": f"`{alarm['at']}`"
-                      },
-                      {
-                        "title": "Account Name",
-                        "value": f"`{alarm['account_name']}`"
-                      },
-                      {
-                        "title": "Account Id",
-                        "value": f"`{alarm['account_id']}`"
-                      },
-                      {
-                        "title": "Region",
-                        "value": f"`{alarm['alarm_arn_region']}`"
-                      },
-                      {
-                        "title": "Region Locale",
-                        "value": f"`{alarm['region']}`"
-                      },
-                      {
-                        "title": "Old State",
-                        "value": f"`{alarm['old_state']}`"
-                      },
-                      {
-                        "title": "New State",
-                        "value": f"`{alarm['state']}`"
-                      }
-                    ]
-                  },
-                  {
-                    "type": "TextBlock",
-                    "text": f"`{alarm['reason']}`"
-                  }
-                ]
-              },
-              {
-                "type": "Container",
-                "items": [
-                  {
-                    "type": "TextBlock",
-                    "text": f"[The Alarm]({alarm['url']})"
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    }
-  
   def __format_security_hub_status(self: Self, finding: Dict[str, Any]) -> Dict[str, Any]:
     """Format AWS Security Hub finding facts into teams message format
 
@@ -537,7 +454,80 @@ class TeamsRender(Render):
       ]
     }
 
+  def __format_budget_alert(self: Self, alarm: Dict[str, Any]) -> Dict[str, Any]:
+    """Format Budget alarm facts into Slack message format
 
+    :params message: Budget facts
+    :returns: formatted Slack message payload
+    """
+    return {
+      "type": "message",
+      "attachments": [
+        {
+          "contentType": "application/vnd.microsoft.card.adaptive",
+          "content": {
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "type": "AdaptiveCard",
+            "version": "1.2",
+            "body": [
+              {
+                "type": "Container",
+                "items": [
+                  {
+                    "type": "TextBlock",
+                    "text": f"Budget Alarm: {alarm['subject']}",
+                    "weight": "bolder",
+                    "size": "medium"
+                  },
+                  {
+                    "type": "TextBlock",
+                    "text": f"`{alarm['info']}`"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+
+  def __format_savings_plan_alert(self: Self, alarm: Dict[str, Any]) -> Dict[str, Any]:
+    """Format Savings Plan alarm facts into Slack message format
+
+    :params message: Savings Plans facts
+    :returns: formatted Slack message payload
+    """
+    return {
+      "type": "message",
+      "attachments": [
+        {
+          "contentType": "application/vnd.microsoft.card.adaptive",
+          "content": {
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "type": "AdaptiveCard",
+            "version": "1.2",
+            "body": [
+              {
+                "type": "Container",
+                "items": [
+                  {
+                    "type": "TextBlock",
+                    "text": f"Savings Plan Alarm: {alarm['subject']}",
+                    "weight": "bolder",
+                    "size": "medium"
+                  },
+                  {
+                    "type": "TextBlock",
+                    "text": f"`{alarm['info']}`"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  
   def __format_default(self: Self, message: Union[str, Dict], subject: Optional[str] = None) -> Dict[str, Any]:
     """
     Default formatter, converting event into teams message format
@@ -614,10 +604,12 @@ class TeamsRender(Render):
         payload = self.__format_health_check_alert(alert=parsedMessage)
       case "Backup":
         payload = self.__format_backup_status(status=parsedMessage)
-      case "Budget":
-        payload = self.__format_budget_status(alarm=parsedMessage)
       case "SecurityHub":
         payload = self.__format_security_hub_status(finding=parsedMessage)
+      case "Budget":
+        payload = self.__format_budget_alert(alarm=parsedMessage)
+      case "SavingsPlan":
+        payload = self.__format_savings_plan_alert(alarm=parsedMessage)
       case "Unknown":
         payload = self.__format_default(message=originalMessage, subject=subject)
 
