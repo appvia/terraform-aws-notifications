@@ -1,0 +1,22 @@
+{
+  "Records": [
+    {
+      "EventSource": "aws:sns",
+      "EventVersion": "1.0",
+      "EventSubscriptionArn": "arn:aws:sns:eu-west-2:123456789:ExampleTopic:31bc39b4-8d76-4063-a5ae-590e971a3517",
+      "Sns": {
+          "Type": "Notification",
+          "MessageId": "94b2d5b6-fe2f-5cde-930a-8a97ac8c0f40",
+          "TopicArn": "arn:aws:sns:eu-west-2:123456789:ExampleTopic",
+          "Subject": "Security Hub Finding",
+          "Message": "{\"FindingId\":\"arn:aws:securityhub:eu-west-2:123456789:subscription/nist-800-53/v/5.0.0/EC2.8/finding/89deac02-0ea8-49a2-a1e7-31b64bc037f2\",\"Description\":\"This control checks whether your Amazon Elastic Compute Cloud (Amazon EC2) instance metadata version is configured with Instance Metadata Service Version 2 (IMDSv2). The control passes if HttpTokens is set to required for IMDSv2. The control fails if HttpTokens is set to optional.\",\"GeneratorId\":\"nist-800-53/v/5.0.0/EC2.8\",\"Severity\":\"HIGH\",\"AccountName\":\"SupportProd\",\"Resources\":[{\"Partition\":\"aws\",\"Type\":\"AwsEc2Instance\",\"Details\":{\"AwsEc2Instance\":{\"VpcId\":\"vpc-738575683784\",\"MetadataOptions\":{\"HttpPutResponseHopLimit\":2,\"HttpProtocolIpv6\":\"disabled\",\"HttpTokens\":\"optional\",\"InstanceMetadataTags\":\"disabled\",\"HttpEndpoint\":\"enabled\"},\"VirtualizationType\":\"hvm\",\"NetworkInterfaces\":[{\"NetworkInterfaceId\":\"eni-070adc8dad15224ce\"},{\"NetworkInterfaceId\":\"eni-0beb2cc73e332cca7\"}],\"ImageId\":\"ami-7e78237da982\",\"SubnetId\":\"subnet-7e782f2da982\",\"LaunchedAt\":\"2024-02-15T11:41:53.000Z\",\"Monitoring\":{\"State\":\"disabled\"},\"IamInstanceProfileArn\":\"arn:aws:iam::123456789:instance-profile/eks-aaaabbbb-1111-1111-1111-fb829a08212d\"}},\"Region\":\"eu-west-2\",\"Id\":\"arn:aws:ec2:eu-west-2:123456789:instance/i-1111aa22222ddd333333\",\"Tags\":{\"aws:autoscaling:groupName\":\"eks-compute-aaaabbbb-1111-1111-1111-fb829a08212d\",\"aws:ec2:fleet-id\":\"fleet-aaaabbbb-1111-1111-1111-fb829a08212d\",\"k8s.io/cluster-autoscaler/ws-supp-portal-eks\":\"owned\",\"aws:eks:cluster-name\":\"cluster1-eks\",\"eks:cluster-name\":\"cluster1-eks\",\"aws:ec2launchtemplate:version\":\"1\",\"eks:nodegroup-name\":\"compute\",\"k8s.io/cluster-autoscaler/enabled\":\"true\",\"kubernetes.io/cluster/ws-supp-portal-eks\":\"owned\",\"aws:ec2launchtemplate:id\":\"lt-aaaa1111eeee8765e\"}}]}",
+          "Timestamp": "2024-07-29T08:18:43.869Z",
+          "SignatureVersion": "1",
+          "Signature": "EXAMPLE",
+          "SigningCertUrl": "EXAMPLE",
+          "UnsubscribeUrl": "EXAMPLE",
+          "MessageAttributes": {}
+      }
+     }
+  ]
+}
