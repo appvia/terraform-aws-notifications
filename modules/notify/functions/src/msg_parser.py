@@ -488,10 +488,12 @@ def parse_dms_notification(message: Dict[str, Any], snsRegion: str) -> Dict[str,
 class AwsParsedMessage:
     parsedMsg: Dict[str, Any]
     originalMsg: Dict[str, Any]
+    actionType: str
 
-    def __init__(self, parsed: Dict[str,Any], original: Dict[str,Any]) -> Any:
+    def __init__(self, parsed: Dict[str,Any], original: Dict[str,Any], actionType: str) -> Any:
         self.parsedMsg = parsed
         self.originalMsg = original
+        self.actionType = actionType
 
 def get_message_payload(
     message: Union[str, Dict],
@@ -545,10 +547,11 @@ def get_message_payload(
         parsedMsg = {
             "action": AwsAction.UNKNOWN.value,
         }
+        
     metricType = parsedMsg["action"]
     metrics.add_metric(name=f"{metricType}", unit=MetricUnit.Count, value=1)
                        
-    return AwsParsedMessage(parsed=parsedMsg, original=message)
+    return AwsParsedMessage(parsed=parsedMsg, original=message, actionType=parsedMsg["action"])
 
 def parse_sns(
     snsRecords: Union[str, Dict],
@@ -573,6 +576,13 @@ def parse_sns(
           messageAttributes=messageAttributes,
           subject=subject,
         )
+
+        if parserResults.actionType == AwsAction.UNKNOWN.value:
+            logger.warning(
+                "Unexpected event type",
+                record=record,
+            )
+
         payload = renderer.payload(
           parsedMessage=parserResults.parsedMsg,
           originalMessage=message,
