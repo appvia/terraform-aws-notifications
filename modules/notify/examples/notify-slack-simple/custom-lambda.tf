@@ -22,7 +22,7 @@ module "custom_lambda" {
   source = "../../"
 
   slack_lambda_function_name = "custom_lambda"
-  lambda_source_path   = "../../functions/mylambda.py"
+  lambda_source_path         = "../../functions/mylambda.py"
 
   iam_role_name_prefix = "custom"
 

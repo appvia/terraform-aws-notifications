@@ -15,6 +15,6 @@ variable "sns_topic_name" {
 
 variable "opsgenie_endpoint" {
   description = "The opsgenie api endpoint url"
-  type = string
-  default = null
+  type        = string
+  default     = null
 }

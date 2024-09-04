@@ -37,7 +37,7 @@ module "notify_slack" {
   kms_key_arn = aws_kms_key.this.arn
 
   slack_lambda_description = "Lambda function which sends notifications to Slack"
-  log_events         = true
+  log_events               = true
 
   # VPC
   #  lambda_function_vpc_subnet_ids = module.vpc.intra_subnets

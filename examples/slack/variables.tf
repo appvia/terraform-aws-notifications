@@ -16,6 +16,6 @@ variable "sns_topic_name" {
 
 variable "slack_webhook" {
   description = "The URL of the slack webhook"
-  type = string
-  default = null
+  type        = string
+  default     = null
 }
