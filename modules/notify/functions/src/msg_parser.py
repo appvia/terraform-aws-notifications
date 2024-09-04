@@ -186,6 +186,7 @@ def parse_guardduty_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str
         "first_seen": first_seen,       # ISO timestamp
         "last_seen": last_seen,         # ISO timestamp
         "severity": severity,
+        "severity_score": severity_score,
         "account_id": account_id,
         "account_name": account_name,
         "count": count,
@@ -211,9 +212,6 @@ def parse_aws_health(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
     :returns: formatted Slack message payload
     """
 
-    aws_health_url = (
-        f"https://phd.aws.amazon.com/phd/home?region={region}#/dashboard/open-issues"
-    )
     detail = message["detail"]
     resources = ",".join(message.setdefault("resources", ["<unknown>"]))
     service = detail.get("service", "<unknown>")
@@ -225,6 +223,13 @@ def parse_aws_health(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
     start_time = detail.get('startTime', '<unknown>')
     end_time = detail.get('endTime', '<unknown>')
 
+    # the originating region for the Health Check is in the detail.eventArn
+    eventArn = detail["eventArn"]
+    eventRegion = eventArn.split(":")[3]
+    aws_health_url = (
+        f"https://phd.aws.amazon.com/phd/home?region={eventRegion}#/dashboard/open-issues"
+    )
+
     priority = AwsHealthCategoryPriroity[detail["eventTypeCategory"]].value
 
     atDT = datetime.fromisoformat(message["time"])
@@ -234,7 +239,7 @@ def parse_aws_health(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
         "action": AwsAction.HEALTH_CHECK.value,
         "priority": priority,
         "description": description,
-        "region": message['region'],
+        "region": eventRegion,
         "category": category,
         "account_id": account_id,
         "account_name": account_name,
@@ -376,7 +381,7 @@ def parse_security_hub_finding(message: Dict[str, Any], snsRegion: str) -> Dict[
     :returns: Security Hub facts
     """
 
-    severity: string = message["Severity"]
+    severity: str = message["Severity"]
     priority = SecurityHubPriority[severity].value
 
     # GeneratorId includes the source of the description
@@ -432,6 +437,7 @@ def parse_security_hub_finding(message: Dict[str, Any], snsRegion: str) -> Dict[
     return {
         "action": AwsAction.SECURITY_HUB.value,
         "priority": priority,
+        "severity": severity,
         "source": source,
         "description": description,
 

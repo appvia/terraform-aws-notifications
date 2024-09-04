@@ -6,13 +6,30 @@ from aws_lambda_powertools import Logger
 logger = Logger()
 
 from render import Render
+from notification_emblems import __ATTENTION_URL__, __WARNING_URL__
+
+"""
+2024-Sept-03
+Apparently Teams does not supports the latest Adaptive card format - using V1.2
+Has a useful designer: https://dev.teams.microsoft.com/cards.
+You need a Microsoft account to use - it will store you card templates under your account to come back and touch up.
+"""
+
 
 class TeamsPriorityColor(Enum):
   """Maps Aws  notification state to teams message format color"""
 
-  NO_ERROR = "good"
-  WARNING = "warning"
-  ERROR = "danger"
+  # Arrgghhh!!!! Teams color=Warning is showing red in V1.2 - having to use Accent
+
+  NO_ERROR = "Default"
+  INFO = "Default"
+  LOW = "Default"
+  ADVISORY = "Accent"
+  WARNING = "Accent"
+  MEDIUM = "Accent"
+  ERROR = "Attention"
+  HIGH = "Attention"
+  CRITICAL = "Attention"
 
 class TeamsRender(Render):
   """
@@ -28,6 +45,26 @@ class TeamsRender(Render):
     :params alarm: CloudWatch facts
     :returns: formatted teams message payload
     """
+
+    imageIconItems = []
+    postColor = TeamsPriorityColor.NO_ERROR.value
+    if alarm['priority'] == "ERROR":
+      imageIconItems.append({
+          "type": "Image",
+          "url": __ATTENTION_URL__,
+          "width": "50px",
+          "height": "50px"
+        })
+      postColor = TeamsPriorityColor.ERROR.value
+    elif alarm['priority'] == "WARNING":
+      imageIconItems.append({
+        "type": "Image",
+        "url": __WARNING_URL__,
+        "width": "50px",
+        "height": "50px"
+      })
+      postColor = TeamsPriorityColor.WARNING.value
+
     return {
       "type": "message",
       "attachments": [
@@ -40,16 +77,19 @@ class TeamsRender(Render):
             "body": [
               {
                 "type": "Container",
-                "items": [
+                "items": imageIconItems + [
                   {
                     "type": "TextBlock",
-                    "text": f"`{alarm['name']}`",
-                    "weight": "bolder",
-                    "size": "medium"
+                    "text": f"CloudWatch: `{alarm['name']}`",
+                    "weight": "Bolder",
+                    "size": "Large",
+                    "wrap": True,
+                    "color": postColor,
                   },
                   {
                     "type": "TextBlock",
-                    "text": f"`{alarm['description']}`"
+                    "text": f"`{alarm['description']}`",
+                    "wrap": True,
                   },
                   {
                     "type": "FactSet",
@@ -86,7 +126,8 @@ class TeamsRender(Render):
                   },
                   {
                     "type": "TextBlock",
-                    "text": f"`{alarm['reason']}`"
+                    "text": f"`{alarm['reason']}`",
+                    "wrap": True,
                   }
                 ]
               },
@@ -112,6 +153,25 @@ class TeamsRender(Render):
     :returns: formatted teams message payload
     """
 
+    imageIconItems = []
+    postColor = TeamsPriorityColor.NO_ERROR.value
+    if finding['priority'] == "HIGH":
+      imageIconItems.append({
+          "type": "Image",
+          "url": __ATTENTION_URL__,
+          "width": "50px",
+          "height": "50px"
+        })
+      postColor = TeamsPriorityColor.ERROR.value
+    elif finding['priority'] == "MEDIUM":
+      imageIconItems.append({
+        "type": "Image",
+        "url": __WARNING_URL__,
+        "width": "50px",
+        "height": "50px"
+      })
+      postColor = TeamsPriorityColor.WARNING.value
+
     return {
       "type": "message",
       "attachments": [
@@ -124,16 +184,19 @@ class TeamsRender(Render):
             "body": [
               {
                 "type": "Container",
-                "items": [
+                "items": imageIconItems + [
                   {
                     "type": "TextBlock",
-                    "text": f"`GuardDuty Finding: {finding['title']}`",
-                    "weight": "bolder",
-                    "size": "medium"
+                    "text": f"`GuardDuty: {finding['title']}`",
+                    "weight": "Bolder",
+                    "size": "Large",
+                    "wrap": True,
+                    "color": postColor,
                   },
                   {
                     "type": "TextBlock",
-                    "text": f"`{finding['description']}`"
+                    "text": f"`{finding['description']}`",
+                    "wrap": True,
                   },
                   {
                     "type": "FactSet",
@@ -143,8 +206,8 @@ class TeamsRender(Render):
                         "value": f"`{finding['id']}`"
                       },
                       {
-                        "title": "Severity",
-                        "value": f"`{finding['severity']}`"
+                        "title": "Severity/Score",
+                        "value": f"`{finding['severity']}/{finding['severity_score']}`"
                       },
                       {
                         "title": "Account Name",
@@ -196,6 +259,25 @@ class TeamsRender(Render):
     :returns: formatted teams message payload
     """
 
+    imageIconItems = []
+    postColor = TeamsPriorityColor.NO_ERROR.value
+    if alert['priority'] == "HIGH":
+      imageIconItems.append({
+          "type": "Image",
+          "url": __ATTENTION_URL__,
+          "width": "50px",
+          "height": "50px"
+        })
+      postColor = TeamsPriorityColor.ERROR.value
+    elif alert['priority'] == "MEDIUM":
+      imageIconItems.append({
+        "type": "Image",
+        "url": __WARNING_URL__,
+        "width": "50px",
+        "height": "50px"
+      })
+      postColor = TeamsPriorityColor.WARNING.value
+
     return {
       "type": "message",
       "attachments": [
@@ -208,16 +290,19 @@ class TeamsRender(Render):
             "body": [
               {
                 "type": "Container",
-                "items": [
+                "items": imageIconItems + [
                   {
                     "type": "TextBlock",
-                    "text": f"`AWS Health Event for service: {alert['service']}`",
-                    "weight": "bolder",
-                    "size": "medium"
+                    "text": f"`AWS Health: {alert['service']}`",
+                    "weight": "Bolder",
+                    "size": "Large",
+                    "wrap": True,
+                    "color": postColor,
                   },
                   {
                     "type": "TextBlock",
-                    "text": f"`{alert['description']}`"
+                    "text": f"`{alert['description']}`",
+                    "wrap": True,
                   },
                   {
                     "type": "FactSet",
@@ -267,7 +352,8 @@ class TeamsRender(Render):
                 "items": [
                   {
                     "type": "TextBlock",
-                    "text": f"[The Healthcheck]({alert['url']})"
+                    "text": f"[The Healthcheck]({alert['url']})",
+                    "wrap": True,
                   }
                 ]
               }
@@ -284,13 +370,32 @@ class TeamsRender(Render):
     :returns: formatted teams message payload
     """
 
+    imageIconItems = []
+    postColor = TeamsPriorityColor.NO_ERROR.value
+    if status['priority'] == "ERROR":
+      imageIconItems.append({
+          "type": "Image",
+          "url": __ATTENTION_URL__,
+          "width": "50px",
+          "height": "50px"
+        })
+      postColor = TeamsPriorityColor.ERROR.value
+    elif status['priority'] == "WARNING":
+      imageIconItems.append({
+        "type": "Image",
+        "url": __WARNING_URL__,
+        "width": "50px",
+        "height": "50px"
+      })
+      postColor = TeamsPriorityColor.WARNING.value
+
     facts: list[Dict[str, Any]] = []
     backup_fields = status['backup_fields']
     for k, v in backup_fields.items():
-        facts.append({
-            "title": k,
-            "value": f"`{v}`",
-        })
+      facts.append({
+          "title": k,
+          "value": f"`{v}`",
+      })
 
     return {
       "type": "message",
@@ -304,16 +409,19 @@ class TeamsRender(Render):
             "body": [
               {
                 "type": "Container",
-                "items": [
+                "items": imageIconItems + [
                   {
                     "type": "TextBlock",
                     "text": f"`AWS Backup: {status['backup_id']}`",
-                    "weight": "bolder",
-                    "size": "medium"
+                    "weight": "Bolder",
+                    "size": "Large",
+                    "wrap": True,
+                    "color": postColor,
                   },
                   {
                     "type": "TextBlock",
-                    "text": f"`{status['description']}`"
+                    "text": f"`{status['description']}`",
+                    "wrap": True,
                   },
                   {
                     "type": "FactSet",
@@ -362,6 +470,25 @@ class TeamsRender(Render):
     :params finding: budget facts
     :returns: formatted teams message payload
     """
+    imageIconItems = []
+    postColor = TeamsPriorityColor.NO_ERROR.value
+    if finding['priority'] == "CRITICAL" or finding['priority'] == "HIGH":
+      imageIconItems.append({
+          "type": "Image",
+          "url": __ATTENTION_URL__,
+          "width": "50px",
+          "height": "50px"
+        })
+      postColor = TeamsPriorityColor.ERROR.value
+    elif finding['priority'] == "MEDIUM":
+      imageIconItems.append({
+        "type": "Image",
+        "url": __WARNING_URL__,
+        "width": "50px",
+        "height": "50px"
+      })
+      postColor = TeamsPriorityColor.WARNING.value
+
     resourcesField: list[Dict[str, Any]] = []
     idx = 1
     for  resource in finding['resources']:
@@ -389,12 +516,14 @@ class TeamsRender(Render):
             "body": [
               {
                 "type": "Container",
-                "items": [
+                "items": imageIconItems + [
                   {
                     "type": "TextBlock",
-                    "text": f"Security Hub Finding: {finding['source']}",
-                    "weight": "bolder",
-                    "size": "medium"
+                    "text": f"Security Hub: {finding['source']}",
+                    "weight": "Bolder",
+                    "size": "Large",
+                    "wrap": True,
+                    "color": postColor,
                   },
                   {
                     "type": "FactSet",
@@ -410,6 +539,10 @@ class TeamsRender(Render):
                       {
                         "title": "Region",
                         "value": f"`{finding['region']}`"
+                      },
+                                            {
+                        "title": "Severity",
+                        "value": f"`{finding['severity']}`"
                       },
                       {
                         "title": "Source",
@@ -431,11 +564,13 @@ class TeamsRender(Render):
                   },
                   {
                     "type": "TextBlock",
-                    "text": f"`{finding['description']}`"
+                    "text": f"`{finding['description']}`",
+                    "wrap": True,
                   },
                   {
                     "type": "FactSet",
-                    "facts": [] + resourcesField
+                    "facts": [] + resourcesField,
+                    "wrap": True,
                   },
                 ]
               },
@@ -444,7 +579,8 @@ class TeamsRender(Render):
                 "items": [
                   {
                     "type": "TextBlock",
-                    "text": f"[The Finding]({finding['url']})"
+                    "text": f"[The Finding]({finding['url']})",
+                    "wrap": True,
                   }
                 ]
               }
@@ -468,20 +604,34 @@ class TeamsRender(Render):
           "content": {
             "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
             "type": "AdaptiveCard",
+            "fallbackText": f"Budget Alarm: {alarm['subject']}",
             "version": "1.2",
             "body": [
               {
                 "type": "Container",
                 "items": [
                   {
-                    "type": "TextBlock",
-                    "text": f"Budget Alarm: {alarm['subject']}",
-                    "weight": "bolder",
-                    "size": "medium"
+                    "type": "Image",
+                    "url": __ATTENTION_URL__,
+                    "width": "50px",
+                    "height": "50px"
                   },
                   {
                     "type": "TextBlock",
-                    "text": f"`{alarm['info']}`"
+                    "text": f"Budget Alarm: {alarm['subject']}",
+                    "weight": "Bolder",
+                    "size": "Large",
+                    "wrap": True,
+                    "color": TeamsPriorityColor.WARNING.value
+                  },
+                  {
+                    "type": "RichTextBlock",
+                    "inlines": [
+                      {
+                        "type": "TextRun",
+                        "text": f"{alarm['info']}"
+                      }
+                    ]
                   }
                 ]
               }
@@ -505,20 +655,34 @@ class TeamsRender(Render):
           "content": {
             "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
             "type": "AdaptiveCard",
+            "fallbackText": f"Savings Plan Alarm: {alarm['subject']}",
             "version": "1.2",
             "body": [
               {
                 "type": "Container",
                 "items": [
                   {
-                    "type": "TextBlock",
-                    "text": f"Savings Plan Alarm: {alarm['subject']}",
-                    "weight": "bolder",
-                    "size": "medium"
+                    "type": "Image",
+                    "url": __ATTENTION_URL__,
+                    "width": "50px",
+                    "height": "50px"
                   },
                   {
                     "type": "TextBlock",
-                    "text": f"`{alarm['info']}`"
+                    "text": f"Savings Plan Alarm: {alarm['subject']}",
+                    "weight": "Bolder",
+                    "size": "Large",
+                    "wrap": True,
+                    "color": TeamsPriorityColor.WARNING.value
+                  },
+                  {
+                    "type": "RichTextBlock",
+                    "inlines": [
+                      {
+                        "type": "TextRun",
+                        "text": f"{alarm['info']}"
+                      }
+                    ]
                   }
                 ]
               }
@@ -550,8 +714,10 @@ class TeamsRender(Render):
                   {
                     "type": "TextBlock",
                     "text": f"DMS Notification: {event['title']}",
-                    "weight": "bolder",
-                    "size": "medium"
+                    "weight": "Bolder",
+                    "size": "Large",
+                    "wrap": True,
+                    "color": "default",
                   },
                   {
                     "type": "FactSet",
@@ -576,7 +742,8 @@ class TeamsRender(Render):
                   },
                   {
                     "type": "TextBlock",
-                    "text": f"`{event['documentation']}`"
+                    "text": f"`{event['documentation']}`",
+                    "wrap": True,
                   }
                 ]
               },
@@ -585,7 +752,8 @@ class TeamsRender(Render):
                 "items": [
                   {
                     "type": "TextBlock",
-                    "text": f"[The Event]({event['url']})"
+                    "text": f"[The Event]({event['url']})",
+                    "wrap": True,
                   }
                 ]
               }
@@ -629,7 +797,7 @@ class TeamsRender(Render):
                   {
                     "type": "TextBlock",
                     "text": title,
-                    "weight": "bolder",
+                    "weight": "Bolder",
                     "size": "medium"
                   },
                   {

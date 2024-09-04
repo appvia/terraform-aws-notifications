@@ -146,6 +146,7 @@ module "lambda" {
       patterns         = <<END
         msg_parser\.py
         account_id_name_mappings\.py
+        notification_emblems\.py
         !.*msg_render_.*\.py
         !.*notify_.*\.py
         .*${each.value}\.py

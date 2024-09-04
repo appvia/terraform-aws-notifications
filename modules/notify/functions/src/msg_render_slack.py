@@ -6,6 +6,14 @@ from aws_lambda_powertools import Logger
 logger = Logger()
 
 from render import Render
+from notification_emblems import __ATTENTION_URL__, __WARNING_URL__
+
+"""
+Using Slack legacy webhook posts format: https://api.slack.com/reference/messaging/attachments.
+Teams supports embebbing base64 encoded data within image URL. Slack however does not. And it's "image_url"
+ property cannot be used to control the size of the icon.
+With legacy format, continuing to use attachment colour bar.
+"""
 
 class SlackPriorityColor(Enum):
   """Maps Aws  notification state to Slack message format color"""
@@ -18,7 +26,7 @@ class SlackPriorityColor(Enum):
   MEDIUM = "warning"
   ERROR = "danger"
   HIGH = "danger"
-  CRITICAL = "danegr"
+  CRITICAL = "danger"
 
 class SlackRender(Render):
   """
@@ -34,11 +42,32 @@ class SlackRender(Render):
     :params message: CloudWatch facts
     :returns: formatted Slack message payload
     """
-    return {
+    imageIconItems = []
+    if alarm['priority'] == "ERROR":
+      imageIconItems.append({
+        "color": SlackPriorityColor[alarm["priority"]].value,
+        "image_url": __ATTENTION_URL__,
+        "title": f"CloudWatch: {alarm['name']}",
+        "title_link": f"{alarm['url']}",
+      })
+    elif alarm['priority'] == "WARNING":
+      imageIconItems.append({
+        "color": SlackPriorityColor[alarm["priority"]].value,
+        "image_url": __WARNING_URL__,
+        "title": f"CloudWatch: {alarm['name']}",
+        "title_link": f"{alarm['url']}",
+      })
+    else:
+      imageIconItems.append({
+        "color": SlackPriorityColor[alarm["priority"]].value,
+        "title": f"CloudWatch: {alarm['name']}",
+        "title_link": f"{alarm['url']}",
+      })
+    
+    return imageIconItems + [
+      {
         "color": SlackPriorityColor[alarm["priority"]].value,
         "fallback": "Alarm %s triggered" % (alarm["name"]),
-        "title": f"CloudWatch Alarm: {alarm['name']}",
-        "title_link": f"{alarm['url']}",
         "text": f"{alarm['description']}",
         "ts": alarm['at_epoch'],
         "fields": [
@@ -83,7 +112,8 @@ class SlackRender(Render):
             "short": True,
           }
         ],
-    }
+      }
+    ]
 
   def __format_guard_duty_finding(self: Self, finding: Dict[str, Any]) -> Dict[str, Any]:
     """Format GuardDuty alarm facts into Slack message format
@@ -91,56 +121,78 @@ class SlackRender(Render):
     :params message: GuardDuty facts
     :returns: formatted Slack message payload
     """
-    return {
-      "color": SlackPriorityColor[finding["priority"]].value,
-      "fallback": f"GuardDuty Finding: {finding['title']}",
-      "title": f"GuardDuty Finding: {finding['title']}",
-      "title_link": f"{finding['url']}#/findings?search=id%3D{finding['id']}",
-      "text": f"{finding['description']}",
-      "ts": finding['at_epoch'],
-      "fields": [
-        {
-          "title": "Finding Type",
-          "value": f"`{finding['type']}`",
-          "short": False,
-        },
-        {
-          "title": "First Seen",
-          "value": f"`{finding['first_seen']}`",
-          "short": True,
-        },
-        {
-          "title": "Last Seen",
-          "value": f"`{finding['last_seen']}`",
-          "short": True,
-        },
-        {
-          "title": "Severity",
-          "value": f"`{finding['severity']}`",
-          "short": True,
-        },
-        {
-          "title": "Count",
-          "value": f"`{finding['count']}`",
-          "short": True,
-        },
-        {
-          "title": "Account Name",
-          "value": f"`{finding['account_name']}`",
-          "short": True,
-        },
-        {
-          "title": "Account ID",
-          "value": f"`{finding['account_id']}`",
-          "short": True,
-        },
-        {
-          "title": "Region",
-          "value": f"`{finding['region']}`",
-          "short": True,
-        },
-      ]
-    }
+    imageIconItems = []
+    if finding['priority'] == "HIGH":
+      imageIconItems.append({
+        "color": SlackPriorityColor[finding["priority"]].value,
+        "image_url": __ATTENTION_URL__,
+        "title": f"GuardDuty: {finding['title']}",
+        "title_link": f"{finding['url']}#/findings?search=id%3D{finding['id']}",
+      })
+    elif finding['priority'] == "MEDIUM":
+      imageIconItems.append({
+        "color": SlackPriorityColor[finding["priority"]].value,
+        "image_url": __WARNING_URL__,
+        "title": f"GuardDuty: {finding['title']}",
+        "title_link": f"{finding['url']}#/findings?search=id%3D{finding['id']}",
+      })
+    else:
+      imageIconItems.append({
+        "color": SlackPriorityColor[finding["priority"]].value,
+        "title": f"GuardDuty: {finding['title']}",
+        "title_link": f"{finding['url']}#/findings?search=id%3D{finding['id']}",
+      })
+    
+    return imageIconItems + [
+      {
+        "color": SlackPriorityColor[finding["priority"]].value,
+        "fallback": f"GuardDuty Finding: {finding['title']}",
+        "text": f"{finding['description']}",
+        "ts": finding['at_epoch'],
+        "fields": [
+          {
+            "title": "Finding Type",
+            "value": f"`{finding['type']}`",
+            "short": False,
+          },
+          {
+            "title": "First Seen",
+            "value": f"`{finding['first_seen']}`",
+            "short": True,
+          },
+          {
+            "title": "Last Seen",
+            "value": f"`{finding['last_seen']}`",
+            "short": True,
+          },
+          {
+            "title": "Severity/Score",
+            "value": f"`{finding['severity']}/{finding['severity_score']}`",
+            "short": True,
+          },
+          {
+            "title": "Count",
+            "value": f"`{finding['count']}`",
+            "short": True,
+          },
+          {
+            "title": "Account Name",
+            "value": f"`{finding['account_name']}`",
+            "short": True,
+          },
+          {
+            "title": "Account ID",
+            "value": f"`{finding['account_id']}`",
+            "short": True,
+          },
+          {
+            "title": "Region",
+            "value": f"`{finding['region']}`",
+            "short": True,
+          },
+        ]
+      }
+    ]
 
   def __format_health_check_alert(self: Self, alert: Dict[str, Any]) -> Dict[str, Any]:
     """Format AWS Healthcheck facts into Slack message format
@@ -148,61 +200,83 @@ class SlackRender(Render):
     :params message: HealthCheck facts
     :returns: formatted Slack message payload
     """
-    return {
-      "color": SlackPriorityColor[alert["priority"]].value,
-      "fallback": f"New AWS Health Event for {alert['service']}",
-      "title": f"AWS Health Event for service: {alert['service']}",
-      "title_link": f"{alert['url']}",
-      "text": f"{alert['description']}",
-      "ts": alert['at_epoch'],
-      "fields": [
-        {
-          "title": "Affected Service",
-          "value": f"`{alert['service']}`",
-          "short": True,
-        },
-        {
-          "title": "Category",
-          "value": f"`{alert['category']}`",
-          "short": True,
-        },
-        {
-          "title": "Account Name",
-          "value": f"`{alert['account_name']}`",
-          "short": True,
-        },
-        {
-          "title": "Account Id",
-          "value": f"`{alert['account_id']}`",
-          "short": True,
-        },
-        {
-          "title": "Start Time",
-          "value": f"`{alert['start_time']}`",
-          "short": True,
-        },
-        {
-          "title": "End Time",
-          "value": f"`{alert['end_time']}`",
-          "short": True,
-        },
-        {
-          "title": "Code",
-          "value": f"`{alert['code']}`",
-          "short": False,
-        },
-        {
-          "title": "Region",
-          "value": f"`{alert['region']}`",
-          "short": False,
-        },
-        {
-          "title": "Affected Resources",
-          "value": f"{alert['resources']}",
-          "short": False,
-        },
-      ],
-    }
+    imageIconItems = []
+    if alert['priority'] == "HIGH":
+      imageIconItems.append({
+        "color": SlackPriorityColor[alert["priority"]].value,
+        "image_url": __ATTENTION_URL__,
+        "title": f"AWS Health: {alert['service']}",
+        "title_link": f"{alert['url']}",
+      })
+    elif alert['priority'] == "MEDIUM":
+      imageIconItems.append({
+        "color": SlackPriorityColor[alert["priority"]].value,
+        "image_url": __WARNING_URL__,
+        "title": f"AWS Health: {alert['service']}",
+        "title_link": f"{alert['url']}",
+      })
+    else:
+      imageIconItems.append({
+        "color": SlackPriorityColor[alert["priority"]].value,
+        "title": f"AWS Health: {alert['service']}",
+        "title_link": f"{alert['url']}",
+      })
+
+    return imageIconItems + [
+      {
+        "color": SlackPriorityColor[alert["priority"]].value,
+        "fallback": f"New AWS Health Event for {alert['service']}",
+        "text": f"{alert['description']}",
+        "ts": alert['at_epoch'],
+        "fields": [
+          {
+            "title": "Affected Service",
+            "value": f"`{alert['service']}`",
+            "short": True,
+          },
+          {
+            "title": "Category",
+            "value": f"`{alert['category']}`",
+            "short": True,
+          },
+          {
+            "title": "Account Name",
+            "value": f"`{alert['account_name']}`",
+            "short": True,
+          },
+          {
+            "title": "Account Id",
+            "value": f"`{alert['account_id']}`",
+            "short": True,
+          },
+          {
+            "title": "Start Time",
+            "value": f"`{alert['start_time']}`",
+            "short": True,
+          },
+          {
+            "title": "End Time",
+            "value": f"`{alert['end_time']}`",
+            "short": True,
+          },
+          {
+            "title": "Code",
+            "value": f"`{alert['code']}`",
+            "short": False,
+          },
+          {
+            "title": "Region",
+            "value": f"`{alert['region']}`",
+            "short": False,
+          },
+          {
+            "title": "Affected Resources",
+            "value": f"{alert['resources']}",
+            "short": False,
+          },
+        ],
+      }
+    ]
 
   def __format_backup_status(self: Self, status: Dict[str, Any]) -> Dict[str, Any]:
     """Format AWS Backup facts into teams message format
@@ -210,6 +284,27 @@ class SlackRender(Render):
     :params finding: Backup facts
     :returns: formatted teams message payload
     """
+    imageIconItems = []
+    if status['priority'] == "ERROR":
+      imageIconItems.append({
+        "color": SlackPriorityColor[status["priority"]].value,
+        "image_url": __ATTENTION_URL__,
+        "title": f"Backup : {status['backup_id']}",
+        # "title_link": f"{status['url']}",
+      })
+    elif status['priority'] == "WARNING":
+      imageIconItems.append({
+        "color": SlackPriorityColor[status["priority"]].value,
+        "image_url": __WARNING_URL__,
+        "title": f"Backup : {status['backup_id']}",
+        # "title_link": f"{status['url']}",
+      })
+    else:
+      imageIconItems.append({
+        "color": SlackPriorityColor[status["priority"]].value,
+        "title": f"Backup : {status['backup_id']}",
+        # "title_link": f"{status['url']}",
+      })
 
     fields: list[Dict[str, Any]] = []
     backup_fields = status['backup_fields']
@@ -220,51 +315,51 @@ class SlackRender(Render):
         "short": False,
       })
 
-    return {
-      "color": SlackPriorityColor[status["priority"]].value,
-      "fallback": f"Backup event for {status['backup_id']}",
-      "title": f"Backup event for {status['backup_id']}",
-      # "title_link": f"{status['url']}",
-      "text": f"{status['description']}",
-      # "ts": alert['at_epoch'],
-      "fields": [
-        {
-          "title": "Backup Id",
-          "value": f"`{status['backup_id']}`",
-          "short": False,
-        },
-        {
-          "title": "Account Name",
-          "value": f"`{status['account_name']}`",
-          "short": True,
-        },
-        {
-          "title": "Account Id",
-          "value": f"`{status['account_id']}`",
-          "short": True,
-        },
-        {
-          "title": "Status",
-          "value": f"`{status['status']}`",
-          "short": True,
-        },
-        {
-          "title": "Priority",
-          "value": f"`{status['priority']}`",
-          "short": True,
-        },
-        {
-          "title": "Region",
-          "value": f"`{status['region']}`",
-          "short": True,
-        },
-        {
-          "title": "Start Time",
-          "value": f"`{status['start_time']}`",
-          "short": True,
-        },
-      ] + fields,
-    }
+    return imageIconItems + [
+      {
+        "color": SlackPriorityColor[status["priority"]].value,
+        "fallback": f"Backup event for {status['backup_id']}",
+        "text": f"{status['description']}",
+        # "ts": alert['at_epoch'],
+        "fields": [
+          {
+            "title": "Backup Id",
+            "value": f"`{status['backup_id']}`",
+            "short": False,
+          },
+          {
+            "title": "Account Name",
+            "value": f"`{status['account_name']}`",
+            "short": True,
+          },
+          {
+            "title": "Account Id",
+            "value": f"`{status['account_id']}`",
+            "short": True,
+          },
+          {
+            "title": "Status",
+            "value": f"`{status['status']}`",
+            "short": True,
+          },
+          {
+            "title": "Priority",
+            "value": f"`{status['priority']}`",
+            "short": True,
+          },
+          {
+            "title": "Region",
+            "value": f"`{status['region']}`",
+            "short": True,
+          },
+          {
+            "title": "Start Time",
+            "value": f"`{status['start_time']}`",
+            "short": True,
+          },
+        ] + fields,
+      }
+    ]
 
   def __format_security_hub_status(self: Self, finding: Dict[str, Any]) -> Dict[str, Any]:
     """Format Seucrity Hub finding  facts into Slack message format
@@ -272,6 +367,28 @@ class SlackRender(Render):
     :params finding: Security Hub facts
     :returns: formatted Slack message payload
     """
+    imageIconItems = []
+    if finding['priority'] == "CRITICAL" or finding['priority'] == "HIGH":
+      imageIconItems.append({
+        "color": SlackPriorityColor[finding["priority"]].value,
+        "image_url": __ATTENTION_URL__,
+        "title": f"Security Hub: {finding['source']}",
+        "title_link": f"{finding['url']}",
+      })
+    elif finding['priority'] == "MEDIUM":
+      imageIconItems.append({
+        "color": SlackPriorityColor[finding["priority"]].value,
+        "image_url": __WARNING_URL__,
+        "title": f"Security Hub: {finding['source']}",
+        "title_link": f"{finding['url']}",
+      })
+    else:
+      imageIconItems.append({
+        "color": SlackPriorityColor[finding["priority"]].value,
+        "title": f"Security Hub: {finding['source']}",
+        "title_link": f"{finding['url']}",
+      })
+    
     resourcesField: list[Dict[str, Any]] = []
     idx = 1
     for  resource in finding['resources']:
@@ -289,11 +406,10 @@ class SlackRender(Render):
       })
       idx += 1
 
-    return {
+    return imageIconItems + [
+      {
         "color": SlackPriorityColor[finding["priority"]].value,
         "fallback": "Security Hub finding %s triggered" % (finding["source"]),
-        "title": f"Security Hub finding: {finding['source']}",
-        "title_link": f"{finding['url']}",
         "text": f"{finding['description']}",
         # "ts": alarm['at_epoch'],
         "fields": [
@@ -310,7 +426,12 @@ class SlackRender(Render):
           {
             "title": "Region",
             "value": f"`{finding['region']}`",
-            "short": False,
+            "short": True,
+          },
+          {
+            "title": "Severity",
+            "value": f"`{finding['severity']}`",
+            "short": True,
           },
           {
             "title": "Provider",
@@ -328,7 +449,8 @@ class SlackRender(Render):
             "short": False,
           },
         ] + resourcesField,
-    }
+      }
+    ]
 
   def __format_budget_alert(self: Self, alarm: Dict[str, Any]) -> Dict[str, Any]:
     """Format Budget alarm facts into Slack message format
@@ -336,10 +458,15 @@ class SlackRender(Render):
     :params message: Budget facts
     :returns: formatted Slack message payload
     """
-    return {
+    return [
+      {
+        "color": SlackPriorityColor.HIGH.value,
+        "image_url": __WARNING_URL__,
+        "title": f"Budget: {alarm['subject']}",
+      },
+      {
         "color": SlackPriorityColor.HIGH.value,
         "fallback": "Budget %s triggered" % (alarm["subject"]),
-        "title": f"Budget Alarm: {alarm['subject']}",
         "mrkdwn_in": ["value"],
         "fields": [
           {
@@ -347,7 +474,8 @@ class SlackRender(Render):
             "short": False,
           }
         ],
-    }
+      }
+    ]
 
   def __format_savings_plan_alert(self: Self, alarm: Dict[str, Any]) -> Dict[str, Any]:
     """Format Savings Plan alarm facts into Slack message format
@@ -355,12 +483,24 @@ class SlackRender(Render):
     :params message: Savings Plans facts
     :returns: formatted Slack message payload
     """
-    return {
+    return [
+      {
+        "color": SlackPriorityColor.HIGH.value,
+        "image_url": __WARNING_URL__,
+        "title": f"Savings Plan: {alarm['subject']}",
+      },
+      {
         "color": SlackPriorityColor.HIGH.value,
         "fallback": "Savings Plan %s triggered" % (alarm["subject"]),
-        "title": f"Savings Plan Alarm: {alarm['subject']}",
-        "text": f"{alarm['info']}",
-    }
+        "mrkdwn_in": ["value"],
+        "fields": [
+          {
+            "value": f"{alarm['info']}",
+            "short": False,
+          }
+        ],
+      }
+    ]
   
   def __format_DMS_notification(self: Self, event: Dict[str, Any]) -> Dict[str, Any]:
     """Format DMS notification facts into Slack message format
@@ -368,7 +508,8 @@ class SlackRender(Render):
     :params message: DMS notificatoin facts
     :returns: formatted Slack message payload
     """
-    return {
+    return [
+      {
         "color": SlackPriorityColor.WARNING.value,
         "fallback": "DMS Notification %s triggered" % (event["title"]),
         "title": f"DMS Notification: {event['title']}",
@@ -397,7 +538,8 @@ class SlackRender(Render):
             "short": True,
           }
         ]
-    }
+      }
+    ]
 
   def __format_default(self: Self, message: Union[str, Dict], subject: Optional[str] = None) -> Dict[str, Any]:
     """
@@ -407,7 +549,7 @@ class SlackRender(Render):
     :returns: formatted Slack message payload
     """
 
-    attachments = {
+    attachment = {
       "fallback": "A new message",
       "text": "AWS notification",
       "title": subject if subject else "Message",
@@ -423,9 +565,9 @@ class SlackRender(Render):
       fields.append({"value": message, "short": False})
 
     if fields:
-      attachments["fields"] = fields  # type: ignore
+      attachment["fields"] = fields  # type: ignore
 
-    return attachments
+    return [attachment]
 
   def payload(
     self: Self,
@@ -446,29 +588,29 @@ class SlackRender(Render):
     payload = {
     }
 
-    attachment = None
+    attachments = None
     logger.debug('Successfully parsed SNS record', parsed=parsedMessage)
     match (parsedMessage['action']):
       case "CloudWatch":
-        attachment = self.__format_cloudwatch_alarm(alarm=parsedMessage)
+        attachments = self.__format_cloudwatch_alarm(alarm=parsedMessage)
       case "GuardDuty":
-        attachment = self.__format_guard_duty_finding(finding=parsedMessage)
+        attachments = self.__format_guard_duty_finding(finding=parsedMessage)
       case "Health":
-        attachment = self.__format_health_check_alert(alert=parsedMessage)
+        attachments = self.__format_health_check_alert(alert=parsedMessage)
       case "Backup":
-        attachment = self.__format_backup_status(status=parsedMessage)
+        attachments = self.__format_backup_status(status=parsedMessage)
       case "SecurityHub":
-        attachment = self.__format_security_hub_status(finding=parsedMessage)
+        attachments = self.__format_security_hub_status(finding=parsedMessage)
       case "Budget":
-        attachment = self.__format_budget_alert(alarm=parsedMessage)
+        attachments = self.__format_budget_alert(alarm=parsedMessage)
       case "SavingsPlan":
-        attachment = self.__format_savings_plan_alert(alarm=parsedMessage)
+        attachments = self.__format_savings_plan_alert(alarm=parsedMessage)
       case "DMS":
-        attachment = self.__format_DMS_notification(event=parsedMessage)
+        attachments = self.__format_DMS_notification(event=parsedMessage)
       case "Unknown":
-        attachment = self.__format_default(message=originalMessage, subject=subject)
+        attachments = self.__format_default(message=originalMessage, subject=subject)
 
-    if attachment:
-        payload["attachments"] = [attachment]  # type: ignore
+    if attachments:
+        payload["attachments"] = attachments  # type: ignore
 
     return payload
