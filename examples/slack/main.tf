@@ -26,7 +26,7 @@ module "notifications" {
 
   # set URLs to non-existent URLs to disable icons
   post_icons_url = {
-    error_url   = "https://doesn-t-exist-domain/attention.png"
-    warning_url = "https://doesn-t-exist-domain/warning.png"
+    error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png"
+    warning_url = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"
   }
 }

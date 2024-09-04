@@ -312,7 +312,7 @@ variable "post_icons_url" {
     warning_url = string
   })
   default = {
-    error_url   = "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/attention-50px.png"
-    warning_url = "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/warning-50px.png"
+    error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png"
+    warning_url = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"
   }
 }
