@@ -23,4 +23,10 @@ module "notifications" {
     "12345678" = "mgmt",
     "123456789" = "audit"
   }
+
+  # set URLs to non-existent URLs to disable icons
+  post_icons_url = {
+    error_url   = "https://doesn-t-exist-domain/attention.png"
+    warning_url = "https://doesn-t-exist-domain/warning.png"
+  }
 }

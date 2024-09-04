@@ -304,3 +304,15 @@ variable "accounts_id_to_name" {
   type        = map(string)
   default     = {}
 }
+
+variable "post_icons_url" {
+  description = "URLs (not base64 encoded!) to publically available icons for highlighting posts of error and/or warning status. Ideally 50px square."
+  type = object({
+    error_url   = string
+    warning_url = string
+  })
+  default = {
+    error_url   = "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/attention-50px.png"
+    warning_url = "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/warning-50px.png"
+  }
+}

@@ -26,4 +26,9 @@ module "notifications" {
     "12345678" = "mgmt",
     "123456789" = "audit"
   }
+
+  post_icons_url = {
+    error_url   = "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/attention-50px.png"
+    warning_url = "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/warning-50px.png"
+  }
 }

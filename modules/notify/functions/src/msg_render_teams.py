@@ -612,7 +612,7 @@ class TeamsRender(Render):
                 "items": [
                   {
                     "type": "Image",
-                    "url": __ATTENTION_URL__,
+                    "url": __WARNING_URL__,
                     "width": "50px",
                     "height": "50px"
                   },
@@ -663,7 +663,7 @@ class TeamsRender(Render):
                 "items": [
                   {
                     "type": "Image",
-                    "url": __ATTENTION_URL__,
+                    "url": __WARNING_URL__,
                     "width": "50px",
                     "height": "50px"
                   },

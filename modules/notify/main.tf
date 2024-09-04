@@ -54,6 +54,13 @@ locals {
       accounts_id_to_name = var.accounts_id_to_name
     }
   )
+  notification_emblems_python = templatefile(
+    "${path.module}/notification-emblems-python.tftpl",
+    {
+      error-icon-url   = var.post_icons_url.error_url
+      warning-icon-url = var.post_icons_url.warning_url
+    }
+  )
 }
 
 data "aws_iam_policy_document" "lambda" {
@@ -116,8 +123,13 @@ resource "aws_sns_topic_subscription" "sns_notify_teams" {
 }
 
 resource "local_file" "notify_account_names_dict_python" {
-  content = local.accounts_id_to_name_python_dictonary
+  content  = local.accounts_id_to_name_python_dictonary
   filename = "${path.module}/functions/src/account_id_name_mappings.py"
+}
+
+resource "local_file" "notification_emblems_python" {
+  content  = local.notification_emblems_python
+  filename = "${path.module}/functions/src/notification_emblems.py"
 }
 
 module "lambda" {
@@ -218,6 +230,7 @@ module "lambda" {
 
   depends_on = [
     aws_cloudwatch_log_group.lambda,
-    local_file.notify_account_names_dict_python
+    local_file.notify_account_names_dict_python,
+    local_file.notification_emblems_python
   ]
 }
