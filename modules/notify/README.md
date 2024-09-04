@@ -9,6 +9,7 @@ The terraform-aws-notify-slack provided a great initial implementation, however,
 * better handling of region - does not assume the region of the SNS topic (may not necessarily be the same as that of the original event)
 * for CloudWatch - better handing of the account id - terraform-aws-notify-slack assumed the SNS topic account - which is not true within appvia's LZA
 * re-worked all the tests - by using a single input source being any array of records for all test cases
+* introduced AWS Powertools for lambda layer - with logging and metrics
 
 Note - rather than allowing for customised posts; this module prefers opinated posts given the variety of different events supported as per appvia's Landing Zone Architcture (LZA).
 
