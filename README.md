@@ -25,6 +25,30 @@ module "notifications" {
       raw_message_delivery   = true
     }
   }
+
+  email = {
+    addresses = var.email_addresses
+  }
+
+  teams = {
+    webhook_url = var.teams_webhook
+  }
+  slack = {
+    webhook_url = var.slack_webhook
+  }
+
+  send_to_slack = true
+  send_to_teams = true
+
+  accounts_id_to_name = {
+    "12345678"  = "mgmt",
+    "123456789" = "audit"
+  }
+
+  post_icons_url = {
+    error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png"
+    warning_url = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"
+  }
 }
 ```
 
@@ -38,12 +62,10 @@ The `terraform-docs` utility is used to generate this README. Follow the below s
 
 ## Using Secrets Manager
 
-The `slack` configuration can be sourced from AWS Secrets Manager, using the `var.slack.secret_name`. The secret should be a JSON object reassembling the `slack` configuration.
+The `slack` and/or `teams` configuration can be sourced from AWS Secrets Manager, using the `var.slack.secret_name` and/or ``var.teams.secret_name`. The secret should be a JSON object.
 
 ```json
 {
-  "channel": "#channel",
-  "username": "username",
   "webhook_url": "https://hooks.slack.com/services/..."
 }
 ```
