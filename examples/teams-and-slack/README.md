@@ -40,12 +40,10 @@ No resources.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_teams_channel"></a> [teams\_channel](#input\_teams\_channel) | The name of the channel in teams associated with the webhook | `string` | `null` | no |
-| <a name="input_teams_webhook"></a> [teams\_webhook](#input\_teams\_webhook) | The URL of the teams webhook | `string` | `null` | no |
-| <a name="input_slack_channel"></a> [slack\_channel](#input\_slack\_channel) | The name of the channel in slack associated with the webhook | `string` | `null` | no |
 | <a name="input_slack_webhook"></a> [slack\_webhook](#input\_slack\_webhook) | The URL of the slack webhook | `string` | `null` | no |
 | <a name="input_sns_topic_name"></a> [sns\_topic\_name](#input\_sns\_topic\_name) | The name of the SNS topic to create | `string` | `"my-topic"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | <pre>{<br>  "Environment": "dev"<br>}</pre> | no |
+| <a name="input_teams_webhook"></a> [teams\_webhook](#input\_teams\_webhook) | The URL of the teams webhook | `string` | `null` | no |
 
 ## Outputs
 
