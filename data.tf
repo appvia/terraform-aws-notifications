@@ -4,7 +4,7 @@ data "aws_caller_identity" "current" {}
 ## Find the current AWS region
 data "aws_region" "current" {}
 
-## Provision an SQS IAM policy allowing the account root 
+## Provision an SNS IAM policy allowing the account root 
 data "aws_iam_policy_document" "current" {
   statement {
     sid    = "AllowAccountRoot"
