@@ -9,12 +9,12 @@ sns_topic_name  = "your new sns topic name!"
 Then:
 ```
 terraform init
-AWS_PROFILE=<profile name> terraform apply --var-file=./<your vars>>.tfvars
+AWS_PROFILE=<profile name> terraform apply --var-file=./<your vars>.tfvars
 ```
 
 And to delete:
 ```
-AWS_PROFILE=<profile name> terraform destroy --var-file=./<your vars>>.tfvars
+AWS_PROFILE=<profile name> terraform destroy --var-file=./<your vars>.tfvars
 ```
 
 <!-- BEGIN_TF_DOCS -->

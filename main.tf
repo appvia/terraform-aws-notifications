@@ -26,11 +26,12 @@ resource "aws_sns_topic_subscription" "email" {
 resource "aws_sns_topic_subscription" "subscribers" {
   for_each = var.subscribers
 
-  endpoint               = each.value.endpoint
-  endpoint_auto_confirms = each.value.endpoint_auto_confirms
-  protocol               = each.value.protocol
-  raw_message_delivery   = each.value.raw_message_delivery
-  topic_arn              = local.sns_topic_arn
+  confirmation_timeout_in_minutes = 1
+  endpoint                        = each.value.endpoint
+  endpoint_auto_confirms          = each.value.endpoint_auto_confirms
+  protocol                        = each.value.protocol
+  raw_message_delivery            = each.value.raw_message_delivery
+  topic_arn                       = local.sns_topic_arn
 
   depends_on = [module.sns]
 }

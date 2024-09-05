@@ -10,7 +10,7 @@ The purpose of this module is to provide a building block for processing and del
 
 ```hcl
 module "notifications" {
-  source = "../.."
+  source = "github.com/appvia/terraform-aws-notifications?ref=main"
 
   allowed_aws_services = ["cloudwatch.amazonaws.com"]
   create_sns_topic     = true
