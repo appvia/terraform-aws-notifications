@@ -115,13 +115,13 @@ class TeamsRender(Render):
                         "value": f"`{alarm['region']}`"
                       },
                       {
+                        "title": "New State",
+                        "value": f"`{alarm['state']}`"
+                      },
+                      {
                         "title": "Old State",
                         "value": f"`{alarm['old_state']}`"
                       },
-                      {
-                        "title": "New State",
-                        "value": f"`{alarm['state']}`"
-                      }
                     ]
                   },
                   {

@@ -102,15 +102,15 @@ class SlackRender(Render):
             "short": False,
           },
           {
+            "title": "Current State",
+            "value": f"`{alarm['state']}`",
+            "short": True,
+          },
+          {
             "title": "Old State",
             "value": f"`{alarm['old_state']}`",
             "short": True,
           },
-          {
-            "title": "Current State",
-            "value": f"`{alarm['state']}`",
-            "short": True,
-          }
         ],
       }
     ]
