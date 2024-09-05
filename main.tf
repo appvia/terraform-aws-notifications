@@ -36,11 +36,12 @@ resource "aws_sns_topic_subscription" "subscribers" {
 }
 
 #
-## Provision the slack notification if enabled
+## Provision the slack/teams notification if enabled
 #
 # tfsec:ignore:aws-lambda-enable-tracing
 # tfsec:ignore:aws-lambda-restrict-source-arn
 module "notify" {
+  count                                  = var.send_to_slack || var.send_to_teams ? 1 : 0
   source = "./modules/notify"
 
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id

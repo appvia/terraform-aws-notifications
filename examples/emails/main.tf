@@ -7,15 +7,20 @@
 module "notifications" {
   source = "../.."
 
+  # creates the SNS topic of the given name, and allows CloudWatch service to post to topic
   allowed_aws_services = ["cloudwatch.amazonaws.com"]
   create_sns_topic     = true
   sns_topic_name       = var.sns_topic_name
-  tags                 = var.tags
 
+
+  # consistent tags applied across all resources
+  tags = {
+    Environment = "email-dev"
+    Mode        = "email subscription"
+  }
+
+  # list of email address that will be subscribed
   email = {
     addresses = var.email_addresses
   }
-
-  send_to_slack = false
-  send_to_teams = false
 }
