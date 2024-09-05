@@ -53,7 +53,7 @@ def send_teams_notification(payload: Dict[str, Any]) -> str:
     logger.debug("Successfully posted to slack with response", code=response.getcode())
     return json.dumps({"code": response.getcode(), "info": response.info().as_string()})
   except HTTPError as e:
-    logger.error("Failed to post to teams", code=e.code, reason=e.reason, response=response)
+    logger.error("Failed to post to teams", code=e.code, reason=e.reason, endpoint_url=teams_url, payload=payload)
     return json.dumps({"code": e.getcode(), "info": e.info().as_string()})
 
 # note - this lambda is invoked as event from SNS - no sensible correlation id to assume

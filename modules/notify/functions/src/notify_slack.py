@@ -53,7 +53,7 @@ def send_slack_notification(payload: Dict[str, Any]) -> str:
     return json.dumps({"code": result.getcode(), "info": result.info().as_string()})
 
   except HTTPError as e:
-    logger.error("Failed to post to slack", code=e.code, reason=e.reason, response=result)
+    logger.error("Failed to post to slack", code=e.code, reason=e.reason, endpoint_url=slack_url, payload=payload)
     return json.dumps({"code": e.getcode(), "info": e.info().as_string()})
 
 # note - this lambda is invoked as event from SNS - no sensible correlation id to assume
