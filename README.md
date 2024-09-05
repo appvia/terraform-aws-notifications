@@ -67,7 +67,7 @@ The `slack` configuration can be sourced from AWS Secrets Manager, using the `va
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_slack"></a> [slack](#module\_slack) | terraform-aws-modules/notify-slack/aws | 6.4.0 |
-| <a name="module_sns"></a> [sns](#module\_sns) | terraform-aws-modules/sns/aws | v6.0.1 |
+| <a name="module_sns"></a> [sns](#module\_sns) | terraform-aws-modules/sns/aws | 6.1.0 |
 
 ## Resources
 
