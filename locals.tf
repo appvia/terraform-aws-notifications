@@ -20,18 +20,14 @@ locals {
   enable_slack_secret = local.enable_slack_config && try(var.slack.secret_name, null) != null ? true : false
   ## The webhook url for slack 
   slack_webhook_url = local.enable_slack_secret ? try(jsondecode(data.aws_secretsmanager_secret_version.slack[0].secret_string)["webhook_url"], var.slack.webhook_url) : try(var.slack.webhook_url, null)
-  ## Indicates slack has all the configuration needed 
-  enable_slack = local.enable_slack_config && local.slack_webhook_url != null
-
+  
   ## Indicates if we are enabling teams notifications 
   enable_teams_config = var.teams != null ? true : false
   ## Indicates if we are looking up the teams secret 
   enable_teams_secret = local.enable_teams_config && try(var.teams.secret_name, null) != null ? true : false
   ## The webhook url for teams 
   teams_webhook_url = local.enable_teams_secret ? try(jsondecode(data.aws_secretsmanager_secret_version.teams[0].secret_string)["webhook_url"], var.teams.webhook_url) : try(var.teams.webhook_url, null)
-  ## Indicates teams has all the configuration needed 
-  enable_teams = local.enable_teams_config && local.teams_webhook_url != null
-
+  
 
   channels_config = {
     "slack" = {
