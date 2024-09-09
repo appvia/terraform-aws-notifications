@@ -4,8 +4,8 @@ This example assumes creating the SNS topic; _refer to [opsgenie example](../ops
 To run:
 ```
 terraform init
-TF_VAR_sns_topic_name="<your SNS topic name>" TF_VAR_slack_webhook="<your url>" terraform plan
-TF_VAR_sns_topic_name="<your SNS topic name>" TF_VAR_slack_webhook="<your url>" terraform apply
+TF_VAR_sns_topic_name="<your SNS topic name>" TF_VAR_slack_webhook="<your url>" TF_VAR_tags='{"your tag"="your tag value"}' terraform plan
+TF_VAR_sns_topic_name="<your SNS topic name>" TF_VAR_slack_webhook="<your url>" TF_VAR_tags='{"your tag"="your tag value"}' terraform apply
 ```
 
 Or create a `local.tfvars` with:

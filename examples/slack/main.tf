@@ -1,7 +1,8 @@
 #####################################################################################
 # Terraform module examples are meant to show an _example_ on how to use a module
 # per use-case. The code below should not be copied directly but referenced in order
-# to build your own root module that invokes this module
+# to build your own root module that invokes this module, where
+#    source = "github.com/appvia/terraform-aws-notifications?ref=main"
 #####################################################################################
 
 module "notifications" {
@@ -53,4 +54,6 @@ module "notifications" {
   # Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653, and 0 (never expire).
   # See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group.
   cloudwatch_log_group_retention = 1
+
+  # other overrides, see "Customisations/Overrides" in README.md
 }

@@ -70,6 +70,11 @@ The `slack` and/or `teams` configuration can be sourced from AWS Secrets Manager
 }
 ```
 
+## Maintenance
+Frequently (quartley at least) check and upgrade:
+1. Python runtime - [python_runtime](./modules/notify/variables.tf)
+2. AWS PowerTools Lambda Layer for python ARN: [powertools_layer_arn_suffix](./modules/notify/variables.tf)
+
 ## Acknowledgements
 - [notify-teams](https://github.com/teamclairvoyant/terraform-aws-notify-teams/releases/tag/v4.12.0.6) - distributed under Apache 2.0 license; obligations met under this GNU V3 license
 - [terraform-aws-notify-slack](https://github.com/terraform-aws-modules/terraform-aws-notify-slack/releases/tag/v6.4.0) - distributed under Apache 2.0 license; obligations met under this GNU V3 license
@@ -113,8 +118,6 @@ The `slack` and/or `teams` configuration can be sourced from AWS Secrets Manager
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_send_to_slack"></a> [send\_to\_slack](#input\_send\_to\_slack) | To send to slack, set to true | `bool` | n/a | yes |
-| <a name="input_send_to_teams"></a> [send\_to\_teams](#input\_send\_to\_teams) | To send to teams, set to true | `bool` | n/a | yes |
 | <a name="input_sns_topic_name"></a> [sns\_topic\_name](#input\_sns\_topic\_name) | The name of the source sns topic where events are published | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | n/a | yes |
 | <a name="input_accounts_id_to_name"></a> [accounts\_id\_to\_name](#input\_accounts\_id\_to\_name) | A mapping of account id and account name - used by notification lamdba to map an account ID to a human readable name | `map(string)` | `{}` | no |
@@ -125,6 +128,8 @@ The `slack` and/or `teams` configuration can be sourced from AWS Secrets Manager
 | <a name="input_create_sns_topic"></a> [create\_sns\_topic](#input\_create\_sns\_topic) | Whether to create an SNS topic for notifications | `bool` | `false` | no |
 | <a name="input_email"></a> [email](#input\_email) | The configuration for Email notifications | <pre>object({<br>    addresses = optional(list(string))<br>    # The email addresses to send notifications to<br>  })</pre> | `null` | no |
 | <a name="input_post_icons_url"></a> [post\_icons\_url](#input\_post\_icons\_url) | URLs (not base64 encoded!) to publically available icons for highlighting posts of error and/or warning status. Ideally 50px square. Set to non-existent URLs to disable icons | <pre>object({<br>    error_url   = string<br>    warning_url = string<br>  })</pre> | <pre>{<br>  "error_url": "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/attention-50px.png",<br>  "warning_url": "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/warning-50px.png"<br>}</pre> | no |
+| <a name="input_send_to_slack"></a> [send\_to\_slack](#input\_send\_to\_slack) | To send to slack, set to true | `bool` | `false` | no |
+| <a name="input_send_to_teams"></a> [send\_to\_teams](#input\_send\_to\_teams) | To send to teams, set to true | `bool` | `false` | no |
 | <a name="input_slack"></a> [slack](#input\_slack) | The configuration for Slack notifications | <pre>object({<br>    lambda_name = optional(string, "slack-notify")<br>    # The name of the lambda function to create <br>    lambda_description = optional(string, "Lambda function to send slack notifications")<br>    # The description for the slack lambda<br>    secret_name = optional(string)<br>    # An optional secret name in secrets manager to use for the slack configuration <br>    webhook_url = optional(string)<br>    # The webhook url to post to<br>  })</pre> | `null` | no |
 | <a name="input_sns_topic_policy"></a> [sns\_topic\_policy](#input\_sns\_topic\_policy) | The policy to attach to the sns topic, else we default to account root | `string` | `null` | no |
 | <a name="input_subscribers"></a> [subscribers](#input\_subscribers) | Optional list of custom subscribers to the SNS topic | <pre>map(object({<br>    protocol = string<br>    # The protocol to use. The possible values for this are: sqs, sms, lambda, application. (http or https are partially supported, see below).<br>    endpoint = string<br>    # The endpoint to send data to, the contents will vary with the protocol. (see below for more information)<br>    endpoint_auto_confirms = bool<br>    # Boolean indicating whether the end point is capable of auto confirming subscription e.g., PagerDuty (default is false)<br>    raw_message_delivery = bool<br>    # Boolean indicating whether or not to enable raw message delivery (the original message is directly passed, not wrapped in JSON with the original message in the message property) (default is false)<br>  }))</pre> | `{}` | no |
