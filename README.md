@@ -98,7 +98,7 @@ Frequently (quartley at least) check and upgrade:
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_notify"></a> [notify](#module\_notify) | ./modules/notify | n/a |
-| <a name="module_sns"></a> [sns](#module\_sns) | terraform-aws-modules/sns/aws | 6.1.0 |
+| <a name="module_sns"></a> [sns](#module\_sns) | terraform-aws-modules/sns/aws | v6.1.0 |
 
 ## Resources
 
