@@ -132,6 +132,41 @@ resource "local_file" "notification_emblems_python" {
   filename = "${path.module}/functions/src/notification_emblems.py"
 }
 
+# a bug in "terraform-aws-modules/lambda/aws::source_path" when
+#  running with for_each, even with the "hash_extra" creates a ZIP
+#  build with a timestamp of "0" epoch timestamp, and causes a race-condition
+#  whereby the hash of the new bundle fails as it is compared with the old bundle hash
+#  making the build fail.
+# Thus having to build separate bundles here.
+data "archive_file" "slack_lambda_archive" {
+  type        = "zip"
+  output_path = "${path.root}/builds/slack_lambda_src.zip"
+  source_dir  = "${path.module}/functions/src"
+  excludes    = [
+    "*_teams.py",
+    ".gitignore"
+  ]
+
+  depends_on = [
+    local_file.notify_account_names_dict_python,
+    local_file.notification_emblems_python
+  ]
+}
+data "archive_file" "teams_lambda_archive" {
+  type        = "zip"
+  output_path = "${path.root}/builds/teams_lambda_src.zip"
+  source_dir  = "${path.module}/functions/src"
+  excludes    = [
+    "*_slack.py",
+    ".gitignore"
+  ]
+
+  depends_on = [
+    local_file.notify_account_names_dict_python,
+    local_file.notification_emblems_python
+  ]
+}
+
 module "lambda" {
   for_each = toset(["slack", "teams"])
 
@@ -148,6 +183,14 @@ module "lambda" {
 
   # source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/src/notify_${each.value}.py"
   # source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/src"
+  
+  
+  # Bug in this module when creating source bundles on updated code change:
+  # `Error: Provider produced inconsistent final plan`
+  # tried creating separate bundles; but still the error occurs
+  # create_package                 = false
+  # local_existing_package         = "${path.root}/builds/${each.value}_lambda_src.zip"
+
   # very bizarre behaviour on patterns filter - to only include the slack/teams specific code
   #  first have to exclude all variations on implementation and then include on the specific vendor implementations
   source_path = [

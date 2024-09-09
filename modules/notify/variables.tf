@@ -10,6 +10,12 @@ variable "architecture" {
   default     = "arm64"
 }
 
+variable "python_runtime" {
+  description = "The lambda python runtime"
+  type        = string
+  default     = "python3.12"
+}
+
 variable "powertools_layer_arn_suffix" {
   description = "The suffix of the ARN to use for AWS Powertools lambda layer (must match the architecture:https://docs.powertools.aws.dev/lambda/python/latest/."
   type        = string
