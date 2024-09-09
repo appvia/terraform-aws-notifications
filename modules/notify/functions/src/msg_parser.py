@@ -525,6 +525,10 @@ def get_message_payload(
             
     message = cast(Dict[str, Any], message)
 
+    # to handle manual posting of messages via SNS, handle the case where subject is not defined
+    if subject == None:
+        subject = ''
+
     if "AlarmName" in message:
         parsedMsg = parse_cloudwatch_alarm(message, snsRegion=region)
 

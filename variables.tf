@@ -86,6 +86,10 @@ variable "slack" {
     # An optional secret name in secrets manager to use for the slack configuration 
     webhook_url = optional(string)
     # The webhook url to post to
+    filter_policy = optional(string)
+    # An optional SNS subscription filter policy to apply
+    filter_policy_scope = optional(string)
+    # If filter policy provided this is the scope of that policy; either "MessageAttributes" (default) or "MessageBody"
   })
   default = null
 }
@@ -101,6 +105,10 @@ variable "teams" {
     # An optional secret name in secrets manager to use for the slack configuration 
     webhook_url = optional(string)
     # The webhook url to post to
+    filter_policy = optional(string)
+    # An optional SNS subscription filter policy to apply
+    filter_policy_scope = optional(string)
+    # If filter policy provided this is the scope of that policy; either "MessageAttributes" (default) or "MessageBody"
   })
   default = null
 }

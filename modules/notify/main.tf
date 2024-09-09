@@ -48,6 +48,17 @@ locals {
     }
   }
 
+  subscription_policies = {
+    "slack" = {
+      filter = try(var.delivery_channels["slack"].filter_policy, null)
+      scope  = try(var.delivery_channels["slack"].filter_policy_scope, null)
+    },
+    "teams" = {
+      filter = try(var.delivery_channels["teams"].filter_policy, null)
+      scope  = try(var.delivery_channels["teams"].filter_policy_scope, null)
+    }
+  }
+
   accounts_id_to_name_python_dictonary = templatefile(
     "${path.module}/mapAccountIdToName-python-dict.tftpl",
     {
@@ -108,8 +119,8 @@ resource "aws_sns_topic_subscription" "sns_notify_slack" {
   topic_arn           = local.sns_topic_arn
   protocol            = "lambda"
   endpoint            = module.lambda["slack"].lambda_function_arn
-  filter_policy       = var.subscription_filter_policy
-  filter_policy_scope = var.subscription_filter_policy_scope
+  filter_policy       = local.subscription_policies["slack"].filter
+  filter_policy_scope = local.subscription_policies["slack"].scope
 }
 
 resource "aws_sns_topic_subscription" "sns_notify_teams" {
@@ -118,8 +129,8 @@ resource "aws_sns_topic_subscription" "sns_notify_teams" {
   topic_arn           = local.sns_topic_arn
   protocol            = "lambda"
   endpoint            = module.lambda["teams"].lambda_function_arn
-  filter_policy       = var.subscription_filter_policy
-  filter_policy_scope = var.subscription_filter_policy_scope
+  filter_policy       = local.subscription_policies["teams"].filter
+  filter_policy_scope = local.subscription_policies["teams"].scope
 }
 
 resource "local_file" "notify_account_names_dict_python" {
@@ -138,34 +149,34 @@ resource "local_file" "notification_emblems_python" {
 #  whereby the hash of the new bundle fails as it is compared with the old bundle hash
 #  making the build fail.
 # Thus having to build separate bundles here.
-data "archive_file" "slack_lambda_archive" {
-  type        = "zip"
-  output_path = "${path.root}/builds/slack_lambda_src.zip"
-  source_dir  = "${path.module}/functions/src"
-  excludes    = [
-    "*_teams.py",
-    ".gitignore"
-  ]
+# data "archive_file" "slack_lambda_archive" {
+#   type        = "zip"
+#   output_path = "${path.root}/builds/slack_lambda_src.zip"
+#   source_dir  = "${path.module}/functions/src"
+#   excludes    = [
+#     "*_teams.py",
+#     ".gitignore"
+#   ]
 
-  depends_on = [
-    local_file.notify_account_names_dict_python,
-    local_file.notification_emblems_python
-  ]
-}
-data "archive_file" "teams_lambda_archive" {
-  type        = "zip"
-  output_path = "${path.root}/builds/teams_lambda_src.zip"
-  source_dir  = "${path.module}/functions/src"
-  excludes    = [
-    "*_slack.py",
-    ".gitignore"
-  ]
+#   depends_on = [
+#     local_file.notify_account_names_dict_python,
+#     local_file.notification_emblems_python
+#   ]
+# }
+# data "archive_file" "teams_lambda_archive" {
+#   type        = "zip"
+#   output_path = "${path.root}/builds/teams_lambda_src.zip"
+#   source_dir  = "${path.module}/functions/src"
+#   excludes    = [
+#     "*_slack.py",
+#     ".gitignore"
+#   ]
 
-  depends_on = [
-    local_file.notify_account_names_dict_python,
-    local_file.notification_emblems_python
-  ]
-}
+#   depends_on = [
+#     local_file.notify_account_names_dict_python,
+#     local_file.notification_emblems_python
+#   ]
+# }
 
 module "lambda" {
   for_each = toset(["slack", "teams"])
@@ -183,8 +194,8 @@ module "lambda" {
 
   # source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/src/notify_${each.value}.py"
   # source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/src"
-  
-  
+
+
   # Bug in this module when creating source bundles on updated code change:
   # `Error: Provider produced inconsistent final plan`
   # tried creating separate bundles; but still the error occurs

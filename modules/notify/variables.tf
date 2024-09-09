@@ -249,18 +249,6 @@ variable "cloudwatch_log_group_tags" {
   default     = {}
 }
 
-variable "subscription_filter_policy" {
-  description = "(Optional) A valid filter policy that will be used in the subscription to filter messages seen by the target resource."
-  type        = string
-  default     = null
-}
-
-variable "subscription_filter_policy_scope" {
-  description = "(Optional) A valid filter policy scope MessageAttributes|MessageBody"
-  type        = string
-  default     = null
-}
-
 variable "send_to_slack" {
   description = "To send to slack, set to true"
   type        = bool
@@ -284,6 +272,10 @@ variable "delivery_channels" {
     # An optional secret name in secrets manager to use for the slack configuration 
     webhook_url = optional(string)
     # The webhook url to post to
+    filter_policy = optional(string)
+    # An optional SNS subscription filter policy to apply
+    filter_policy_scope = optional(string)
+    # If filter policy provided this is the scope of that policy; either "MessageAttributes" (default) or "MessageBody"
   }))
   default = null
 }
