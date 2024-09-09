@@ -167,7 +167,7 @@ module "lambda" {
   ]
 
   recreate_missing_package       = var.recreate_missing_package
-  runtime                        = "python3.11"
+  runtime                        = var.python_runtime
   architectures                  = [var.architecture]
   timeout                        = 10
   kms_key_arn                    = var.kms_key_arn
