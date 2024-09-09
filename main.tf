@@ -43,7 +43,7 @@ resource "aws_sns_topic_subscription" "subscribers" {
 module "slack" {
   count   = local.enable_slack ? 1 : 0
   source  = "terraform-aws-modules/notify-slack/aws"
-  version = "6.4.0"
+  version = "6.5.0"
 
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention
