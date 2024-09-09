@@ -38,15 +38,15 @@ locals {
       webhook_url         = local.slack_webhook_url
       lambda_name         = try(var.slack.lambda_name, "slack-notify")
       lambda_description  = try(var.slack.lambda_description, "Sends posts to slack")
-      filter_policy       = try(var.slack.filter_policy)
-      filter_policy_scope = try(var.slack.filter_policy_scope)
+      filter_policy       = try(var.slack.filter_policy, null)
+      filter_policy_scope = try(var.slack.filter_policy_scope, null)
     },
     "teams" = {
       webhook_url         = local.teams_webhook_url
       lambda_name         = try(var.teams.lambda_name, "teams-notify")
       lambda_description  = try(var.teams.lambda_description, "Sends posts to teams")
-      filter_policy       = try(var.teams.filter_policy)
-      filter_policy_scope = try(var.teams.filter_policy_scope)
+      filter_policy       = try(var.teams.filter_policy, null)
+      filter_policy_scope = try(var.teams.filter_policy_scope, null)
     }
   }
 }
