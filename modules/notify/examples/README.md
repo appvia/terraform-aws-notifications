@@ -1,1 +1,1 @@
-The original "terraform-aws-modules" examples are no longer relevant.
+The original "terraform-aws-modules/terraform-aws-notify-slack" examples are no longer relevant.
