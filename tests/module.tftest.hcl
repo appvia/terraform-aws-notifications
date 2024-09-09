@@ -5,8 +5,8 @@ run "input_validation_fail" {
 
   variables {
     sns_topic_name = "BAD topic_name"
-    tags = {}
-    email                = {
+    tags           = {}
+    email = {
       addresses = [
         "email1@mail.com",
         "email11",
@@ -41,7 +41,7 @@ run "unit_test_create_sns_topic" {
     tags = {
       UT_tag_1 = "ut-tag-1"
     }
-    sns_topic_name = "unit-test-topic"
+    sns_topic_name       = "unit-test-topic"
     allowed_aws_services = ["cloudwatch.amazonaws.com", "cloudtrail.amazonaws.com"]
     create_sns_topic     = true
     slack = {
@@ -50,12 +50,12 @@ run "unit_test_create_sns_topic" {
   }
 
   assert {
-    condition = aws_sns_topic_subscription.subscribers == {}
+    condition     = aws_sns_topic_subscription.subscribers == {}
     error_message = "Expected an empty set of general subscribers"
   }
 
   assert {
-    condition  = aws_sns_topic_subscription.email == {}
+    condition     = aws_sns_topic_subscription.email == {}
     error_message = "Expected an empty set of email subscribers"
   }
 }
@@ -65,16 +65,16 @@ run "unit_test_sns_email_subscriptions" {
 
   # note to self - merge global tags with unit test tags
   variables {
-    tags                = {
-                            UT_tag_1 = "ut-tag-1"
-                          }
+    tags = {
+      UT_tag_1 = "ut-tag-1"
+    }
     sns_topic_name       = "unit-test-topic"
     allowed_aws_services = ["cloudwatch.amazonaws.com", "cloudtrail.amazonaws.com"]
     create_sns_topic     = true
 
     # duplicate email addresses here is intentional test - to assert set dedup
-    email                = {
-      addresses      = [
+    email = {
+      addresses = [
         "email1@_example.com",
         "email1111@_example.com",
         "email1@_example.com",
@@ -83,29 +83,29 @@ run "unit_test_sns_email_subscriptions" {
   }
 
   assert {
-    condition = aws_sns_topic_subscription.subscribers == {}
+    condition     = aws_sns_topic_subscription.subscribers == {}
     error_message = "Expected an empty set of general subscribers"
   }
 
   assert {
-    condition  = length(aws_sns_topic_subscription.email) == 2
+    condition     = length(aws_sns_topic_subscription.email) == 2
     error_message = "Expected an empty set of email subscribers"
   }
 
   assert {
-    condition  = aws_sns_topic_subscription.email["email1111@_example.com"].endpoint == "email1111@_example.com"
+    condition     = aws_sns_topic_subscription.email["email1111@_example.com"].endpoint == "email1111@_example.com"
     error_message = "Expected an empty set of email subscribers"
   }
   assert {
-    condition  = aws_sns_topic_subscription.email["email1111@_example.com"].protocol == "email"
+    condition     = aws_sns_topic_subscription.email["email1111@_example.com"].protocol == "email"
     error_message = "Expected an empty set of email subscribers"
   }
   assert {
-    condition  = aws_sns_topic_subscription.email["email1@_example.com"].endpoint == "email1@_example.com"
+    condition     = aws_sns_topic_subscription.email["email1@_example.com"].endpoint == "email1@_example.com"
     error_message = "Expected an empty set of email subscribers"
   }
   assert {
-    condition  = aws_sns_topic_subscription.email["email1@_example.com"].protocol == "email"
+    condition     = aws_sns_topic_subscription.email["email1@_example.com"].protocol == "email"
     error_message = "Expected an empty set of email subscribers"
   }
 }
@@ -115,13 +115,13 @@ run "unit_test_sns_general_subscriptions" {
 
   # note to self - merge global tags with unit test tags
   variables {
-    tags                = {
-                            UT_tag_1 = "ut-tag-1"
-                          }
+    tags = {
+      UT_tag_1 = "ut-tag-1"
+    }
     sns_topic_name       = "unit-test-topic"
     allowed_aws_services = ["cloudwatch.amazonaws.com", "cloudtrail.amazonaws.com"]
     create_sns_topic     = true
-    subscribers          = {
+    subscribers = {
       "sub1" = {
         protocol               = "http"
         endpoint               = "http://url1.com/endpoint111"
@@ -138,27 +138,27 @@ run "unit_test_sns_general_subscriptions" {
   }
 
   assert {
-    condition = aws_sns_topic_subscription.email == {}
+    condition     = aws_sns_topic_subscription.email == {}
     error_message = "Expected an empty set of general subscribers"
   }
   assert {
-    condition  = length(aws_sns_topic_subscription.subscribers) == 2
+    condition     = length(aws_sns_topic_subscription.subscribers) == 2
     error_message = "Expected an empty set of email subscribers"
   }
   assert {
-    condition  = aws_sns_topic_subscription.subscribers["sub1"].endpoint == "http://url1.com/endpoint111"
+    condition     = aws_sns_topic_subscription.subscribers["sub1"].endpoint == "http://url1.com/endpoint111"
     error_message = "Expected an empty set of email subscribers"
   }
   assert {
-    condition  = aws_sns_topic_subscription.subscribers["sub1"].protocol == "http"
+    condition     = aws_sns_topic_subscription.subscribers["sub1"].protocol == "http"
     error_message = "Expected an empty set of email subscribers"
   }
   assert {
-    condition  = aws_sns_topic_subscription.subscribers["sub2"].endpoint == "arn:aws:sqs:eu-west-1:111122111:function:my-lamba-func"
+    condition     = aws_sns_topic_subscription.subscribers["sub2"].endpoint == "arn:aws:sqs:eu-west-1:111122111:function:my-lamba-func"
     error_message = "Expected an empty set of email subscribers"
   }
   assert {
-    condition  = aws_sns_topic_subscription.subscribers["sub2"].protocol == "lambda"
+    condition     = aws_sns_topic_subscription.subscribers["sub2"].protocol == "lambda"
     error_message = "Expected an empty set of email subscribers"
   }
 }
