@@ -1,0 +1,22 @@
+{
+  "Records": [
+      {
+          "EventSource": "aws:sns",
+          "EventVersion": "1.0",
+          "EventSubscriptionArn": "arn:aws:sns:eu-west-2:123456789:ExampleTopic:31bc39b4-8d76-4063-a5ae-590e971a3517",
+          "Sns": {
+              "Type": "Notification",
+              "MessageId": "a24e1383-3eee-534d-bb0b-4cabecb7b371",
+              "TopicArn": "arn:aws:sns:eu-west-2:123456789:budget-notifications",
+              "Subject": "Savings Plans Coverage Alert: AWS Savings Plan Cov... has dropped below your alert threshold",
+              "Message": "Savings Plans Alerts August 04, 2024\nAWS Account 123456789\n\nDear AWS Customer,\n\nYou requested that we alert you when the monthly Savings Plans Coverage associated with your AWS Savings Plan Coverage Budget budget falls below 100.0%. On August 01, 2024, the monthly coverage associated with your Savings Plans agreements was 0.0%. You can find additional details below and by accessing the budget details of AWS Savings Plan Coverage Budget [1].\n\nBudget Name: AWS Savings Plan Coverage Budget\nBudget Type: Savings Plans Coverage\nBudgeted Amount%: 100.00%\nAlert Threshold%: 100.0%\nActual Coverage%: 0.0%\n\nIdentify potential opportunities for cost savings by accessing AWS Cost Explorer's Savings Plan Purchase Recommendations [2].\n\n[1] https://console.aws.amazon.com/billing/home#/budgets/details?name=AWS Savings Plan Coverage Budget\n[2] https://console.aws.amazon.com/cost-reports/home?region=us-east-1#/savings-plans/recommendations\n",
+              "Timestamp": "2024-08-04T00:49:29.794Z",
+              "SignatureVersion": "1",
+              "Signature": "EXAMPLE",
+              "SigningCertUrl": "EXAMPLE",
+              "UnsubscribeUrl": "EXAMPLE",
+              "MessageAttributes": {}
+          }
+      }
+  ]
+}

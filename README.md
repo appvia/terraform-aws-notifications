@@ -10,7 +10,8 @@ The purpose of this module is to provide a building block for processing and del
 
 ```hcl
 module "notifications" {
-  source = "../.."
+module "notifications" {
+  source = "github.com/appvia/terraform-aws-notifications?ref=main"
 
   allowed_aws_services = ["cloudwatch.amazonaws.com"]
   create_sns_topic     = true
@@ -24,6 +25,29 @@ module "notifications" {
       endpoint_auto_confirms = true
       raw_message_delivery   = true
     }
+  }
+
+  email = {
+    addresses = var.email_addresses
+  }
+
+  send_to_slack = true
+  teams = {
+    webhook_url = var.teams_webhook
+  }
+  send_to_teams = true
+  slack = {
+    webhook_url = var.slack_webhook
+  }
+
+  accounts_id_to_name = {
+    "12345678"  = "mgmt",
+    "123456789" = "audit"
+  }
+
+  post_icons_url = {
+    error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png"
+    warning_url = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"
   }
 }
 ```
@@ -42,11 +66,18 @@ The `slack` configuration can be sourced from AWS Secrets Manager, using the `va
 
 ```json
 {
-  "channel": "#channel",
-  "username": "username",
   "webhook_url": "https://hooks.slack.com/services/..."
 }
 ```
+
+## Maintenance
+Frequently (quartley at least) check and upgrade:
+1. Python runtime - [python_runtime](./modules/notify/variables.tf)
+2. AWS PowerTools Lambda Layer for python ARN: [powertools_layer_arn_suffix](./modules/notify/variables.tf)
+
+## Acknowledgements
+- [notify-teams](https://github.com/teamclairvoyant/terraform-aws-notify-teams/releases/tag/v4.12.0.6) - distributed under Apache 2.0 license; obligations met under this GNU V3 license
+- [terraform-aws-notify-slack](https://github.com/terraform-aws-modules/terraform-aws-notify-slack/releases/tag/v6.4.0) - distributed under Apache 2.0 license; obligations met under this GNU V3 license
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

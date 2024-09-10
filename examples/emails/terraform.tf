@@ -1,15 +1,9 @@
+variable "sns_topic_name" {
+  description = "The name of the SNS topic to create"
+  type        = string
+}
 
-terraform {
-  required_version = ">= 1.0.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 5.0.0"
-    }
-    awscc = {
-      source  = "hashicorp/awscc"
-      version = ">= 0.11.0"
-    }
-  }
+variable "email_addresses" {
+  description = "A list of target email addresses"
+  type        = list(string)
 }

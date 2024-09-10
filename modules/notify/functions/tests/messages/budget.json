@@ -1,0 +1,22 @@
+{
+  "Records": [
+      {
+          "EventSource": "aws:sns",
+          "EventVersion": "1.0",
+          "EventSubscriptionArn": "arn:aws:sns:eu-west-2:123456789:ExampleTopic:31bc39b4-8d76-4063-a5ae-590e971a3517",
+          "Sns": {
+              "Type": "Notification",
+              "MessageId": "399a1dcd-0940-5685-9769-42e8e02f6a64",
+              "TopicArn": "arn:aws:sns:eu-west-2:123456789:budget-notifications",
+              "Subject": "AWS Budgets: AWS Forecasted Cost Budget has exceeded your alert threshold",
+              "Message": "AWS Budget Notification August 01, 2024\nAWS Account 123456789\n\nDear AWS Customer,\n\nYou requested that we alert you when the FORECASTED Cost associated with your AWS Forecasted Cost Budget budget is greater than $1,987.12 for the current month. The FORECASTED Cost associated with this budget is $2,123.98. You can find additional details below and by accessing the AWS Budgets dashboard [1].\n\nBudget Name: AWS Forecasted Cost Budget\nBudget Type: Cost\nBudgeted Amount: $2,000.00\nAlert Type: FORECASTED\nAlert Threshold: > $2,1111.12\nFORECASTED Amount: $3,543.34\n\n[1] https://console.aws.amazon.com/billing/home#/budgets\n",
+              "Timestamp": "2024-08-01T19:51:11.668Z",
+              "SignatureVersion": "1",
+              "Signature": "EXAMPLE",
+              "SigningCertUrl": "EXAMPLE",
+              "UnsubscribeUrl": "EXAMPLE",
+              "MessageAttributes": {}
+          }
+      }
+  ]
+}

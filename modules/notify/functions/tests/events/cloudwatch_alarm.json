@@ -1,0 +1,11 @@
+{
+  "AlarmName": "Example",
+  "AlarmDescription": "Example alarm description.",
+  "AWSAccountId": "735598076380",
+  "NewStateValue": "ALARM",
+  "NewStateReason": "Threshold Crossed",
+  "StateChangeTime": "2017-01-12T16:30:42.236+0000",
+  "Region": "EU - Ireland",
+  "OldStateValue": "OK",
+  "AlarmArn": "arn:aws:cloudwatch:eu-west-1:735598076380:alarm:Example"
+}

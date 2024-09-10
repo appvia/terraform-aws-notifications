@@ -4,7 +4,7 @@ data "aws_caller_identity" "current" {}
 ## Find the current AWS region
 data "aws_region" "current" {}
 
-## Provision an SQS IAM policy allowing the account root 
+## Provision an SNS IAM policy allowing the account root 
 data "aws_iam_policy_document" "current" {
   statement {
     sid    = "AllowAccountRoot"
@@ -66,4 +66,18 @@ data "aws_secretsmanager_secret_version" "slack" {
   count = local.enable_slack_secret ? 1 : 0
 
   secret_id = data.aws_secretsmanager_secret.slack[0].id
+}
+
+## Find the teams secret if required 
+data "aws_secretsmanager_secret" "teams" {
+  count = local.enable_teams_secret ? 1 : 0
+
+  name = var.teams.secret_name
+}
+
+## Find the latest version of the teams secret if required 
+data "aws_secretsmanager_secret_version" "teams" {
+  count = local.enable_teams_secret ? 1 : 0
+
+  secret_id = data.aws_secretsmanager_secret.teams[0].id
 }
