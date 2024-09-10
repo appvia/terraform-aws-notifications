@@ -52,8 +52,8 @@ module "notify" {
   iam_role_tags                          = var.tags
   lambda_function_tags                   = var.tags
   recreate_missing_package               = false
-  enable_slack                          = var.enable_slack
-  enable_teams                          = var.enable_teams
+  enable_slack                           = var.enable_slack
+  enable_teams                           = var.enable_teams
   delivery_channels                      = local.channels_config
   sns_topic_name                         = var.sns_topic_name
   sns_topic_tags                         = var.tags
