@@ -32,8 +32,12 @@ Start by setting up an [incoming webhook integration](https://my.slack.com/servi
 - Map account ids to account names (who can remember account ids?)
 
 ## Limitations
-- Slack posts using legacy format; need to migrate to Block Kit
-- Posts report in a varity of epoch, ISO and user date/times; need to consolidate and use Teams/Slack (Block Kit only) user timezone support
+- Slack posts using legacy format; need to migrate to Block Kit - SA-354
+- Posts report in a varity of epoch, ISO and user date/times; need to consolidate and use Teams/Slack (Block Kit only) user timezone support - SA-353
+
+## TODO
+1. Python tests and update github workflow to run tests - SA-374
+2. terraform tests - SA-375
 
 ## Usage
 ```hcl
