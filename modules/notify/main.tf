@@ -41,10 +41,14 @@ locals {
 
   lambda_env_vars = {
     "slack" = {
-      SLACK_WEBHOOK_URL = try(var.delivery_channels["slack"].webhook_url, "https://null")
+      SLACK_WEBHOOK_URL    = try(var.delivery_channels["slack"].webhook_url, "https://null")
+      IDENTITY_CENTER_URL  = try(var.identity_center_start_url, "")
+      IDENTITY_CENTER_ROLE = try(var.identity_center_role, "")
     },
     "teams" = {
-      TEAMS_WEBHOOK_URL = try(var.delivery_channels["teams"].webhook_url, "https://null")
+      TEAMS_WEBHOOK_URL    = try(var.delivery_channels["teams"].webhook_url, "https://null")
+      IDENTITY_CENTER_URL  = try(var.identity_center_start_url, "")
+      IDENTITY_CENTER_ROLE = try(var.identity_center_role, "")
     }
   }
 

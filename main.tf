@@ -62,5 +62,8 @@ module "notify" {
   accounts_id_to_name = var.accounts_id_to_name
   post_icons_url      = var.post_icons_url
 
+  identity_center_start_url = var.identity_center_start_url
+  identity_center_role      = var.identity_center_role
+
   depends_on = [module.sns]
 }

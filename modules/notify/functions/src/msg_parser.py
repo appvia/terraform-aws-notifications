@@ -24,6 +24,15 @@ from account_id_name_mappings import ACCOUNT_ID_TO_NAME
 # Set default region if not provided
 REGION = os.environ.get("AWS_REGION", "us-east-1")
 
+# Service URLS may, optionally, be redirect through Identity Center
+IDENTITY_CENTER_URL = os.environ.get("IDENTITY_CENTER_URL", "")
+IDENTITY_CENTER_ROLE = os.environ.get("IDENTITY_CENTER_ROLE", "")
+# clean up URL
+if IDENTITY_CENTER_URL.endswith("/"):
+    IDENTITY_CENTER_URL = IDENTITY_CENTER_URL[:-1]
+if IDENTITY_CENTER_URL.endswith("console"):
+    IDENTITY_CENTER_URL = IDENTITY_CENTER_URL[:-8]
+
 # Create client so its cached/frozen between invocations
 KMS_CLIENT = boto3.client("kms", region_name=REGION)
 
@@ -49,19 +58,25 @@ def decrypt_url(encrypted_url: str) -> str:
     except Exception as e:
         raise e
 
-def get_service_url(region: str, service: str) -> str:
+def get_service_url(region: str, service: str, account_id: str) -> str:
     """Get the appropriate service URL for the region
 
     :param region: name of the AWS region
     :param service: name of the AWS service
     :returns: AWS console url formatted for the region and service provided
     """
+
     try:
         service_name = AwsService[service].value
+        service_url = f"{service_name}/home?region={region}"
+
         if region.startswith("us-gov-"):
-            return f"https://console.amazonaws-us-gov.com/{service_name}/home?region={region}"
+            return f"https://console.amazonaws-us-gov.com/{service_url}"
+        elif IDENTITY_CENTER_URL.__len__ and account_id != None:
+            destination_url = f"https://{region}.console.aws.amazon.com/{service_url}"
+            return f"{IDENTITY_CENTER_URL}/#/console?account_id={account_id}&role_name={IDENTITY_CENTER_ROLE}&destination={urllib.parse.quote(destination_url)}"
         else:
-            return f"https://console.aws.amazon.com/{service_name}/home?region={region}"
+            return f"https://console.aws.amazon.com/{service_url}"
 
     except KeyError:
         print(f"Service {service} is currently not supported")
@@ -109,7 +124,7 @@ def parse_cloudwatch_alarm(message: Dict[str, Any], snsRegion: str) -> Dict[str,
     alarm_arn = message["AlarmArn"]
     alarm_arn_region = message["AlarmArn"].split(":")[3]
     
-    cloudwatch_service_url = get_service_url(region=alarm_arn_region, service="cloudwatch")
+    cloudwatch_service_url = get_service_url(region=alarm_arn_region, service="cloudwatch", account_id=account_id)
     cloudwatch_url = f"{cloudwatch_service_url}#alarm:alarmFilter=ANY;name={urllib.parse.quote(name)}"
         
     return {
@@ -152,7 +167,6 @@ def parse_guardduty_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str
     detail = message["detail"]
     service = detail.get("service", {})
     region =  message['region']
-    guardduty_url = get_service_url(region=region, service="guardduty")
     
     severity_score = detail.get("severity")
     if severity_score < 4.0:
@@ -172,6 +186,9 @@ def parse_guardduty_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str
     account_name = ACCOUNT_ID_TO_NAME.get(account_id, '')
     count = service['count']
     guard_duty_id = detail['id']
+
+    guardduty_url = get_service_url(region=region, service="guardduty", account_id=account_id)
+
 
     atDT = datetime.fromisoformat(service["eventLastSeen"])
     atEpoch = atDT.timestamp()
@@ -423,7 +440,7 @@ def parse_security_hub_finding(message: Dict[str, Any], snsRegion: str) -> Dict[
     region = message["FindingId"].split(":")[3]
 
     # not done any real investigztion into the service url yet!!!!!!
-    service_url = get_service_url(region=region, service="securityhub")
+    service_url = get_service_url(region=region, service="securityhub", account_id=account_id)
     url = f"{service_url}#finding:findindFilter=ANY;rule={urllib.parse.quote(rule_id)}"
     
     # light touch parse on each resource

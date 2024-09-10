@@ -162,3 +162,15 @@ variable "post_icons_url" {
     warning_url = "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/warning-50px.png"
   }
 }
+
+variable "identity_center_start_url" {
+  description = "The start URL of your Identity Center instance"
+  type        = string
+  default     = null
+}
+
+variable "identity_center_role" {
+  description = "The name of the role to use when redirecting through Identity Center"
+  type        = string
+  default     = null
+}

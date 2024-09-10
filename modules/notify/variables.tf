@@ -314,3 +314,15 @@ variable "post_icons_url" {
     warning_url = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"
   }
 }
+
+variable "identity_center_start_url" {
+  description = "The start URL of your Identity Center instance"
+  type        = string
+  default     = null
+}
+
+variable "identity_center_role" {
+  description = "The name of the role to use when redirecting through Identity Center"
+  type        = string
+  default     = null
+}
