@@ -10,7 +10,8 @@ The purpose of this module is to provide a building block for processing and del
 
 ```hcl
 module "notifications" {
-  source = "../.."
+module "notifications" {
+  source = "github.com/appvia/terraform-aws-notifications?ref=main"
 
   allowed_aws_services = ["cloudwatch.amazonaws.com"]
   create_sns_topic     = true
@@ -24,6 +25,29 @@ module "notifications" {
       endpoint_auto_confirms = true
       raw_message_delivery   = true
     }
+  }
+
+  email = {
+    addresses = var.email_addresses
+  }
+
+  enable_slack = true
+  teams = {
+    webhook_url = var.teams_webhook
+  }
+  enable_teams = true
+  slack = {
+    webhook_url = var.slack_webhook
+  }
+
+  accounts_id_to_name = {
+    "12345678"  = "mgmt",
+    "123456789" = "audit"
+  }
+
+  post_icons_url = {
+    error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png"
+    warning_url = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"
   }
 }
 ```
@@ -42,11 +66,18 @@ The `slack` configuration can be sourced from AWS Secrets Manager, using the `va
 
 ```json
 {
-  "channel": "#channel",
-  "username": "username",
   "webhook_url": "https://hooks.slack.com/services/..."
 }
 ```
+
+## Maintenance
+Frequently (quartley at least) check and upgrade:
+1. Python runtime - [python_runtime](./modules/notify/variables.tf)
+2. AWS PowerTools Lambda Layer for python ARN: [powertools_layer_arn_suffix](./modules/notify/variables.tf)
+
+## Acknowledgements
+- [notify-teams](https://github.com/teamclairvoyant/terraform-aws-notify-teams/releases/tag/v4.12.0.6) - distributed under Apache 2.0 license; obligations met under this GNU V3 license
+- [terraform-aws-notify-slack](https://github.com/terraform-aws-modules/terraform-aws-notify-slack/releases/tag/v6.4.0) - distributed under Apache 2.0 license; obligations met under this GNU V3 license
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -66,7 +97,7 @@ The `slack` configuration can be sourced from AWS Secrets Manager, using the `va
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_slack"></a> [slack](#module\_slack) | terraform-aws-modules/notify-slack/aws | 6.4.0 |
+| <a name="module_notify"></a> [notify](#module\_notify) | ./modules/notify | n/a |
 | <a name="module_sns"></a> [sns](#module\_sns) | terraform-aws-modules/sns/aws | 6.1.0 |
 
 ## Resources
@@ -79,7 +110,9 @@ The `slack` configuration can be sourced from AWS Secrets Manager, using the `va
 | [aws_iam_policy_document.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 | [aws_secretsmanager_secret.slack](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/secretsmanager_secret) | data source |
+| [aws_secretsmanager_secret.teams](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/secretsmanager_secret) | data source |
 | [aws_secretsmanager_secret_version.slack](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/secretsmanager_secret_version) | data source |
+| [aws_secretsmanager_secret_version.teams](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/secretsmanager_secret_version) | data source |
 
 ## Inputs
 
@@ -87,15 +120,22 @@ The `slack` configuration can be sourced from AWS Secrets Manager, using the `va
 |------|-------------|------|---------|:--------:|
 | <a name="input_sns_topic_name"></a> [sns\_topic\_name](#input\_sns\_topic\_name) | The name of the source sns topic where events are published | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | n/a | yes |
+| <a name="input_accounts_id_to_name"></a> [accounts\_id\_to\_name](#input\_accounts\_id\_to\_name) | A mapping of account id and account name - used by notification lamdba to map an account ID to a human readable name | `map(string)` | `{}` | no |
 | <a name="input_allowed_aws_principals"></a> [allowed\_aws\_principals](#input\_allowed\_aws\_principals) | Optional, list of AWS accounts able to publish via the SNS topic (when creating topic) e.g 123456789012 | `list(string)` | `[]` | no |
 | <a name="input_allowed_aws_services"></a> [allowed\_aws\_services](#input\_allowed\_aws\_services) | Optional, list of AWS services able to publish via the SNS topic (when creating topic) e.g cloudwatch.amazonaws.com | `list(string)` | `[]` | no |
 | <a name="input_cloudwatch_log_group_kms_key_id"></a> [cloudwatch\_log\_group\_kms\_key\_id](#input\_cloudwatch\_log\_group\_kms\_key\_id) | The KMS key id to use for encrypting the cloudwatch log group (default is none) | `string` | `null` | no |
 | <a name="input_cloudwatch_log_group_retention"></a> [cloudwatch\_log\_group\_retention](#input\_cloudwatch\_log\_group\_retention) | The retention period for the cloudwatch log group (for lambda function logs) in days | `string` | `"3"` | no |
 | <a name="input_create_sns_topic"></a> [create\_sns\_topic](#input\_create\_sns\_topic) | Whether to create an SNS topic for notifications | `bool` | `false` | no |
 | <a name="input_email"></a> [email](#input\_email) | The configuration for Email notifications | <pre>object({<br>    addresses = optional(list(string))<br>    # The email addresses to send notifications to<br>  })</pre> | `null` | no |
-| <a name="input_slack"></a> [slack](#input\_slack) | The configuration for Slack notifications | <pre>object({<br>    channel = optional(string)<br>    # The channel to post to <br>    lambda_name = optional(string, "slack-notify")<br>    # The name of the lambda function to create <br>    secret_name = optional(string)<br>    # An optional secret name in secrets manager to use for the slack configuration <br>    username = optional(string, ":aws: Notification")<br>    # The username to post as <br>    webhook_url = optional(string)<br>    # The webhook url to post to<br>  })</pre> | `null` | no |
+| <a name="input_enable_slack"></a> [enable\_slack](#input\_enable\_slack) | To send to slack, set to true | `bool` | `false` | no |
+| <a name="input_enable_teams"></a> [enable\_teams](#input\_enable\_teams) | To send to teams, set to true | `bool` | `false` | no |
+| <a name="input_identity_center_role"></a> [identity\_center\_role](#input\_identity\_center\_role) | The name of the role to use when redirecting through Identity Center | `string` | `null` | no |
+| <a name="input_identity_center_start_url"></a> [identity\_center\_start\_url](#input\_identity\_center\_start\_url) | The start URL of your Identity Center instance | `string` | `null` | no |
+| <a name="input_post_icons_url"></a> [post\_icons\_url](#input\_post\_icons\_url) | URLs (not base64 encoded!) to publically available icons for highlighting posts of error and/or warning status. Ideally 50px square. Set to non-existent URLs to disable icons | <pre>object({<br>    error_url   = string<br>    warning_url = string<br>  })</pre> | <pre>{<br>  "error_url": "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/attention-50px.png",<br>  "warning_url": "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/warning-50px.png"<br>}</pre> | no |
+| <a name="input_slack"></a> [slack](#input\_slack) | The configuration for Slack notifications | <pre>object({<br>    lambda_name = optional(string, "slack-notify")<br>    # The name of the lambda function to create <br>    lambda_description = optional(string, "Lambda function to send slack notifications")<br>    # The description for the slack lambda<br>    secret_name = optional(string)<br>    # An optional secret name in secrets manager to use for the slack configuration <br>    webhook_url = optional(string)<br>    # The webhook url to post to<br>    filter_policy = optional(string)<br>    # An optional SNS subscription filter policy to apply<br>    filter_policy_scope = optional(string)<br>    # If filter policy provided this is the scope of that policy; either "MessageAttributes" (default) or "MessageBody"<br>  })</pre> | `null` | no |
 | <a name="input_sns_topic_policy"></a> [sns\_topic\_policy](#input\_sns\_topic\_policy) | The policy to attach to the sns topic, else we default to account root | `string` | `null` | no |
 | <a name="input_subscribers"></a> [subscribers](#input\_subscribers) | Optional list of custom subscribers to the SNS topic | <pre>map(object({<br>    protocol = string<br>    # The protocol to use. The possible values for this are: sqs, sms, lambda, application. (http or https are partially supported, see below).<br>    endpoint = string<br>    # The endpoint to send data to, the contents will vary with the protocol. (see below for more information)<br>    endpoint_auto_confirms = bool<br>    # Boolean indicating whether the end point is capable of auto confirming subscription e.g., PagerDuty (default is false)<br>    raw_message_delivery = bool<br>    # Boolean indicating whether or not to enable raw message delivery (the original message is directly passed, not wrapped in JSON with the original message in the message property) (default is false)<br>  }))</pre> | `{}` | no |
+| <a name="input_teams"></a> [teams](#input\_teams) | The configuration for teams notifications | <pre>object({<br>    lambda_name = optional(string, "teams-notify")<br>    # The name of the lambda function to create <br>    lambda_description = optional(string, "Lambda function to send teams notifications")<br>    # The description for the teams lambda<br>    secret_name = optional(string)<br>    # An optional secret name in secrets manager to use for the slack configuration <br>    webhook_url = optional(string)<br>    # The webhook url to post to<br>    filter_policy = optional(string)<br>    # An optional SNS subscription filter policy to apply<br>    filter_policy_scope = optional(string)<br>    # If filter policy provided this is the scope of that policy; either "MessageAttributes" (default) or "MessageBody"<br>  })</pre> | `null` | no |
 
 ## Outputs
 

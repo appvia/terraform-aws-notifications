@@ -1,0 +1,8 @@
+{
+  "Event Source": "replication-task",
+  "Event Time": "2019-02-12 15:45:24.091",
+  "Identifier Link": "https:\/\/console.aws.amazon.com\/dms\/home?region=us-east-1#tasks:ids=hello-world",
+  "SourceId": "hello-world",
+  "Event ID": "http:\/\/docs.aws.amazon.com\/dms\/latest\/userguide\/CHAP_Events.html#DMS-EVENT-0079 ",
+  "Event Message": "Replication task has stopped."
+}

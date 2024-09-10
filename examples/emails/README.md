@@ -1,3 +1,22 @@
+# Email example using appvia notifications
+
+Create a `tfvars` local file with variables for:
+```
+email_addresses = ["<your mail1@address1.domain>"]
+sns_topic_name  = "your new sns topic name!"
+```
+
+Then:
+```
+terraform init
+AWS_PROFILE=<profile name> terraform apply --var-file=./<your vars>.tfvars
+```
+
+And to delete:
+```
+AWS_PROFILE=<profile name> terraform destroy --var-file=./<your vars>.tfvars
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -25,8 +44,8 @@ No resources.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_sns_topic_name"></a> [sns\_topic\_name](#input\_sns\_topic\_name) | The name of the SNS topic to create | `string` | `"my-topic"` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | <pre>{<br>  "Environment": "dev"<br>}</pre> | no |
+| <a name="input_email_addresses"></a> [email\_addresses](#input\_email\_addresses) | A list of target email addresses | `list(string)` | n/a | yes |
+| <a name="input_sns_topic_name"></a> [sns\_topic\_name](#input\_sns\_topic\_name) | The name of the SNS topic to create | `string` | n/a | yes |
 
 ## Outputs
 

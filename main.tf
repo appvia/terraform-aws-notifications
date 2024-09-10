@@ -26,40 +26,44 @@ resource "aws_sns_topic_subscription" "email" {
 resource "aws_sns_topic_subscription" "subscribers" {
   for_each = var.subscribers
 
-  endpoint               = each.value.endpoint
-  endpoint_auto_confirms = each.value.endpoint_auto_confirms
-  protocol               = each.value.protocol
-  raw_message_delivery   = each.value.raw_message_delivery
-  topic_arn              = local.sns_topic_arn
+  confirmation_timeout_in_minutes = 1
+  endpoint                        = each.value.endpoint
+  endpoint_auto_confirms          = each.value.endpoint_auto_confirms
+  protocol                        = each.value.protocol
+  raw_message_delivery            = each.value.raw_message_delivery
+  topic_arn                       = local.sns_topic_arn
 
   depends_on = [module.sns]
 }
 
 #
-## Provision the slack notification if enabled
+## Provision the slack/teams notification if enabled
 #
 # tfsec:ignore:aws-lambda-enable-tracing
 # tfsec:ignore:aws-lambda-restrict-source-arn
-module "slack" {
-  count   = local.enable_slack ? 1 : 0
-  source  = "terraform-aws-modules/notify-slack/aws"
-  version = "6.4.0"
+module "notify" {
+  count  = var.enable_slack || var.enable_teams ? 1 : 0
+  source = "./modules/notify"
 
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention
   cloudwatch_log_group_tags              = var.tags
   create_sns_topic                       = false
   iam_role_tags                          = var.tags
-  lambda_description                     = "Lambda function to send slack notifications, for sns topic ${var.sns_topic_name}"
-  lambda_function_name                   = var.slack.lambda_name
   lambda_function_tags                   = var.tags
   recreate_missing_package               = false
-  slack_channel                          = local.slack_channel
-  slack_username                         = local.slack_username
-  slack_webhook_url                      = local.slack_webhook_url
+  enable_slack                           = var.enable_slack
+  enable_teams                           = var.enable_teams
+  delivery_channels                      = local.channels_config
   sns_topic_name                         = var.sns_topic_name
   sns_topic_tags                         = var.tags
   tags                                   = var.tags
+
+  accounts_id_to_name = var.accounts_id_to_name
+  post_icons_url      = var.post_icons_url
+
+  identity_center_start_url = var.identity_center_start_url
+  identity_center_role      = var.identity_center_role
 
   depends_on = [module.sns]
 }
