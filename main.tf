@@ -42,7 +42,7 @@ resource "aws_sns_topic_subscription" "subscribers" {
 # tfsec:ignore:aws-lambda-enable-tracing
 # tfsec:ignore:aws-lambda-restrict-source-arn
 module "notify" {
-  count  = var.send_to_slack || var.send_to_teams ? 1 : 0
+  count  = var.enable_slack || var.enable_teams ? 1 : 0
   source = "./modules/notify"
 
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
@@ -52,8 +52,8 @@ module "notify" {
   iam_role_tags                          = var.tags
   lambda_function_tags                   = var.tags
   recreate_missing_package               = false
-  send_to_slack                          = var.send_to_slack
-  send_to_teams                          = var.send_to_teams
+  enable_slack                          = var.enable_slack
+  enable_teams                          = var.enable_teams
   delivery_channels                      = local.channels_config
   sns_topic_name                         = var.sns_topic_name
   sns_topic_tags                         = var.tags

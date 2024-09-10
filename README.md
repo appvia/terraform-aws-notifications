@@ -31,11 +31,11 @@ module "notifications" {
     addresses = var.email_addresses
   }
 
-  send_to_slack = true
+  enable_slack = true
   teams = {
     webhook_url = var.teams_webhook
   }
-  send_to_teams = true
+  enable_teams = true
   slack = {
     webhook_url = var.slack_webhook
   }
@@ -127,11 +127,11 @@ Frequently (quartley at least) check and upgrade:
 | <a name="input_cloudwatch_log_group_retention"></a> [cloudwatch\_log\_group\_retention](#input\_cloudwatch\_log\_group\_retention) | The retention period for the cloudwatch log group (for lambda function logs) in days | `string` | `"3"` | no |
 | <a name="input_create_sns_topic"></a> [create\_sns\_topic](#input\_create\_sns\_topic) | Whether to create an SNS topic for notifications | `bool` | `false` | no |
 | <a name="input_email"></a> [email](#input\_email) | The configuration for Email notifications | <pre>object({<br>    addresses = optional(list(string))<br>    # The email addresses to send notifications to<br>  })</pre> | `null` | no |
+| <a name="input_enable_slack"></a> [enable\_slack](#input\_enable\_slack) | To send to slack, set to true | `bool` | `false` | no |
+| <a name="input_enable_teams"></a> [enable\_teams](#input\_enable\_teams) | To send to teams, set to true | `bool` | `false` | no |
 | <a name="input_identity_center_role"></a> [identity\_center\_role](#input\_identity\_center\_role) | The name of the role to use when redirecting through Identity Center | `string` | `null` | no |
 | <a name="input_identity_center_start_url"></a> [identity\_center\_start\_url](#input\_identity\_center\_start\_url) | The start URL of your Identity Center instance | `string` | `null` | no |
 | <a name="input_post_icons_url"></a> [post\_icons\_url](#input\_post\_icons\_url) | URLs (not base64 encoded!) to publically available icons for highlighting posts of error and/or warning status. Ideally 50px square. Set to non-existent URLs to disable icons | <pre>object({<br>    error_url   = string<br>    warning_url = string<br>  })</pre> | <pre>{<br>  "error_url": "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/attention-50px.png",<br>  "warning_url": "https://sa-251-emblems.s3.eu-west-1.amazonaws.com/warning-50px.png"<br>}</pre> | no |
-| <a name="input_send_to_slack"></a> [send\_to\_slack](#input\_send\_to\_slack) | To send to slack, set to true | `bool` | `false` | no |
-| <a name="input_send_to_teams"></a> [send\_to\_teams](#input\_send\_to\_teams) | To send to teams, set to true | `bool` | `false` | no |
 | <a name="input_slack"></a> [slack](#input\_slack) | The configuration for Slack notifications | <pre>object({<br>    lambda_name = optional(string, "slack-notify")<br>    # The name of the lambda function to create <br>    lambda_description = optional(string, "Lambda function to send slack notifications")<br>    # The description for the slack lambda<br>    secret_name = optional(string)<br>    # An optional secret name in secrets manager to use for the slack configuration <br>    webhook_url = optional(string)<br>    # The webhook url to post to<br>    filter_policy = optional(string)<br>    # An optional SNS subscription filter policy to apply<br>    filter_policy_scope = optional(string)<br>    # If filter policy provided this is the scope of that policy; either "MessageAttributes" (default) or "MessageBody"<br>  })</pre> | `null` | no |
 | <a name="input_sns_topic_policy"></a> [sns\_topic\_policy](#input\_sns\_topic\_policy) | The policy to attach to the sns topic, else we default to account root | `string` | `null` | no |
 | <a name="input_subscribers"></a> [subscribers](#input\_subscribers) | Optional list of custom subscribers to the SNS topic | <pre>map(object({<br>    protocol = string<br>    # The protocol to use. The possible values for this are: sqs, sms, lambda, application. (http or https are partially supported, see below).<br>    endpoint = string<br>    # The endpoint to send data to, the contents will vary with the protocol. (see below for more information)<br>    endpoint_auto_confirms = bool<br>    # Boolean indicating whether the end point is capable of auto confirming subscription e.g., PagerDuty (default is false)<br>    raw_message_delivery = bool<br>    # Boolean indicating whether or not to enable raw message delivery (the original message is directly passed, not wrapped in JSON with the original message in the message property) (default is false)<br>  }))</pre> | `{}` | no |

@@ -28,7 +28,7 @@ module "notifications" {
   # Optionally:
   #  1. Override the name of the lambda - this will be essential if you are deploying multiple instances of this module
   #  2. Override the description of the lambda
-  send_to_slack = true
+  enable_slack = true
   slack = {
     webhook_url = var.slack_webhook
     # secret_name        = "name of AWS secret with slack webhook_url"

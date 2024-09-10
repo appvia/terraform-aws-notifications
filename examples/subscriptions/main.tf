@@ -26,7 +26,7 @@ module "primary_notifications" {
   # Optionally:
   #  1. Override the name of the lambda - this will be essential if you are deploying multiple instances of this module
   #  2. Override the description of the lambda
-  send_to_teams = true
+  enable_teams = true
   teams = {
     webhook_url = var.primary_teams_webhook
     # secret_name        = "name of AWS secret with teams webhook_url"
@@ -39,7 +39,7 @@ module "primary_notifications" {
   # Optionally:
   #  1. Override the name of the lambda - this will be essential if you are deploying multiple instances of this module
   #  2. Override the description of the lambda
-  send_to_slack = true
+  enable_slack = true
   slack = {
     webhook_url = var.primary_slack_webhook
     # secret_name        = "name of AWS secret with slack webhook_url"
@@ -94,7 +94,7 @@ module "security_hub_notifications" {
   #  2. Override the description of the lambda
   #  3. Optional: filter policy - must be a JSON string
   #  4. Optinoal: filter policy scope - either "MessageAttributes" (default) or "MessageBody"
-  send_to_teams = true
+  enable_teams = true
   teams = {
     webhook_url = var.security_hub_teams_webhook
     # secret_name        = "name of AWS secret with teams webhook_url"
@@ -111,7 +111,7 @@ module "security_hub_notifications" {
   #  2. Override the description of the lambda
   #  3. Optional: filter policy - must be a JSON string
   #  4. Optinoal: filter policy scope - either "MessageAttributes" (default) or "MessageBody"
-  send_to_slack = true
+  enable_slack = true
   slack = {
     webhook_url = var.security_hub_slack_webhook
     # secret_name        = "name of AWS secret with slack webhook_url"

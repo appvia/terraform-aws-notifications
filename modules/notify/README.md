@@ -57,8 +57,8 @@ module "appvia_notification" {
     webhook_url = var.slack_webhook
   }
 
-  send_to_slack = true
-  send_to_teams = true
+  enable_slack = true
+  enable_teams = true
 
   accounts_id_to_name = {
     "12345678"  = "mgmt",
@@ -140,7 +140,9 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 | <a name="input_create"></a> [create](#input\_create) | Whether to create all resources | `bool` | `true` | no |
 | <a name="input_create_sns_topic"></a> [create\_sns\_topic](#input\_create\_sns\_topic) | Whether to create new SNS topic | `bool` | `true` | no |
 | <a name="input_delivery_channels"></a> [delivery\_channels](#input\_delivery\_channels) | The configuration for Slack notifications | <pre>map(object({<br>    lambda_name = optional(string, "delivery_channel")<br>    # The name of the lambda function to create<br>    lambda_description = optional(string, "Lambda function to send notifications")<br>    # The description for the lambda<br>    secret_name = optional(string)<br>    # An optional secret name in secrets manager to use for the slack configuration <br>    webhook_url = optional(string)<br>    # The webhook url to post to<br>    filter_policy = optional(string)<br>    # An optional SNS subscription filter policy to apply<br>    filter_policy_scope = optional(string)<br>    # If filter policy provided this is the scope of that policy; either "MessageAttributes" (default) or "MessageBody"<br>  }))</pre> | `null` | no |
+| <a name="input_enable_slack"></a> [enable\_slack](#input\_enable\_slack) | To send to slack, set to true | `bool` | `false` | no |
 | <a name="input_enable_sns_topic_delivery_status_logs"></a> [enable\_sns\_topic\_delivery\_status\_logs](#input\_enable\_sns\_topic\_delivery\_status\_logs) | Whether to enable SNS topic delivery status logs | `bool` | `false` | no |
+| <a name="input_enable_teams"></a> [enable\_teams](#input\_enable\_teams) | To send to teams, set to true | `bool` | `false` | no |
 | <a name="input_hash_extra"></a> [hash\_extra](#input\_hash\_extra) | The string to add into hashing function. Useful when building same source path for different functions. | `string` | `""` | no |
 | <a name="input_iam_policy_path"></a> [iam\_policy\_path](#input\_iam\_policy\_path) | Path of policies to that should be added to IAM role for Lambda Function | `string` | `null` | no |
 | <a name="input_iam_role_boundary_policy_arn"></a> [iam\_role\_boundary\_policy\_arn](#input\_iam\_role\_boundary\_policy\_arn) | The ARN of the policy that is used to set the permissions boundary for the role | `string` | `null` | no |
@@ -166,8 +168,6 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 | <a name="input_python_runtime"></a> [python\_runtime](#input\_python\_runtime) | The lambda python runtime | `string` | `"python3.12"` | no |
 | <a name="input_recreate_missing_package"></a> [recreate\_missing\_package](#input\_recreate\_missing\_package) | Whether to recreate missing Lambda package if it is missing locally or not | `bool` | `true` | no |
 | <a name="input_reserved_concurrent_executions"></a> [reserved\_concurrent\_executions](#input\_reserved\_concurrent\_executions) | The amount of reserved concurrent executions for this lambda function. A value of 0 disables lambda from being triggered and -1 removes any concurrency limitations | `number` | `-1` | no |
-| <a name="input_send_to_slack"></a> [send\_to\_slack](#input\_send\_to\_slack) | To send to slack, set to true | `bool` | `false` | no |
-| <a name="input_send_to_teams"></a> [send\_to\_teams](#input\_send\_to\_teams) | To send to teams, set to true | `bool` | `false` | no |
 | <a name="input_slack_emoji"></a> [slack\_emoji](#input\_slack\_emoji) | A custom emoji that will appear on Slack messages | `string` | `":aws:"` | no |
 | <a name="input_sns_topic_feedback_role_description"></a> [sns\_topic\_feedback\_role\_description](#input\_sns\_topic\_feedback\_role\_description) | Description of IAM role to use for SNS topic delivery status logging | `string` | `null` | no |
 | <a name="input_sns_topic_feedback_role_force_detach_policies"></a> [sns\_topic\_feedback\_role\_force\_detach\_policies](#input\_sns\_topic\_feedback\_role\_force\_detach\_policies) | Specifies to force detaching any policies the IAM role has before destroying it. | `bool` | `true` | no |

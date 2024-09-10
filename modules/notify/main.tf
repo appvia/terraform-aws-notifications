@@ -118,7 +118,7 @@ resource "aws_sns_topic" "this" {
 
 
 resource "aws_sns_topic_subscription" "sns_notify_slack" {
-  count = var.create && var.send_to_slack ? 1 : 0
+  count = var.create && var.enable_slack ? 1 : 0
 
   topic_arn           = local.sns_topic_arn
   protocol            = "lambda"
@@ -128,7 +128,7 @@ resource "aws_sns_topic_subscription" "sns_notify_slack" {
 }
 
 resource "aws_sns_topic_subscription" "sns_notify_teams" {
-  count = var.create && var.send_to_teams ? 1 : 0
+  count = var.create && var.enable_teams ? 1 : 0
 
   topic_arn           = local.sns_topic_arn
   protocol            = "lambda"

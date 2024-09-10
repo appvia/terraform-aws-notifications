@@ -22,7 +22,7 @@ module "notifications" {
     var.tags,
   ))
 
-  send_to_teams = true
+  enable_teams = true
   teams = {
     webhook_url = var.teams_webhook
     # secret_name        = "name of AWS secret with teams webhook_url"
