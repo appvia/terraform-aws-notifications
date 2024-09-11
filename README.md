@@ -140,5 +140,7 @@ Frequently (quartley at least) check and upgrade:
 
 | Name | Description |
 |------|-------------|
+| <a name="output_channels_config"></a> [channels\_config](#output\_channels\_config) | The configuration data for each distribution channel |
+| <a name="output_distributions"></a> [distributions](#output\_distributions) | The list of slack/teams distributions that are managed |
 | <a name="output_sns_topic_arn"></a> [sns\_topic\_arn](#output\_sns\_topic\_arn) | The ARN of the SNS topic |
 <!-- END_TF_DOCS -->

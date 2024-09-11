@@ -3,31 +3,36 @@ output "sns_topic_arn" {
   value       = local.sns_topic_arn
 }
 
+output "distributions" {
+  description = "The list of slack/teams distributions that are managed"
+  value       = local.distributions
+}
+
 output "notify_slack_lambda_function_arn" {
   description = "The ARN of the Lambda function"
-  value       = module.lambda["slack"].lambda_function_arn
+  value       = try(module.lambda["slack"].lambda_function_arn, "")
 }
 output "notify_teams_lambda_function_arn" {
   description = "The ARN of the Lambda function"
-  value       = module.lambda["teams"].lambda_function_arn
+  value       = try(module.lambda["teams"].lambda_function_arn, "")
 }
 
 output "notify_slack_slack_lambda_function_name" {
   description = "The name of the Lambda function"
-  value       = module.lambda["slack"].lambda_function_name
+  value       = try(module.lambda["slack"].lambda_function_name, "")
 }
 output "notify_teams_slack_lambda_function_name" {
   description = "The name of the Lambda function"
-  value       = module.lambda["teams"].lambda_function_name
+  value       = try(module.lambda["teams"].lambda_function_name, "")
 }
 
 output "notify_slack_lambda_function_version" {
   description = "Latest published version of your Lambda function"
-  value       = module.lambda["slack"].lambda_function_version
+  value       = try(module.lambda["slack"].lambda_function_version, "")
 }
 output "notify_teams_lambda_function_version" {
   description = "Latest published version of your Lambda function"
-  value       = module.lambda["teams"].lambda_function_version
+  value       = try(module.lambda["teams"].lambda_function_version, "")
 }
 
 output "slack_lambda_cloudwatch_log_group_arn" {
