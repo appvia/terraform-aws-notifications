@@ -66,7 +66,7 @@ variable "sns_topic_policy" {
 variable "cloudwatch_log_group_retention" {
   description = "The retention period for the cloudwatch log group (for lambda function logs) in days"
   type        = string
-  default     = "3"
+  default     = "0"
 }
 
 variable "cloudwatch_log_group_kms_key_id" {
