@@ -3,7 +3,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 locals {
-  create = var.create && var.putin_khuylo
+  create = var.create
 
   sns_topic_arn = try(
     aws_sns_topic.this[0].arn,
@@ -76,10 +76,21 @@ locals {
       warning-icon-url = var.post_icons_url.warning_url
     }
   )
+
+  # the enable_[slack|teams] variable controls the subsubcription between SNS and lambda only; it is
+  #  feasible that we want to keep the infrastructure (lambda, lambda role, log group et al) while suspending
+  #  the posts.
+  # but we only want to create the infrastructure if details of slack or team have been defined
+  create_distribution = {
+    "slack" = var.delivery_channels["slack"] != null ? true : false,
+    "teams" = var.delivery_channels["teams"] != null ? true : false,
+  }
+
+  distributions = toset([ for x in ["slack", "teams"]:  x if local.create_distribution[x] == true ])
 }
 
 data "aws_iam_policy_document" "lambda" {
-  for_each = toset(["slack", "teams"])
+  for_each = local.distributions
 
   dynamic "statement" {
     for_each = concat([local.lambda_policy_document[each.value]], var.kms_key_arn != "" ? [local.lambda_policy_document_kms] : [])
@@ -93,7 +104,7 @@ data "aws_iam_policy_document" "lambda" {
 }
 
 resource "aws_cloudwatch_log_group" "lambda" {
-  for_each = toset(["slack", "teams"])
+  for_each = local.distributions
 
   name              = "/aws/lambda/${var.delivery_channels[each.value].lambda_name}"
   retention_in_days = var.cloudwatch_log_group_retention_in_days
@@ -118,7 +129,7 @@ resource "aws_sns_topic" "this" {
 
 
 resource "aws_sns_topic_subscription" "sns_notify_slack" {
-  count = var.create && var.enable_slack ? 1 : 0
+  count = var.create && var.enable_slack && local.create_distribution["slack"] == true ? 1 : 0
 
   topic_arn           = local.sns_topic_arn
   protocol            = "lambda"
@@ -128,7 +139,7 @@ resource "aws_sns_topic_subscription" "sns_notify_slack" {
 }
 
 resource "aws_sns_topic_subscription" "sns_notify_teams" {
-  count = var.create && var.enable_teams ? 1 : 0
+  count = var.create && var.enable_teams  && local.create_distribution["teams"] == true ? 1 : 0
 
   topic_arn           = local.sns_topic_arn
   protocol            = "lambda"
@@ -183,7 +194,7 @@ resource "local_file" "notification_emblems_python" {
 # }
 
 module "lambda" {
-  for_each = toset(["slack", "teams"])
+  for_each = local.distributions
 
   source  = "terraform-aws-modules/lambda/aws"
   version = "3.2.0"

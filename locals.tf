@@ -29,19 +29,19 @@ locals {
   teams_webhook_url = local.enable_teams_secret ? try(jsondecode(data.aws_secretsmanager_secret_version.teams[0].secret_string)["webhook_url"], var.teams.webhook_url) : try(var.teams.webhook_url, null)
 
   channels_config = {
-    "slack" = {
+    "slack" = var.slack != null ? {
       webhook_url         = local.slack_webhook_url
       lambda_name         = try(var.slack.lambda_name, "slack-notify")
       lambda_description  = try(var.slack.lambda_description, "Sends posts to slack")
       filter_policy       = try(var.slack.filter_policy, null)
       filter_policy_scope = try(var.slack.filter_policy_scope, null)
-    },
-    "teams" = {
+    } : null,
+    "teams" = var.teams != null ? {
       webhook_url         = local.teams_webhook_url
       lambda_name         = try(var.teams.lambda_name, "teams-notify")
       lambda_description  = try(var.teams.lambda_description, "Sends posts to teams")
       filter_policy       = try(var.teams.filter_policy, null)
       filter_policy_scope = try(var.teams.filter_policy_scope, null)
-    }
+    } : null,
   }
 }
