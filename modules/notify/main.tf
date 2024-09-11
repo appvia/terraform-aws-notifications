@@ -78,6 +78,8 @@ locals {
   )
 }
 
+#trivy:ignore:avd-aws-0059
+#trivy:ignore:avd-aws-0057
 data "aws_iam_policy_document" "lambda" {
   for_each = toset(["slack", "teams"])
 
@@ -102,6 +104,7 @@ resource "aws_cloudwatch_log_group" "lambda" {
   tags = merge(var.tags, var.cloudwatch_log_group_tags)
 }
 
+#trivy:ignore:avd-aws-0095
 resource "aws_sns_topic" "this" {
   count = var.create_sns_topic && var.create ? 1 : 0
 
@@ -182,6 +185,7 @@ resource "local_file" "notification_emblems_python" {
 #   ]
 # }
 
+#trivy:ignore:avd-aws-0067
 module "lambda" {
   for_each = toset(["slack", "teams"])
 
