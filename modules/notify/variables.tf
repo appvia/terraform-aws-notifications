@@ -28,12 +28,6 @@ variable "create_sns_topic" {
   default     = true
 }
 
-variable "hash_extra" {
-  description = "The string to add into hashing function. Useful when building same source path for different functions."
-  type        = string
-  default     = ""
-}
-
 variable "lambda_role" {
   description = "IAM role attached to the Lambda Function.  If this is set then a role will not be created for you."
   type        = string
@@ -121,12 +115,6 @@ variable "sns_topic_lambda_feedback_sample_rate" {
   description = "The percentage of successful deliveries to log"
   type        = number
   default     = 100
-}
-
-variable "slack_emoji" {
-  description = "A custom emoji that will appear on Slack messages"
-  type        = string
-  default     = ":aws:"
 }
 
 variable "kms_key_arn" {
@@ -278,17 +266,6 @@ variable "aws_powertools_service_name" {
   description = "The service name to use"
   type        = string
   default     = "appvia-notifications"
-}
-
-variable "aws_powertools_log_level" {
-  description = "The log level for aws powertools"
-  type        = string
-  default     = "DEBUG"
-
-  validation {
-    condition     = contains(["TRACE", "DEBUG", "INFO", "WARNING", "ERROR"], var.aws_powertools_log_level)
-    error_message = "Valid values are TRACE, DEBUG, INFO, WARNING, ERROR"
-  }
 }
 
 variable "accounts_id_to_name" {
