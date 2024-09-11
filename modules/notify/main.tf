@@ -86,7 +86,7 @@ locals {
     "teams" = var.delivery_channels["teams"] != null ? true : false,
   }
 
-  distributions = toset([ for x in ["slack", "teams"]:  x if local.create_distribution[x] == true ])
+  distributions = toset([for x in ["slack", "teams"] : x if local.create_distribution[x] == true])
 }
 
 data "aws_iam_policy_document" "lambda" {
@@ -139,7 +139,7 @@ resource "aws_sns_topic_subscription" "sns_notify_slack" {
 }
 
 resource "aws_sns_topic_subscription" "sns_notify_teams" {
-  count = var.create && var.enable_teams  && local.create_distribution["teams"] == true ? 1 : 0
+  count = var.create && var.enable_teams && local.create_distribution["teams"] == true ? 1 : 0
 
   topic_arn           = local.sns_topic_arn
   protocol            = "lambda"

@@ -3,7 +3,7 @@ output "sns_topic_arn" {
   value       = local.sns_topic_arn
 }
 
-output distributions {
+output "distributions" {
   description = "The list of slack/teams distributions that are managed"
   value       = local.distributions
 }
