@@ -77,7 +77,7 @@ locals {
     }
   )
 
-  # the enable_[slack|teams] variable controls the subsubcription between SNS and lambda only; it is
+  # the enable_[slack|teams] variable controls the subscription between SNS and lambda only; it is
   #  feasible that we want to keep the infrastructure (lambda, lambda role, log group et al) while suspending
   #  the posts.
   # but we only want to create the infrastructure if details of slack or team have been defined
