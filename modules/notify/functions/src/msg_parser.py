@@ -38,7 +38,7 @@ KMS_CLIENT = boto3.client("kms", region_name=REGION)
 
 class AwsService(Enum):
     """AWS service supported by function"""
-
+    absoloute = "absolute"
     cloudwatch = "cloudwatch"
     guardduty = "guardduty"
     securityhub = "securityhub"
@@ -58,25 +58,33 @@ def decrypt_url(encrypted_url: str) -> str:
     except Exception as e:
         raise e
 
-def get_service_url(region: str, service: str, account_id: str) -> str:
+def get_service_url(region: str, service: str, account_id: str, absoluteUrl: str = None) -> str:
     """Get the appropriate service URL for the region
 
     :param region: name of the AWS region
     :param service: name of the AWS service
+    :param account_id: the originating account id to use when using Identity Center redirects
+    :param absoluteUrl: if the service is "absolute", then this is the target url
     :returns: AWS console url formatted for the region and service provided
     """
 
     try:
-        service_name = AwsService[service].value
-        service_url = f"{service_name}/home?region={region}"
+        if service != AwsService.absoloute:
+            service_name = AwsService[service].value
+            service_url = f"{service_name}/home?region={region}"
 
-        if region.startswith("us-gov-"):
-            return f"https://console.amazonaws-us-gov.com/{service_url}"
-        elif IDENTITY_CENTER_URL.__len__ and account_id != None:
-            destination_url = f"https://{region}.console.aws.amazon.com/{service_url}"
-            return f"{IDENTITY_CENTER_URL}/#/console?account_id={account_id}&role_name={IDENTITY_CENTER_ROLE}&destination={urllib.parse.quote(destination_url)}"
+            if region.startswith("us-gov-"):
+                return f"https://console.amazonaws-us-gov.com/{service_url}"
+            elif len(IDENTITY_CENTER_URL) > 0 and account_id != None:
+                destination_url = f"https://{region}.console.aws.amazon.com/{service_url}"
+                return f"{IDENTITY_CENTER_URL}/#/console?account_id={account_id}&role_name={IDENTITY_CENTER_ROLE}&destination={urllib.parse.quote(destination_url)}"
+            else:
+                return f"https://console.aws.amazon.com/{service_url}"
         else:
-            return f"https://console.aws.amazon.com/{service_url}"
+            if len(IDENTITY_CENTER_URL) > 0 and account_id != None:
+                return f"{IDENTITY_CENTER_URL}/#/console?account_id={account_id}&role_name={IDENTITY_CENTER_ROLE}&destination={urllib.parse.quote(absoluteUrl)}"
+            else:
+                return f"{absoluteUrl}"
 
     except KeyError:
         print(f"Service {service} is currently not supported")
