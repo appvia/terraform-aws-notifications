@@ -549,7 +549,7 @@ class TeamsRender(Render):
                         "value": f"`{finding['source']}`"
                       },
                       {
-                        "title": "Providerr",
+                        "title": "Provider",
                         "value": f"`{finding['ruleProvider']} v{finding['providerVersion']}`"
                       },
                       {
@@ -763,6 +763,120 @@ class TeamsRender(Render):
       ]
     }
 
+  def __format_cost_anomaly(self: Self, anomaly: Dict[str, Any]) -> Dict[str, Any]:
+    """Format Costing Anomaly facts into teams message format
+
+    :params anomaly: cost anomaly facts
+    :returns: formatted teams message payload
+    """
+    imageIconItems = []
+    postColor = TeamsPriorityColor.NO_ERROR.value
+    if anomaly['priority'] == "ERROR":
+      imageIconItems.append({
+          "type": "Image",
+          "url": __ATTENTION_URL__,
+          "width": "50px",
+          "height": "50px"
+        })
+      postColor = TeamsPriorityColor.ERROR.value
+    elif anomaly['priority'] == "WARNING":
+      imageIconItems.append({
+        "type": "Image",
+        "url": __WARNING_URL__,
+        "width": "50px",
+        "height": "50px"
+      })
+      postColor = TeamsPriorityColor.WARNING.value
+
+    return {
+      "type": "message",
+      "attachments": [
+        {
+          "contentType": "application/vnd.microsoft.card.adaptive",
+          "content": {
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "type": "AdaptiveCard",
+            "version": "1.2",
+            "body": [
+              {
+                "type": "Container",
+                "items": imageIconItems + [
+                  {
+                    "type": "TextBlock",
+                    "text": f"Cost Anomaly: {anomaly['usage']}",
+                    "weight": "Bolder",
+                    "size": "Large",
+                    "wrap": True,
+                    "color": postColor,
+                  },
+                  {
+                    "type": "FactSet",
+                    "facts": [
+                      {
+                        "title": "Account Name",
+                        "value": f"`{anomaly['account_name']}`"
+                      },
+                      {
+                        "title": "Account Id",
+                        "value": f"`{anomaly['account_id']}`"
+                      },
+                      {
+                        "title": "Region",
+                        "value": f"`{anomaly['region']}`"
+                      },
+                      {
+                        "title": "Service",
+                        "value": f"`{anomaly['service']}`"
+                      },
+                      {
+                        "title": "ID",
+                        "value": f"`{anomaly['anomaly_id']}`"
+                      },
+                      {
+                        "title": "Started At",
+                        "value": f"`{anomaly['started']}`"
+                      },
+                      {
+                        "title": "Ended At",
+                        "value": f"`{anomaly['ended']}`"
+                      },
+                      {
+                        "title": "Expended Spend ($)",
+                        "value": f"`{anomaly['expected_spend']}`"
+                      },
+                                            {
+                        "title": "Actual Spend ($)",
+                        "value": f"`{anomaly['actual_spend']}`"
+                      },
+                      {
+                        "title": "Impact",
+                        "value": f"`{anomaly['total_impact']}`"
+                      },
+                    ]
+                  },
+                  {
+                    "type": "TextBlock",
+                    "text": f"`{anomaly['monitor_name']}`",
+                    "wrap": True,
+                  },
+                ]
+              },
+              {
+                "type": "Container",
+                "items": [
+                  {
+                    "type": "TextBlock",
+                    "text": f"[The Anomaly]({anomaly['url']})",
+                    "wrap": True,
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+
   def __format_default(self: Self, message: Union[str, Dict], subject: Optional[str] = None) -> Dict[str, Any]:
     """
     Default formatter, converting event into teams message format
@@ -847,6 +961,8 @@ class TeamsRender(Render):
         payload = self.__format_savings_plan_alert(alarm=parsedMessage)
       case "DMS":
         payload = self.__format_DMS_notification(event=parsedMessage)
+      case "CostAnomaly":
+        payload = self.__format_cost_anomaly(anomaly=parsedMessage)
       case "Unknown":
         payload = self.__format_default(message=originalMessage, subject=subject)
 
