@@ -132,7 +132,6 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 |------|-------------|------|---------|:--------:|
 | <a name="input_accounts_id_to_name"></a> [accounts\_id\_to\_name](#input\_accounts\_id\_to\_name) | A mapping of account id and account name - used by notification lamdba to map an account ID to a human readable name | `map(string)` | `{}` | no |
 | <a name="input_architecture"></a> [architecture](#input\_architecture) | Instruction set architecture for your Lambda function. Valid values are "x86\_64" or "arm64". | `string` | `"arm64"` | no |
-| <a name="input_aws_powertools_log_level"></a> [aws\_powertools\_log\_level](#input\_aws\_powertools\_log\_level) | The log level for aws powertools | `string` | `"DEBUG"` | no |
 | <a name="input_aws_powertools_service_name"></a> [aws\_powertools\_service\_name](#input\_aws\_powertools\_service\_name) | The service name to use | `string` | `"appvia-notifications"` | no |
 | <a name="input_cloudwatch_log_group_kms_key_id"></a> [cloudwatch\_log\_group\_kms\_key\_id](#input\_cloudwatch\_log\_group\_kms\_key\_id) | The ARN of the KMS Key to use when encrypting log data for Lambda | `string` | `null` | no |
 | <a name="input_cloudwatch_log_group_retention_in_days"></a> [cloudwatch\_log\_group\_retention\_in\_days](#input\_cloudwatch\_log\_group\_retention\_in\_days) | Specifies the number of days you want to retain log events in log group for Lambda. | `number` | `0` | no |
@@ -143,7 +142,6 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 | <a name="input_enable_slack"></a> [enable\_slack](#input\_enable\_slack) | To send to slack, set to true | `bool` | `false` | no |
 | <a name="input_enable_sns_topic_delivery_status_logs"></a> [enable\_sns\_topic\_delivery\_status\_logs](#input\_enable\_sns\_topic\_delivery\_status\_logs) | Whether to enable SNS topic delivery status logs | `bool` | `false` | no |
 | <a name="input_enable_teams"></a> [enable\_teams](#input\_enable\_teams) | To send to teams, set to true | `bool` | `false` | no |
-| <a name="input_hash_extra"></a> [hash\_extra](#input\_hash\_extra) | The string to add into hashing function. Useful when building same source path for different functions. | `string` | `""` | no |
 | <a name="input_iam_policy_path"></a> [iam\_policy\_path](#input\_iam\_policy\_path) | Path of policies to that should be added to IAM role for Lambda Function | `string` | `null` | no |
 | <a name="input_iam_role_boundary_policy_arn"></a> [iam\_role\_boundary\_policy\_arn](#input\_iam\_role\_boundary\_policy\_arn) | The ARN of the policy that is used to set the permissions boundary for the role | `string` | `null` | no |
 | <a name="input_iam_role_name_prefix"></a> [iam\_role\_name\_prefix](#input\_iam\_role\_name\_prefix) | A unique role name beginning with the specified prefix | `string` | `"lambda"` | no |
@@ -167,7 +165,6 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 | <a name="input_python_runtime"></a> [python\_runtime](#input\_python\_runtime) | The lambda python runtime | `string` | `"python3.12"` | no |
 | <a name="input_recreate_missing_package"></a> [recreate\_missing\_package](#input\_recreate\_missing\_package) | Whether to recreate missing Lambda package if it is missing locally or not | `bool` | `true` | no |
 | <a name="input_reserved_concurrent_executions"></a> [reserved\_concurrent\_executions](#input\_reserved\_concurrent\_executions) | The amount of reserved concurrent executions for this lambda function. A value of 0 disables lambda from being triggered and -1 removes any concurrency limitations | `number` | `-1` | no |
-| <a name="input_slack_emoji"></a> [slack\_emoji](#input\_slack\_emoji) | A custom emoji that will appear on Slack messages | `string` | `":aws:"` | no |
 | <a name="input_sns_topic_feedback_role_description"></a> [sns\_topic\_feedback\_role\_description](#input\_sns\_topic\_feedback\_role\_description) | Description of IAM role to use for SNS topic delivery status logging | `string` | `null` | no |
 | <a name="input_sns_topic_feedback_role_force_detach_policies"></a> [sns\_topic\_feedback\_role\_force\_detach\_policies](#input\_sns\_topic\_feedback\_role\_force\_detach\_policies) | Specifies to force detaching any policies the IAM role has before destroying it. | `bool` | `true` | no |
 | <a name="input_sns_topic_feedback_role_name"></a> [sns\_topic\_feedback\_role\_name](#input\_sns\_topic\_feedback\_role\_name) | Name of the IAM role to use for SNS topic delivery status logging | `string` | `null` | no |

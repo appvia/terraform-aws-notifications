@@ -362,7 +362,7 @@ class SlackRender(Render):
     ]
 
   def __format_security_hub_status(self: Self, finding: Dict[str, Any]) -> Dict[str, Any]:
-    """Format Seucrity Hub finding  facts into Slack message format
+    """Format Security Hub finding  facts into Slack message format
 
     :params finding: Security Hub facts
     :returns: formatted Slack message payload
@@ -541,6 +541,95 @@ class SlackRender(Render):
       }
     ]
 
+  def __format_cost_anomaly(self: Self, anomaly: Dict[str, Any]) -> Dict[str, Any]:
+    """Format Costing Anomaly facts into slack message format
+
+    :params anomaly: cost anomaly facts
+    :returns: formatted slack message payload
+    """
+    imageIconItems = []
+    if anomaly['priority'] == "ERROR":
+      imageIconItems.append({
+        "color": SlackPriorityColor[anomaly["priority"]].value,
+        "image_url": __ATTENTION_URL__,
+        "title": f"Cost Anomaly: {anomaly['usage']}",
+        "title_link": f"{anomaly['url']}",
+      })
+    elif anomaly['priority'] == "WARNING":
+      imageIconItems.append({
+        "color": SlackPriorityColor[anomaly["priority"]].value,
+        "image_url": __WARNING_URL__,
+        "title": f"Cost Anomaly: {anomaly['usage']}",
+        "title_link": f"{anomaly['url']}",
+      })
+    else:
+      imageIconItems.append({
+        "color": SlackPriorityColor[anomaly["priority"]].value,
+        "title": f"Cost Anomaly: {anomaly['usage']}",
+        "title_link": f"{anomaly['url']}",
+      })
+    
+    return imageIconItems + [
+      {
+        "color": SlackPriorityColor[anomaly["priority"]].value,
+        "fallback": "Cost Anomaly:  %s triggered" % (anomaly["usage"]),
+        "text": f"{anomaly['monitor_name']}",
+        # "ts": alarm['at_epoch'],
+        "fields": [
+          {
+            "title": "Account Name",
+            "value": f"`{anomaly['account_name']}`",
+            "short": True,
+          },
+          {
+            "title": "Account ID",
+            "value": f"`{anomaly['account_id']}`",
+            "short": True,
+          },
+          {
+            "title": "Region",
+            "value": f"`{anomaly['region']}`",
+            "short": True,
+          },
+          {
+            "title": "Service",
+            "value": f"`{anomaly['service']}`",
+            "short": True,
+          },
+          {
+            "title": "Started At",
+            "value": f"`{anomaly['started']}`",
+            "short": True,
+          },
+          {
+            "title": "Ended At",
+            "value": f"`{anomaly['ended']}`",
+            "short": True,
+          },
+          {
+            "title": "Expended Spend ($)",
+            "value": f"`{anomaly['expected_spend']}`",
+            "short": True,
+          },
+          {
+            "title": "Actual Spend ($)",
+            "value": f"`{anomaly['actual_spend']}`",
+            "short": True,
+          },
+          {
+            "title": "Impact",
+            "value": f"`{anomaly['total_impact']}`",
+            "short": True,
+          },
+          {
+            "title": "ID",
+            "value": f"`{anomaly['anomaly_id']}`",
+            "short": False,
+          },
+        ],
+      }
+    ]
+
   def __format_default(self: Self, message: Union[str, Dict], subject: Optional[str] = None) -> Dict[str, Any]:
     """
     Default formatter, converting event into Slack message format
@@ -607,6 +696,8 @@ class SlackRender(Render):
         attachments = self.__format_savings_plan_alert(alarm=parsedMessage)
       case "DMS":
         attachments = self.__format_DMS_notification(event=parsedMessage)
+      case "CostAnomaly":
+        attachments = self.__format_cost_anomaly(anomaly=parsedMessage)
       case "Unknown":
         attachments = self.__format_default(message=originalMessage, subject=subject)
 

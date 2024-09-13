@@ -38,7 +38,6 @@ KMS_CLIENT = boto3.client("kms", region_name=REGION)
 
 class AwsService(Enum):
     """AWS service supported by function"""
-
     cloudwatch = "cloudwatch"
     guardduty = "guardduty"
     securityhub = "securityhub"
@@ -58,10 +57,10 @@ def decrypt_url(encrypted_url: str) -> str:
     except Exception as e:
         raise e
 
-def get_service_url(region: str, service: str, account_id: str) -> str:
+def get_service_url(region: str, service: str) -> str:
     """Get the appropriate service URL for the region
 
-    :param region: name of the AWS region
+    :param region: name of the AWS region - not used on a
     :param service: name of the AWS service
     :returns: AWS console url formatted for the region and service provided
     """
@@ -72,15 +71,25 @@ def get_service_url(region: str, service: str, account_id: str) -> str:
 
         if region.startswith("us-gov-"):
             return f"https://console.amazonaws-us-gov.com/{service_url}"
-        elif IDENTITY_CENTER_URL.__len__ and account_id != None:
-            destination_url = f"https://{region}.console.aws.amazon.com/{service_url}"
-            return f"{IDENTITY_CENTER_URL}/#/console?account_id={account_id}&role_name={IDENTITY_CENTER_ROLE}&destination={urllib.parse.quote(destination_url)}"
         else:
             return f"https://console.aws.amazon.com/{service_url}"
 
     except KeyError:
         print(f"Service {service} is currently not supported")
         raise
+
+def get_target_url(account_id: str, absoluteUrl: str = None) -> str:
+    """Redirect via identity center if defined
+
+    :param account_id: the originating account id to use when using Identity Center redirects
+    :param absoluteUrl: if the service is "absolute", then this is the target url
+    :returns: AWS console url formatted for the given URL, account & role iv via Identity Center
+    """
+    if len(IDENTITY_CENTER_URL) > 0 and account_id != None:
+        return f"{IDENTITY_CENTER_URL}/#/console?account_id={account_id}&role_name={IDENTITY_CENTER_ROLE}&destination={urllib.parse.quote(absoluteUrl)}"
+    else:
+        return f"{absoluteUrl}"
+
 
 class AwsAction(Enum):
     """The individual AWS service types parsed"""
@@ -92,6 +101,7 @@ class AwsAction(Enum):
     SAVINGS_PLAN = "SavingsPlan"
     SECURITY_HUB = "SecurityHub"
     DMS = "DMS"
+    COST_ANOMALY = "CostAnomaly"
     UNKNOWN = "Unknown"
 
 class CloudWatchAlarmPriority(Enum):
@@ -124,7 +134,7 @@ def parse_cloudwatch_alarm(message: Dict[str, Any], snsRegion: str) -> Dict[str,
     alarm_arn = message["AlarmArn"]
     alarm_arn_region = message["AlarmArn"].split(":")[3]
     
-    cloudwatch_service_url = get_service_url(region=alarm_arn_region, service="cloudwatch", account_id=account_id)
+    cloudwatch_service_url = get_target_url(account_id=account_id, absoluteUrl=get_service_url(region=alarm_arn_region, service="cloudwatch"))
     cloudwatch_url = f"{cloudwatch_service_url}#alarm:alarmFilter=ANY;name={urllib.parse.quote(name)}"
         
     return {
@@ -187,7 +197,7 @@ def parse_guardduty_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str
     count = service['count']
     guard_duty_id = detail['id']
 
-    guardduty_url = get_service_url(region=region, service="guardduty", account_id=account_id)
+    guardduty_url = get_target_url(account_id=account_id, absoluteUrl=get_service_url(region=region, service="guardduty"))
 
 
     atDT = datetime.fromisoformat(service["eventLastSeen"])
@@ -440,8 +450,8 @@ def parse_security_hub_finding(message: Dict[str, Any], snsRegion: str) -> Dict[
     region = message["FindingId"].split(":")[3]
 
     # not done any real investigztion into the service url yet!!!!!!
-    service_url = get_service_url(region=region, service="securityhub", account_id=account_id)
-    url = f"{service_url}#finding:findindFilter=ANY;rule={urllib.parse.quote(rule_id)}"
+    service_url = get_target_url(account_id=account_id, absoluteUrl=get_service_url(region=region, service="securityhub"))
+    url = f"{service_url}#findings?search=GeneratorId%3D%255Coperator%255C%253AEQUALS%255C%253A{urllib.parse.quote(source)}"
     
     # light touch parse on each resource
     resources:list[Dict[str, Any]] = []
@@ -508,6 +518,87 @@ def parse_dms_notification(message: Dict[str, Any], snsRegion: str) -> Dict[str,
         "at_epoch": floor(atEpoch),
     }
 
+
+class CostAnomalyPriority(Enum):
+    """Maps Cost Anomaly severity state to a normalised 3 level priority"""
+    GOOD = "GOOD"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+
+def parse_cost_anomaly(message: Dict[str, Any]) -> Dict[str, Any]:
+    """Format Cost Anomaly event into facts
+
+    :params message: SNS message body containing Security Hub event
+    :returns: Cost Anomaly facts
+    """
+
+    # if the anomaly current score is lower than max then it's a warning
+    # if the anomaly current score is equal to max then it's an error (the current event is the max)
+    anomaly_score = message["anomalyScore"]
+    current_anomaly_score = anomaly_score["currentScore"]
+    max_anomaly_score = anomaly_score["maxScore"]
+
+    if current_anomaly_score < max_anomaly_score:
+        priority = CostAnomalyPriority.WARNING.value
+    else:
+        priority = CostAnomalyPriority.ERROR.value
+
+    # to use for the identity center style url
+    originatingAccountId = message["accountId"]
+    originatingUrl = message["anomalyDetailsLink"]
+    url = get_target_url(account_id=originatingAccountId, absoluteUrl=originatingUrl)
+    
+    # start and end
+    startedAt = message["anomalyStartDate"]
+    startedAtDT = datetime.fromisoformat(startedAt)
+    startedAtEpoch = startedAtDT.timestamp()
+    endedAt = message["anomalyEndDate"]
+    endedAtDT = datetime.fromisoformat(endedAt)
+    endedAtEpoch = endedAtDT.timestamp()
+
+    # the anomaly
+    anomaly_id = message["anomalyId"]
+    anomaly_dimension = message["dimensionalValue"]
+    monitor_name = message["monitorName"]
+
+    # the impact
+    impact = message["impact"]
+    expected_spend = impact["totalExpectedSpend"]
+    actual_spend = impact["totalActualSpend"]
+    total_impact = impact["totalImpact"]
+
+    # cost anomaly includes the account id and name that originated the anomaly (linked)
+    # assuming the first root cause
+    rootCauses = message["rootCauses"][0]
+    account_id = rootCauses["linkedAccount"]
+    account_name = rootCauses["linkedAccountName"]
+    region = rootCauses["region"]
+    service = rootCauses["service"]
+    usage = rootCauses["usageType"]
+
+    return {
+        "action": AwsAction.COST_ANOMALY.value,
+        "priority": priority,
+
+        "started": startedAt,
+        "ended": endedAt,
+
+        "anomaly_id": anomaly_id,
+        "monitor_name": monitor_name,
+
+        "expected_spend": expected_spend,
+        "actual_spend": actual_spend,
+        "total_impact": total_impact,
+
+        "account_id": account_id,
+        "account_name": account_name,
+        "region": region,
+        "service": service,
+        "usage": usage,
+
+        "url": url,
+    }
+
 class AwsParsedMessage:
     parsedMsg: Dict[str, Any]
     originalMsg: Dict[str, Any]
@@ -537,7 +628,6 @@ def get_message_payload(
         try:
             message = json.loads(message)
         except json.JSONDecodeError:
-            # logger.debug("SNS Record 'message' is not a structured (JSON) payload; it's just a string message")
             pass
             
     message = cast(Dict[str, Any], message)
@@ -569,6 +659,9 @@ def get_message_payload(
 
     elif subject.startswith("Savings Plans Coverage Alert:"):
         parsedMsg = parse_aws_savings_plan(subject=subject, message=str(message))
+    
+    elif subject.startswith("AWS Cost Management:"):
+        parsedMsg = parse_cost_anomaly(message=message)
     
     else:
         parsedMsg = {
@@ -612,7 +705,7 @@ def parse_sns(
 
         payload = renderer.payload(
           parsedMessage=parserResults.parsedMsg,
-          originalMessage=message,
+          originalMessage=parserResults.originalMsg,
           subject=subject,
         )
         response = vendor_send_to_function(payload=payload)
