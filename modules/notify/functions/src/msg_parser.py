@@ -545,7 +545,6 @@ def get_message_payload(
         try:
             message = json.loads(message)
         except json.JSONDecodeError:
-            # logger.debug("SNS Record 'message' is not a structured (JSON) payload; it's just a string message")
             pass
             
     message = cast(Dict[str, Any], message)
@@ -620,7 +619,7 @@ def parse_sns(
 
         payload = renderer.payload(
           parsedMessage=parserResults.parsedMsg,
-          originalMessage=message,
+          originalMessage=parserResults.originalMsg,
           subject=subject,
         )
         response = vendor_send_to_function(payload=payload)
