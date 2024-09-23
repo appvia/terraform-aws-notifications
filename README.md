@@ -6,7 +6,7 @@
 
 ![Github Actions](../../actions/workflows/terraform.yml/badge.svg)
 
-# Terraform AWS Notifications module
+# Terraform AWS Notifications
 
 ## Description
 
