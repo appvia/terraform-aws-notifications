@@ -201,7 +201,7 @@ module "lambda" {
   for_each = local.distributions
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.10.0"
+  version = "7.13.0"
 
   create = var.create
 
