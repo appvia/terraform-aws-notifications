@@ -107,7 +107,7 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_lambda"></a> [lambda](#module\_lambda) | terraform-aws-modules/lambda/aws | 3.2.0 |
+| <a name="module_lambda"></a> [lambda](#module\_lambda) | terraform-aws-modules/lambda/aws | 7.10.0 |
 
 ## Resources
 
