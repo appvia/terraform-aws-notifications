@@ -4,7 +4,7 @@
 module "sns" {
   count   = var.create_sns_topic ? 1 : 0
   source  = "terraform-aws-modules/sns/aws"
-  version = "6.1.0"
+  version = "6.1.1"
 
   name                          = var.sns_topic_name
   source_topic_policy_documents = [local.sns_topic_policy]
