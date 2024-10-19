@@ -1,5 +1,54 @@
 
-## Provision a SQS queue if required 
+## Craft a defatult policy for the SNS topic, assuming the consumer has not provided one
+data "aws_iam_policy_document" "current" {
+  statement {
+    sid    = "AllowAccountRoot"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = [format("arn:aws:iam::%s:root", local.account_id)]
+    }
+    actions = [
+      "sns:Publish"
+    ]
+    resources = ["*"]
+  }
+
+  dynamic "statement" {
+    for_each = var.allowed_aws_services
+
+    content {
+      sid    = "AllowService${index(var.allowed_aws_services, statement.value)}"
+      effect = "Allow"
+      principals {
+        type        = "Service"
+        identifiers = [statement.value]
+      }
+      actions = [
+        "sns:Publish"
+      ]
+      resources = ["*"]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.allowed_aws_principals
+
+    content {
+      sid    = "AllowPrincipal${index(var.allowed_aws_principals, statement.value)}"
+      effect = "Allow"
+      principals {
+        type        = "AWS"
+        identifiers = [statement.value]
+      }
+      actions = [
+        "sns:Publish"
+      ]
+      resources = ["*"]
+    }
+  }
+}
+
 ## Provision the SNS topic for the budgets 
 module "sns" {
   count   = var.create_sns_topic ? 1 : 0
@@ -42,27 +91,22 @@ resource "aws_sns_topic_subscription" "subscribers" {
 # tfsec:ignore:aws-lambda-enable-tracing
 # tfsec:ignore:aws-lambda-restrict-source-arn
 module "notify" {
+  count  = var.enable_slack || var.enable_teams ? 1 : 0
   source = "./modules/notify"
 
+  account_id                             = local.account_id
+  accounts_id_to_name                    = var.accounts_id_to_name
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention
-  cloudwatch_log_group_tags              = var.tags
-  create_sns_topic                       = false
-  iam_role_tags                          = var.tags
-  lambda_function_tags                   = var.tags
-  recreate_missing_package               = false
+  delivery_channels                      = local.channels_config
   enable_slack                           = var.enable_slack
   enable_teams                           = var.enable_teams
-  delivery_channels                      = local.channels_config
+  identity_center_role                   = var.identity_center_role
+  identity_center_start_url              = var.identity_center_start_url
+  region                                 = local.region
+  recreate_missing_package               = false
   sns_topic_name                         = var.sns_topic_name
-  sns_topic_tags                         = var.tags
   tags                                   = var.tags
-
-  accounts_id_to_name = var.accounts_id_to_name
-  post_icons_url      = var.post_icons_url
-
-  identity_center_start_url = var.identity_center_start_url
-  identity_center_role      = var.identity_center_role
 
   depends_on = [module.sns]
 }

@@ -94,59 +94,36 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.8 |
-| <a name="provider_local"></a> [local](#provider\_local) | n/a |
+| <a name="provider_local"></a> [local](#provider\_local) | >= 2.1 |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_account_id"></a> [account\_id](#input\_account\_id) | The AWS account ID | `string` | n/a | yes |
+| <a name="input_region"></a> [region](#input\_region) | The AWS region to deploy to | `string` | n/a | yes |
 | <a name="input_sns_topic_name"></a> [sns\_topic\_name](#input\_sns\_topic\_name) | The name of the SNS topic to create | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | n/a | yes |
 | <a name="input_accounts_id_to_name"></a> [accounts\_id\_to\_name](#input\_accounts\_id\_to\_name) | A mapping of account id and account name - used by notification lamdba to map an account ID to a human readable name | `map(string)` | `{}` | no |
 | <a name="input_architecture"></a> [architecture](#input\_architecture) | Instruction set architecture for your Lambda function. Valid values are "x86\_64" or "arm64". | `string` | `"arm64"` | no |
 | <a name="input_aws_powertools_service_name"></a> [aws\_powertools\_service\_name](#input\_aws\_powertools\_service\_name) | The service name to use | `string` | `"appvia-notifications"` | no |
 | <a name="input_cloudwatch_log_group_kms_key_id"></a> [cloudwatch\_log\_group\_kms\_key\_id](#input\_cloudwatch\_log\_group\_kms\_key\_id) | The ARN of the KMS Key to use when encrypting log data for Lambda | `string` | `null` | no |
 | <a name="input_cloudwatch_log_group_retention_in_days"></a> [cloudwatch\_log\_group\_retention\_in\_days](#input\_cloudwatch\_log\_group\_retention\_in\_days) | Specifies the number of days you want to retain log events in log group for Lambda. | `number` | `0` | no |
-| <a name="input_cloudwatch_log_group_tags"></a> [cloudwatch\_log\_group\_tags](#input\_cloudwatch\_log\_group\_tags) | Additional tags for the Cloudwatch log group | `map(string)` | `{}` | no |
-| <a name="input_create"></a> [create](#input\_create) | Whether to create all resources | `bool` | `true` | no |
-| <a name="input_create_sns_topic"></a> [create\_sns\_topic](#input\_create\_sns\_topic) | Whether to create new SNS topic | `bool` | `true` | no |
 | <a name="input_delivery_channels"></a> [delivery\_channels](#input\_delivery\_channels) | The configuration for Slack notifications | <pre>map(object({<br/>    lambda_name = optional(string, "delivery_channel")<br/>    # The name of the lambda function to create<br/>    lambda_description = optional(string, "Lambda function to send notifications")<br/>    # The description for the lambda<br/>    secret_name = optional(string)<br/>    # An optional secret name in secrets manager to use for the slack configuration <br/>    webhook_url = optional(string)<br/>    # The webhook url to post to<br/>    filter_policy = optional(string)<br/>    # An optional SNS subscription filter policy to apply<br/>    filter_policy_scope = optional(string)<br/>    # If filter policy provided this is the scope of that policy; either "MessageAttributes" (default) or "MessageBody"<br/>  }))</pre> | `null` | no |
 | <a name="input_enable_slack"></a> [enable\_slack](#input\_enable\_slack) | To send to slack, set to true | `bool` | `false` | no |
-| <a name="input_enable_sns_topic_delivery_status_logs"></a> [enable\_sns\_topic\_delivery\_status\_logs](#input\_enable\_sns\_topic\_delivery\_status\_logs) | Whether to enable SNS topic delivery status logs | `bool` | `false` | no |
 | <a name="input_enable_teams"></a> [enable\_teams](#input\_enable\_teams) | To send to teams, set to true | `bool` | `false` | no |
-| <a name="input_iam_policy_path"></a> [iam\_policy\_path](#input\_iam\_policy\_path) | Path of policies to that should be added to IAM role for Lambda Function | `string` | `null` | no |
+| <a name="input_iam_policy_arns"></a> [iam\_policy\_arns](#input\_iam\_policy\_arns) | A list of IAM policy ARNs to attach to the Lambda function | `list(string)` | `[]` | no |
+| <a name="input_iam_policy_jsons"></a> [iam\_policy\_jsons](#input\_iam\_policy\_jsons) | A list of IAM policies to attach to the Lambda function | `list(string)` | `[]` | no |
 | <a name="input_iam_role_boundary_policy_arn"></a> [iam\_role\_boundary\_policy\_arn](#input\_iam\_role\_boundary\_policy\_arn) | The ARN of the policy that is used to set the permissions boundary for the role | `string` | `null` | no |
-| <a name="input_iam_role_name_prefix"></a> [iam\_role\_name\_prefix](#input\_iam\_role\_name\_prefix) | A unique role name beginning with the specified prefix | `string` | `"lambda"` | no |
-| <a name="input_iam_role_path"></a> [iam\_role\_path](#input\_iam\_role\_path) | Path of IAM role to use for Lambda Function | `string` | `null` | no |
-| <a name="input_iam_role_tags"></a> [iam\_role\_tags](#input\_iam\_role\_tags) | Additional tags for the IAM role | `map(string)` | `{}` | no |
 | <a name="input_identity_center_role"></a> [identity\_center\_role](#input\_identity\_center\_role) | The name of the role to use when redirecting through Identity Center | `string` | `null` | no |
 | <a name="input_identity_center_start_url"></a> [identity\_center\_start\_url](#input\_identity\_center\_start\_url) | The start URL of your Identity Center instance | `string` | `null` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | ARN of the KMS key used for decrypting slack webhook url | `string` | `""` | no |
-| <a name="input_lambda_attach_dead_letter_policy"></a> [lambda\_attach\_dead\_letter\_policy](#input\_lambda\_attach\_dead\_letter\_policy) | Controls whether SNS/SQS dead letter notification policy should be added to IAM role for Lambda Function | `bool` | `false` | no |
-| <a name="input_lambda_dead_letter_target_arn"></a> [lambda\_dead\_letter\_target\_arn](#input\_lambda\_dead\_letter\_target\_arn) | The ARN of an SNS topic or SQS queue to notify when an invocation fails. | `string` | `null` | no |
-| <a name="input_lambda_function_ephemeral_storage_size"></a> [lambda\_function\_ephemeral\_storage\_size](#input\_lambda\_function\_ephemeral\_storage\_size) | Amount of ephemeral storage (/tmp) in MB your Lambda Function can use at runtime. Valid value between 512 MB to 10,240 MB (10 GB). | `number` | `512` | no |
-| <a name="input_lambda_function_s3_bucket"></a> [lambda\_function\_s3\_bucket](#input\_lambda\_function\_s3\_bucket) | S3 bucket to store artifacts | `string` | `null` | no |
-| <a name="input_lambda_function_store_on_s3"></a> [lambda\_function\_store\_on\_s3](#input\_lambda\_function\_store\_on\_s3) | Whether to store produced artifacts on S3 or locally. | `bool` | `false` | no |
-| <a name="input_lambda_function_tags"></a> [lambda\_function\_tags](#input\_lambda\_function\_tags) | Additional tags for the Lambda function | `map(string)` | `{}` | no |
-| <a name="input_lambda_function_vpc_security_group_ids"></a> [lambda\_function\_vpc\_security\_group\_ids](#input\_lambda\_function\_vpc\_security\_group\_ids) | List of security group ids when Lambda Function should run in the VPC. | `list(string)` | `null` | no |
-| <a name="input_lambda_function_vpc_subnet_ids"></a> [lambda\_function\_vpc\_subnet\_ids](#input\_lambda\_function\_vpc\_subnet\_ids) | List of subnet ids when Lambda Function should run in the VPC. Usually private or intra subnets. | `list(string)` | `null` | no |
-| <a name="input_lambda_role"></a> [lambda\_role](#input\_lambda\_role) | IAM role attached to the Lambda Function.  If this is set then a role will not be created for you. | `string` | `""` | no |
+| <a name="input_lambda_ephemeral_storage_size"></a> [lambda\_ephemeral\_storage\_size](#input\_lambda\_ephemeral\_storage\_size) | Amount of ephemeral storage (/tmp) in MB your Lambda Function can use at runtime. Valid value between 512 MB to 10,240 MB (10 GB). | `number` | `512` | no |
 | <a name="input_lambda_source_path"></a> [lambda\_source\_path](#input\_lambda\_source\_path) | The source path of the custom Lambda function | `string` | `null` | no |
-| <a name="input_post_icons_url"></a> [post\_icons\_url](#input\_post\_icons\_url) | URLs (not base64 encoded!) to publically available icons for highlighting posts of error and/or warning status. Ideally 50px square. | <pre>object({<br/>    error_url   = string<br/>    warning_url = string<br/>  })</pre> | <pre>{<br/>  "error_url": "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png",<br/>  "warning_url": "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"<br/>}</pre> | no |
 | <a name="input_powertools_layer_arn_suffix"></a> [powertools\_layer\_arn\_suffix](#input\_powertools\_layer\_arn\_suffix) | The suffix of the ARN to use for AWS Powertools lambda layer (must match the architecture:https://docs.powertools.aws.dev/lambda/python/latest/. | `string` | `"AWSLambdaPowertoolsPythonV2-Arm64:79"` | no |
 | <a name="input_python_runtime"></a> [python\_runtime](#input\_python\_runtime) | The lambda python runtime | `string` | `"python3.12"` | no |
 | <a name="input_recreate_missing_package"></a> [recreate\_missing\_package](#input\_recreate\_missing\_package) | Whether to recreate missing Lambda package if it is missing locally or not | `bool` | `true` | no |
 | <a name="input_reserved_concurrent_executions"></a> [reserved\_concurrent\_executions](#input\_reserved\_concurrent\_executions) | The amount of reserved concurrent executions for this lambda function. A value of 0 disables lambda from being triggered and -1 removes any concurrency limitations | `number` | `-1` | no |
-| <a name="input_sns_topic_feedback_role_description"></a> [sns\_topic\_feedback\_role\_description](#input\_sns\_topic\_feedback\_role\_description) | Description of IAM role to use for SNS topic delivery status logging | `string` | `null` | no |
-| <a name="input_sns_topic_feedback_role_force_detach_policies"></a> [sns\_topic\_feedback\_role\_force\_detach\_policies](#input\_sns\_topic\_feedback\_role\_force\_detach\_policies) | Specifies to force detaching any policies the IAM role has before destroying it. | `bool` | `true` | no |
-| <a name="input_sns_topic_feedback_role_name"></a> [sns\_topic\_feedback\_role\_name](#input\_sns\_topic\_feedback\_role\_name) | Name of the IAM role to use for SNS topic delivery status logging | `string` | `null` | no |
-| <a name="input_sns_topic_feedback_role_path"></a> [sns\_topic\_feedback\_role\_path](#input\_sns\_topic\_feedback\_role\_path) | Path of IAM role to use for SNS topic delivery status logging | `string` | `null` | no |
-| <a name="input_sns_topic_feedback_role_permissions_boundary"></a> [sns\_topic\_feedback\_role\_permissions\_boundary](#input\_sns\_topic\_feedback\_role\_permissions\_boundary) | The ARN of the policy that is used to set the permissions boundary for the IAM role used by SNS topic delivery status logging | `string` | `null` | no |
-| <a name="input_sns_topic_feedback_role_tags"></a> [sns\_topic\_feedback\_role\_tags](#input\_sns\_topic\_feedback\_role\_tags) | A map of tags to assign to IAM the SNS topic feedback role | `map(string)` | `{}` | no |
-| <a name="input_sns_topic_kms_key_id"></a> [sns\_topic\_kms\_key\_id](#input\_sns\_topic\_kms\_key\_id) | ARN of the KMS key used for enabling SSE on the topic | `string` | `""` | no |
-| <a name="input_sns_topic_lambda_feedback_role_arn"></a> [sns\_topic\_lambda\_feedback\_role\_arn](#input\_sns\_topic\_lambda\_feedback\_role\_arn) | IAM role for SNS topic delivery status logs.  If this is set then a role will not be created for you. | `string` | `""` | no |
-| <a name="input_sns_topic_lambda_feedback_sample_rate"></a> [sns\_topic\_lambda\_feedback\_sample\_rate](#input\_sns\_topic\_lambda\_feedback\_sample\_rate) | The percentage of successful deliveries to log | `number` | `100` | no |
-| <a name="input_sns_topic_tags"></a> [sns\_topic\_tags](#input\_sns\_topic\_tags) | Additional tags for the SNS topic | `map(string)` | `{}` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | `{}` | no |
 
 ## Outputs
 
@@ -159,7 +136,5 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 | <a name="output_notify_teams_lambda_function_arn"></a> [notify\_teams\_lambda\_function\_arn](#output\_notify\_teams\_lambda\_function\_arn) | The ARN of the Lambda function |
 | <a name="output_notify_teams_lambda_function_version"></a> [notify\_teams\_lambda\_function\_version](#output\_notify\_teams\_lambda\_function\_version) | Latest published version of your Lambda function |
 | <a name="output_notify_teams_slack_lambda_function_name"></a> [notify\_teams\_slack\_lambda\_function\_name](#output\_notify\_teams\_slack\_lambda\_function\_name) | The name of the Lambda function |
-| <a name="output_slack_lambda_cloudwatch_log_group_arn"></a> [slack\_lambda\_cloudwatch\_log\_group\_arn](#output\_slack\_lambda\_cloudwatch\_log\_group\_arn) | The Amazon Resource Name (ARN) specifying the log group |
 | <a name="output_sns_topic_arn"></a> [sns\_topic\_arn](#output\_sns\_topic\_arn) | The ARN of the SNS topic from which messages will be sent to Slack |
-| <a name="output_teams_lambda_cloudwatch_log_group_arn"></a> [teams\_lambda\_cloudwatch\_log\_group\_arn](#output\_teams\_lambda\_cloudwatch\_log\_group\_arn) | The Amazon Resource Name (ARN) specifying the log group |
 <!-- END_TF_DOCS -->

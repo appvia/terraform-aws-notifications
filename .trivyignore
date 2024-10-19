@@ -3,3 +3,7 @@ AVD-DS-0015 # (Dockerfile) Purge Yum Package Cache - https://avd.aquasec.com/mis
 AVD-DS-0002 # (Dockerfile) Least Privilege User - https://avd.aquasec.com/misconfig/dockerfile/general/avd-ds-0002/
 AVD-DS-0026 # (Dockerfile) No Healthcheck - https://avd.aquasec.com/misconfig/dockerfile/general/avd-ds-0026/
 AVD-DS-0013 # (Dockerfile) Use Workdir Over Cd - https://avd.aquasec.com/misconfig/dockerfile/general/avd-ds-0013/
+AVD-AWS-0095 # https://avd.aquasec.com/misconfig/aws/sns/avd-aws-0095/
+AVD-DS-0001  # https://avd.aquasec.com/misconfig/dockerfile/general/avd-ds-0001/
+AVD-DS-0002  # https://avd.aquasec.com/misconfig/dockerfile/general/avd-ds-0002/
+AVD-AWS-0017 # https://avd.aquasec.com/misconfig/aws/cloudwatch/avd-aws-0017/
