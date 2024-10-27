@@ -114,28 +114,9 @@ The module allows for further customisation of:
 * `sns_topic_policy` - used to override the generated SNS topic policy (if creating the SNS topic): refer to [locals.tf](../../locals.tf)
 
 <!-- BEGIN_TF_DOCS -->
-## Requirements
-
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0.0 |
-| <a name="requirement_awscc"></a> [awscc](#requirement\_awscc) | >= 0.11.0 |
-
 ## Providers
 
 No providers.
-
-## Modules
-
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_primary_notifications"></a> [primary\_notifications](#module\_primary\_notifications) | ../.. | n/a |
-| <a name="module_security_hub_notifications"></a> [security\_hub\_notifications](#module\_security\_hub\_notifications) | ../.. | n/a |
-
-## Resources
-
-No resources.
 
 ## Inputs
 
