@@ -63,10 +63,18 @@ locals {
     }
   }
 
+  ## We need to ensure the account names are ordered 
+  account_by_ids = [
+    for name in sort(keys(var.accounts_id_to_name)) : {
+      id   = name
+      name = var.accounts_id_to_name[name]
+    }
+  ]
+
   accounts_id_to_name_python_dictonary = templatefile(
     "${path.module}/mapAccountIdToName-python-dict.tftpl",
     {
-      accounts_id_to_name = var.accounts_id_to_name
+      accounts_id_to_name = local.account_by_ids
     }
   )
   notification_emblems_python = templatefile(
