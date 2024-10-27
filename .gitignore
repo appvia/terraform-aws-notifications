@@ -5,8 +5,6 @@
 *.tfstate
 *.tfstate.*
 
-builds/
-
 # Crash log files
 crash.log
 crash.*.log
@@ -28,10 +26,16 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# ignore local tfvars
-*.tfvars
-
 # Other
 .DS_Store
 todo.md
+
+# Ignore vim swap files 
+*.swp 
+*.swo 
+
+# Irgnore meld diff files 
+*.orig 
+*.backup 
+*.rej 
 
