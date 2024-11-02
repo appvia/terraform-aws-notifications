@@ -47,19 +47,15 @@ module "notify" {
   accounts_id_to_name                    = var.accounts_id_to_name
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention
-  cloudwatch_log_group_tags              = var.tags
   create_sns_topic                       = false
   delivery_channels                      = local.channels_config
   enable_slack                           = var.enable_slack
   enable_teams                           = var.enable_teams
-  iam_role_tags                          = var.tags
   identity_center_role                   = var.identity_center_role
   identity_center_start_url              = var.identity_center_start_url
-  lambda_function_tags                   = var.tags
   post_icons_url                         = var.post_icons_url
   recreate_missing_package               = false
   sns_topic_name                         = var.sns_topic_name
-  sns_topic_tags                         = var.tags
   tags                                   = var.tags
 
   depends_on = [module.sns]

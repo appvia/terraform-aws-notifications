@@ -24,15 +24,11 @@ data "aws_iam_policy_document" "sns_feedback" {
 resource "aws_iam_role" "sns_feedback_role" {
   count = local.create_sns_feedback_role ? 1 : 0
 
-  name                  = var.sns_topic_feedback_role_name
-  description           = var.sns_topic_feedback_role_description
-  path                  = var.sns_topic_feedback_role_path
-  force_detach_policies = var.sns_topic_feedback_role_force_detach_policies
-  permissions_boundary  = var.sns_topic_feedback_role_permissions_boundary
   assume_role_policy    = data.aws_iam_policy_document.sns_feedback[0].json
-
-  tags = merge(
-    var.tags,
-    var.sns_topic_feedback_role_tags,
-  )
+  description           = var.sns_topic_feedback_role_description
+  force_detach_policies = var.sns_topic_feedback_role_force_detach_policies
+  name                  = var.sns_topic_feedback_role_name
+  path                  = var.sns_topic_feedback_role_path
+  permissions_boundary  = var.sns_topic_feedback_role_permissions_boundary
+  tags                  = var.tags
 }
