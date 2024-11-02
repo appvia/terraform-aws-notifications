@@ -1,10 +1,4 @@
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-
 locals {
-  create = var.create
-
   sns_topic_arn = try(
     aws_sns_topic.this[0].arn,
     "arn:${data.aws_partition.current.id}:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.sns_topic_name}",
@@ -12,27 +6,6 @@ locals {
   )
 
   sns_feedback_role = local.create_sns_feedback_role ? aws_iam_role.sns_feedback_role[0].arn : var.sns_topic_lambda_feedback_role_arn
-  lambda_policy_document = {
-    "slack" = {
-      sid       = "AllowWriteToCloudwatchLogsSlack"
-      effect    = "Allow"
-      actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
-      resources = [replace("${try(aws_cloudwatch_log_group.lambda["slack"].arn, "")}:*", ":*:*", ":*")]
-    },
-    "teams" = {
-      sid       = "AllowWriteToCloudwatchLogsTeams"
-      effect    = "Allow"
-      actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
-      resources = [replace("${try(aws_cloudwatch_log_group.lambda["teams"].arn, "")}:*", ":*:*", ":*")]
-    }
-  }
-
-  lambda_policy_document_kms = {
-    sid       = "AllowKMSDecrypt"
-    effect    = "Allow"
-    actions   = ["kms:Decrypt"]
-    resources = [var.kms_key_arn]
-  }
 
   lambda_handler = {
     "slack" = try(split(".", basename(var.lambda_source_path))[0], "notify_slack"),
@@ -97,34 +70,9 @@ locals {
   distributions = toset([for x in ["slack", "teams"] : x if local.create_distribution[x] == true])
 }
 
-#trivy:ignore:avd-aws-0059
-#trivy:ignore:avd-aws-0057
-data "aws_iam_policy_document" "lambda" {
-  for_each = local.distributions
-
-  dynamic "statement" {
-    for_each = concat([local.lambda_policy_document[each.value]], var.kms_key_arn != "" ? [local.lambda_policy_document_kms] : [])
-    content {
-      sid       = statement.value.sid
-      effect    = statement.value.effect
-      actions   = statement.value.actions
-      resources = statement.value.resources
-    }
-  }
-}
-
-resource "aws_cloudwatch_log_group" "lambda" {
-  for_each = local.distributions
-
-  kms_key_id        = var.cloudwatch_log_group_kms_key_id
-  name              = "/aws/lambda/${var.delivery_channels[each.value].lambda_name}"
-  retention_in_days = var.cloudwatch_log_group_retention_in_days
-  tags              = var.tags
-}
-
 #trivy:ignore:avd-aws-0095
 resource "aws_sns_topic" "this" {
-  count = var.create_sns_topic && var.create ? 1 : 0
+  count = var.create_sns_topic ? 1 : 0
 
   kms_master_key_id                   = var.sns_topic_kms_key_id
   lambda_failure_feedback_role_arn    = var.enable_sns_topic_delivery_status_logs ? local.sns_feedback_role : null
@@ -134,9 +82,8 @@ resource "aws_sns_topic" "this" {
   tags                                = var.tags
 }
 
-
 resource "aws_sns_topic_subscription" "sns_notify_slack" {
-  count = var.create && var.enable_slack && local.create_distribution["slack"] == true ? 1 : 0
+  count = var.enable_slack && local.create_distribution["slack"] == true ? 1 : 0
 
   topic_arn           = local.sns_topic_arn
   protocol            = "lambda"
@@ -146,7 +93,7 @@ resource "aws_sns_topic_subscription" "sns_notify_slack" {
 }
 
 resource "aws_sns_topic_subscription" "sns_notify_teams" {
-  count = var.create && var.enable_teams && local.create_distribution["teams"] == true ? 1 : 0
+  count = var.enable_teams && local.create_distribution["teams"] == true ? 1 : 0
 
   topic_arn           = local.sns_topic_arn
   protocol            = "lambda"
@@ -165,41 +112,6 @@ resource "local_file" "notification_emblems_python" {
   filename = "${path.module}/functions/src/notification_emblems.py"
 }
 
-# a bug in "terraform-aws-modules/lambda/aws::source_path" when
-#  running with for_each, even with the "hash_extra" creates a ZIP
-#  build with a timestamp of "0" epoch timestamp, and causes a race-condition
-#  whereby the hash of the new bundle fails as it is compared with the old bundle hash
-#  making the build fail.
-# Thus having to build separate bundles here.
-# data "archive_file" "slack_lambda_archive" {
-#   type        = "zip"
-#   output_path = "${path.root}/builds/slack_lambda_src.zip"
-#   source_dir  = "${path.module}/functions/src"
-#   excludes    = [
-#     "*_teams.py",
-#     ".gitignore"
-#   ]
-
-#   depends_on = [
-#     local_file.notify_account_names_dict_python,
-#     local_file.notification_emblems_python
-#   ]
-# }
-# data "archive_file" "teams_lambda_archive" {
-#   type        = "zip"
-#   output_path = "${path.root}/builds/teams_lambda_src.zip"
-#   source_dir  = "${path.module}/functions/src"
-#   excludes    = [
-#     "*_slack.py",
-#     ".gitignore"
-#   ]
-
-#   depends_on = [
-#     local_file.notify_account_names_dict_python,
-#     local_file.notification_emblems_python
-#   ]
-# }
-
 #trivy:ignore:avd-aws-0067
 module "lambda" {
   for_each = local.distributions
@@ -207,37 +119,40 @@ module "lambda" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "7.10.0"
 
-  architectures                     = [var.architecture]
-  attach_cloudwatch_logs_policy     = false
-  attach_dead_letter_policy         = var.lambda_attach_dead_letter_policy
-  attach_network_policy             = var.lambda_function_vpc_subnet_ids != null
-  attach_policy_json                = true
-  create                            = var.create
-  create_role                       = var.lambda_role == ""
-  dead_letter_target_arn            = var.lambda_dead_letter_target_arn
-  description                       = try(var.delivery_channels[each.value].lambda_description, "")
-  ephemeral_storage_size            = var.lambda_function_ephemeral_storage_size
-  function_name                     = try(var.delivery_channels[each.value].lambda_name, "notify_${each.value}")
-  handler                           = "${local.lambda_handler[each.value]}.lambda_handler"
-  hash_extra                        = each.value
-  kms_key_arn                       = var.kms_key_arn
-  lambda_role                       = var.lambda_role
-  policy_json                       = try(data.aws_iam_policy_document.lambda[each.value].json, "")
-  policy_path                       = var.iam_policy_path
-  recreate_missing_package          = var.recreate_missing_package
-  reserved_concurrent_executions    = var.reserved_concurrent_executions
-  role_name                         = "${var.iam_role_name_prefix}-${var.delivery_channels[each.value].lambda_name}"
-  role_path                         = var.iam_role_path
-  role_permissions_boundary         = var.iam_role_boundary_policy_arn
-  role_tags                         = var.tags
-  runtime                           = var.python_runtime
-  s3_bucket                         = var.lambda_function_s3_bucket
-  store_on_s3                       = var.lambda_function_store_on_s3
-  tags                              = var.tags
-  timeout                           = 10
-  use_existing_cloudwatch_log_group = true
-  vpc_security_group_ids            = var.lambda_function_vpc_security_group_ids
-  vpc_subnet_ids                    = var.lambda_function_vpc_subnet_ids
+  architectures                      = [var.architecture]
+  attach_cloudwatch_logs_policy      = true
+  attach_create_log_group_permission = true
+  attach_dead_letter_policy          = var.lambda_attach_dead_letter_policy
+  attach_network_policy              = false
+  attach_policy_json                 = false
+  create                             = true
+  create_role                        = var.lambda_role == ""
+  dead_letter_target_arn             = var.lambda_dead_letter_target_arn
+  description                        = try(var.delivery_channels[each.value].lambda_description, "")
+  ephemeral_storage_size             = var.lambda_function_ephemeral_storage_size
+  function_name                      = try(var.delivery_channels[each.value].lambda_name, "notify_${each.value}")
+  handler                            = "${local.lambda_handler[each.value]}.lambda_handler"
+  hash_extra                         = each.value
+  kms_key_arn                        = var.kms_key_arn
+  lambda_role                        = var.lambda_role
+  publish                            = true
+  recreate_missing_package           = var.recreate_missing_package
+  reserved_concurrent_executions     = var.reserved_concurrent_executions
+  role_name                          = "${var.iam_role_name_prefix}-${var.delivery_channels[each.value].lambda_name}"
+  role_path                          = var.iam_role_path
+  role_permissions_boundary          = var.iam_role_boundary_policy_arn
+  role_tags                          = var.tags
+  runtime                            = var.python_runtime
+  s3_bucket                          = var.lambda_function_s3_bucket
+  store_on_s3                        = var.lambda_function_store_on_s3
+  tags                               = var.tags
+  timeout                            = 10
+
+  ## Logging related 
+  use_existing_cloudwatch_log_group = false
+  cloudwatch_logs_kms_key_id        = var.cloudwatch_log_group_kms_key_id
+  cloudwatch_logs_retention_in_days = var.cloudwatch_log_group_retention_in_days
+  cloudwatch_logs_tags              = var.tags
 
   # Bug in this module when creating source bundles on updated code change:
   # `Error: Provider produced inconsistent final plan`
@@ -263,9 +178,6 @@ module "lambda" {
     }
   ]
 
-  # If publish is disabled, there will be "Error adding new Lambda Permission for notify_xxxxx:
-  # InvalidParameterValueException: We currently do not support adding policies for $LATEST."
-  publish = true
 
   # utilise the AWS lambda PowerTools layer - must match the lamdba architecture
   #  using the Powertools for logging, supports managing the log level via standard Layer monitoring
@@ -289,7 +201,6 @@ module "lambda" {
   }
 
   depends_on = [
-    aws_cloudwatch_log_group.lambda,
     local_file.notify_account_names_dict_python,
     local_file.notification_emblems_python
   ]

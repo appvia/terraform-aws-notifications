@@ -16,12 +16,6 @@ variable "powertools_layer_arn_suffix" {
   default     = "AWSLambdaPowertoolsPythonV2-Arm64:79"
 }
 
-variable "create" {
-  description = "Whether to create all resources"
-  type        = bool
-  default     = true
-}
-
 variable "create_sns_topic" {
   description = "Whether to create new SNS topic"
   type        = bool
@@ -167,18 +161,6 @@ variable "iam_role_path" {
 variable "iam_policy_path" {
   description = "Path of policies to that should be added to IAM role for Lambda Function"
   type        = string
-  default     = null
-}
-
-variable "lambda_function_vpc_subnet_ids" {
-  description = "List of subnet ids when Lambda Function should run in the VPC. Usually private or intra subnets."
-  type        = list(string)
-  default     = null
-}
-
-variable "lambda_function_vpc_security_group_ids" {
-  description = "List of security group ids when Lambda Function should run in the VPC."
-  type        = list(string)
   default     = null
 }
 

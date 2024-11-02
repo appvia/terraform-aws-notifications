@@ -1,5 +1,5 @@
 locals {
-  create_sns_feedback_role = local.create && var.create_sns_topic && var.enable_sns_topic_delivery_status_logs && var.sns_topic_lambda_feedback_role_arn == ""
+  create_sns_feedback_role = var.create_sns_topic && var.enable_sns_topic_delivery_status_logs && var.sns_topic_lambda_feedback_role_arn == ""
 }
 
 data "aws_iam_policy_document" "sns_feedback" {
