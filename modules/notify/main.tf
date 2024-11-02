@@ -116,26 +116,22 @@ data "aws_iam_policy_document" "lambda" {
 resource "aws_cloudwatch_log_group" "lambda" {
   for_each = local.distributions
 
+  kms_key_id        = var.cloudwatch_log_group_kms_key_id
   name              = "/aws/lambda/${var.delivery_channels[each.value].lambda_name}"
   retention_in_days = var.cloudwatch_log_group_retention_in_days
-  kms_key_id        = var.cloudwatch_log_group_kms_key_id
-
-  tags = merge(var.tags, var.cloudwatch_log_group_tags)
+  tags              = var.tags
 }
 
 #trivy:ignore:avd-aws-0095
 resource "aws_sns_topic" "this" {
   count = var.create_sns_topic && var.create ? 1 : 0
 
-  name = var.sns_topic_name
-
-  kms_master_key_id = var.sns_topic_kms_key_id
-
+  kms_master_key_id                   = var.sns_topic_kms_key_id
   lambda_failure_feedback_role_arn    = var.enable_sns_topic_delivery_status_logs ? local.sns_feedback_role : null
   lambda_success_feedback_role_arn    = var.enable_sns_topic_delivery_status_logs ? local.sns_feedback_role : null
   lambda_success_feedback_sample_rate = var.enable_sns_topic_delivery_status_logs ? var.sns_topic_lambda_feedback_sample_rate : null
-
-  tags = merge(var.tags, var.sns_topic_tags)
+  name                                = var.sns_topic_name
+  tags                                = var.tags
 }
 
 
@@ -211,17 +207,37 @@ module "lambda" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "7.10.0"
 
-  create = var.create
-
-  function_name = try(var.delivery_channels[each.value].lambda_name, "notify_${each.value}")
-  description   = try(var.delivery_channels[each.value].lambda_description, "")
-
-  hash_extra = each.value
-  handler    = "${local.lambda_handler[each.value]}.lambda_handler"
-
-  # source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/src/notify_${each.value}.py"
-  # source_path                    = var.lambda_source_path != null ? "${path.root}/${var.lambda_source_path}" : "${path.module}/functions/src"
-
+  architectures                     = [var.architecture]
+  attach_cloudwatch_logs_policy     = false
+  attach_dead_letter_policy         = var.lambda_attach_dead_letter_policy
+  attach_network_policy             = var.lambda_function_vpc_subnet_ids != null
+  attach_policy_json                = true
+  create                            = var.create
+  create_role                       = var.lambda_role == ""
+  dead_letter_target_arn            = var.lambda_dead_letter_target_arn
+  description                       = try(var.delivery_channels[each.value].lambda_description, "")
+  ephemeral_storage_size            = var.lambda_function_ephemeral_storage_size
+  function_name                     = try(var.delivery_channels[each.value].lambda_name, "notify_${each.value}")
+  handler                           = "${local.lambda_handler[each.value]}.lambda_handler"
+  hash_extra                        = each.value
+  kms_key_arn                       = var.kms_key_arn
+  lambda_role                       = var.lambda_role
+  policy_json                       = try(data.aws_iam_policy_document.lambda[each.value].json, "")
+  policy_path                       = var.iam_policy_path
+  recreate_missing_package          = var.recreate_missing_package
+  reserved_concurrent_executions    = var.reserved_concurrent_executions
+  role_name                         = "${var.iam_role_name_prefix}-${var.delivery_channels[each.value].lambda_name}"
+  role_path                         = var.iam_role_path
+  role_permissions_boundary         = var.iam_role_boundary_policy_arn
+  role_tags                         = var.tags
+  runtime                           = var.python_runtime
+  s3_bucket                         = var.lambda_function_s3_bucket
+  store_on_s3                       = var.lambda_function_store_on_s3
+  tags                              = var.tags
+  timeout                           = 10
+  use_existing_cloudwatch_log_group = true
+  vpc_security_group_ids            = var.lambda_function_vpc_security_group_ids
+  vpc_subnet_ids                    = var.lambda_function_vpc_subnet_ids
 
   # Bug in this module when creating source bundles on updated code change:
   # `Error: Provider produced inconsistent final plan`
@@ -247,14 +263,6 @@ module "lambda" {
     }
   ]
 
-  recreate_missing_package       = var.recreate_missing_package
-  runtime                        = var.python_runtime
-  architectures                  = [var.architecture]
-  timeout                        = 10
-  kms_key_arn                    = var.kms_key_arn
-  reserved_concurrent_executions = var.reserved_concurrent_executions
-  ephemeral_storage_size         = var.lambda_function_ephemeral_storage_size
-
   # If publish is disabled, there will be "Error adding new Lambda Permission for notify_xxxxx:
   # InvalidParameterValueException: We currently do not support adding policies for $LATEST."
   publish = true
@@ -273,41 +281,12 @@ module "lambda" {
     }
   ))
 
-  create_role               = var.lambda_role == ""
-  lambda_role               = var.lambda_role
-  role_name                 = "${var.iam_role_name_prefix}-${var.delivery_channels[each.value].lambda_name}"
-  role_permissions_boundary = var.iam_role_boundary_policy_arn
-  role_tags                 = var.iam_role_tags
-  role_path                 = var.iam_role_path
-  policy_path               = var.iam_policy_path
-
-  # Do not use Lambda's policy for cloudwatch logs, because we have to add a policy
-  # for KMS conditionally. This way attach_policy_json is always true independenty of
-  # the value of presense of KMS. Famous "computed values in count" bug...
-  attach_cloudwatch_logs_policy = false
-  attach_policy_json            = true
-  policy_json                   = try(data.aws_iam_policy_document.lambda[each.value].json, "")
-
-  use_existing_cloudwatch_log_group = true
-  attach_network_policy             = var.lambda_function_vpc_subnet_ids != null
-
-  dead_letter_target_arn    = var.lambda_dead_letter_target_arn
-  attach_dead_letter_policy = var.lambda_attach_dead_letter_policy
-
   allowed_triggers = {
     AllowExecutionFromSNS = {
       principal  = "sns.amazonaws.com"
       source_arn = local.sns_topic_arn
     }
   }
-
-  store_on_s3 = var.lambda_function_store_on_s3
-  s3_bucket   = var.lambda_function_s3_bucket
-
-  vpc_subnet_ids         = var.lambda_function_vpc_subnet_ids
-  vpc_security_group_ids = var.lambda_function_vpc_security_group_ids
-
-  tags = merge(var.tags, var.lambda_function_tags)
 
   depends_on = [
     aws_cloudwatch_log_group.lambda,

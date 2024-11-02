@@ -105,12 +105,6 @@ variable "sns_topic_feedback_role_permissions_boundary" {
   default     = null
 }
 
-variable "sns_topic_feedback_role_tags" {
-  description = "A map of tags to assign to IAM the SNS topic feedback role"
-  type        = map(string)
-  default     = {}
-}
-
 variable "sns_topic_lambda_feedback_sample_rate" {
   description = "The percentage of successful deliveries to log"
   type        = number
@@ -150,13 +144,6 @@ variable "cloudwatch_log_group_kms_key_id" {
 variable "tags" {
   description = "A map of tags to add to all resources"
   type        = map(string)
-  default     = {}
-}
-
-variable "iam_role_tags" {
-  description = "Additional tags for the IAM role"
-  type        = map(string)
-  default     = {}
 }
 
 variable "iam_role_boundary_policy_arn" {
@@ -181,12 +168,6 @@ variable "iam_policy_path" {
   description = "Path of policies to that should be added to IAM role for Lambda Function"
   type        = string
   default     = null
-}
-
-variable "lambda_function_tags" {
-  description = "Additional tags for the Lambda function"
-  type        = map(string)
-  default     = {}
 }
 
 variable "lambda_function_vpc_subnet_ids" {
@@ -217,18 +198,6 @@ variable "lambda_function_ephemeral_storage_size" {
   description = "Amount of ephemeral storage (/tmp) in MB your Lambda Function can use at runtime. Valid value between 512 MB to 10,240 MB (10 GB)."
   type        = number
   default     = 512
-}
-
-variable "sns_topic_tags" {
-  description = "Additional tags for the SNS topic"
-  type        = map(string)
-  default     = {}
-}
-
-variable "cloudwatch_log_group_tags" {
-  description = "Additional tags for the Cloudwatch log group"
-  type        = map(string)
-  default     = {}
 }
 
 variable "enable_slack" {
