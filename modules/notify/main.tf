@@ -117,7 +117,7 @@ module "lambda" {
   for_each = local.distributions
 
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.10.0"
+  version = "7.15.0"
 
   architectures                      = [var.architecture]
   attach_cloudwatch_logs_policy      = true
