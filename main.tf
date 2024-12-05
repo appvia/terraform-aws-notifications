@@ -1,6 +1,6 @@
 
-## Provision a SQS queue if required 
-## Provision the SNS topic for the budgets 
+## Provision a SQS queue if required
+## Provision the SNS topic for the budgets
 module "sns" {
   count   = var.create_sns_topic ? 1 : 0
   source  = "terraform-aws-modules/sns/aws"
@@ -11,7 +11,7 @@ module "sns" {
   tags                          = var.tags
 }
 
-## Provision any email notifications if required 
+## Provision any email notifications if required
 resource "aws_sns_topic_subscription" "email" {
   for_each = local.enable_email ? toset(var.email.addresses) : toset([])
 
@@ -22,7 +22,7 @@ resource "aws_sns_topic_subscription" "email" {
   depends_on = [module.sns]
 }
 
-## Provision the sns topic subscriptions if required 
+## Provision the sns topic subscriptions if required
 resource "aws_sns_topic_subscription" "subscribers" {
   for_each = var.subscribers
 
@@ -57,6 +57,7 @@ module "notify" {
   recreate_missing_package               = false
   sns_topic_name                         = var.sns_topic_name
   tags                                   = var.tags
+  trigger_on_package_timestamp           = false
 
   depends_on = [module.sns]
 }
