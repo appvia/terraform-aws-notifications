@@ -202,7 +202,7 @@ variable "delivery_channels" {
     lambda_description = optional(string, "Lambda function to send notifications")
     # The description for the lambda
     secret_name = optional(string)
-    # An optional secret name in secrets manager to use for the slack configuration 
+    # An optional secret name in secrets manager to use for the slack configuration
     webhook_url = optional(string)
     # The webhook url to post to
     filter_policy = optional(string)
@@ -247,4 +247,10 @@ variable "identity_center_role" {
   description = "The name of the role to use when redirecting through Identity Center"
   type        = string
   default     = null
+}
+
+variable "trigger_on_package_timestamp" {
+  description = "Whether to recreate the Lambda package if the timestamp changes"
+  type        = bool
+  default     = true
 }

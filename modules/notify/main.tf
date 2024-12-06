@@ -36,7 +36,7 @@ locals {
     }
   }
 
-  ## We need to ensure the account names are ordered 
+  ## We need to ensure the account names are ordered
   account_by_ids = [
     for name in sort(keys(var.accounts_id_to_name)) : {
       id   = name
@@ -147,8 +147,9 @@ module "lambda" {
   store_on_s3                        = var.lambda_function_store_on_s3
   tags                               = var.tags
   timeout                            = 10
+  trigger_on_package_timestamp       = var.trigger_on_package_timestamp
 
-  ## Logging related 
+  ## Logging related
   use_existing_cloudwatch_log_group = false
   cloudwatch_logs_kms_key_id        = var.cloudwatch_log_group_kms_key_id
   cloudwatch_logs_retention_in_days = var.cloudwatch_log_group_retention_in_days
