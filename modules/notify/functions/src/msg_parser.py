@@ -19,7 +19,7 @@ metrics = Metrics(namespace=powertools_namespace)
 from aws_lambda_powertools.metrics import MetricUnit
 
 from render import Render
-from account_id_name_mappings import ACCOUNT_ID_TO_NAME
+from ssm_param import get_parameter
 
 # Set default region if not provided
 REGION = os.environ.get("AWS_REGION", "us-east-1")
@@ -35,6 +35,21 @@ if IDENTITY_CENTER_URL.endswith("console"):
 
 # Create client so its cached/frozen between invocations
 KMS_CLIENT = boto3.client("kms", region_name=REGION)
+
+
+def get_account_mappings() -> dict:
+    try:
+        parameter_arn = os.environ.get('ACCOUNT_MAPPINGS_PARAMETER_ARN', 'arn:aws:ssm:eu-west-2:012140491173:parameter/lza/configuration/aws_organisations/accounts_id_to_name_mapping_test') #FIXME
+        if not parameter_arn:
+            logger.error("Missing required environment variable: ACCOUNT_MAPPINGS_PARAMETER_ARN")
+            return {}
+
+        return get_parameter(parameter_arn)
+    except Exception as e:
+        logger.exception(f"Error retrieving account mappings: {e}")
+        return {}
+
+ACCOUNT_ID_TO_NAME = get_account_mappings()
 
 class AwsService(Enum):
     """AWS service supported by function"""
