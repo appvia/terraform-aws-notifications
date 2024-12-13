@@ -10,12 +10,6 @@ variable "python_runtime" {
   default     = "python3.12"
 }
 
-variable "powertools_layer_arn_suffix" {
-  description = "The suffix of the ARN to use for AWS Powertools lambda layer (must match the architecture:https://docs.powertools.aws.dev/lambda/python/latest/."
-  type        = string
-  default     = "AWSLambdaPowertoolsPythonV2-Arm64:79"
-}
-
 variable "create_sns_topic" {
   description = "Whether to create new SNS topic"
   type        = bool
@@ -202,7 +196,7 @@ variable "delivery_channels" {
     lambda_description = optional(string, "Lambda function to send notifications")
     # The description for the lambda
     secret_name = optional(string)
-    # An optional secret name in secrets manager to use for the slack configuration 
+    # An optional secret name in secrets manager to use for the slack configuration
     webhook_url = optional(string)
     # The webhook url to post to
     filter_policy = optional(string)
@@ -217,12 +211,6 @@ variable "aws_powertools_service_name" {
   description = "The service name to use"
   type        = string
   default     = "appvia-notifications"
-}
-
-variable "accounts_id_to_name" {
-  description = "A mapping of account id and account name - used by notification lamdba to map an account ID to a human readable name"
-  type        = map(string)
-  default     = {}
 }
 
 variable "post_icons_url" {
@@ -247,4 +235,42 @@ variable "identity_center_role" {
   description = "The name of the role to use when redirecting through Identity Center"
   type        = string
   default     = null
+}
+
+variable "lambda_policy_config" {
+  description = "Map of policy configurations"
+  type = map(object({
+    enabled   = bool
+    effect    = string
+    actions   = list(string)
+    resources = list(string)
+  }))
+  default = {
+    ssm = {
+      enabled = false
+      effect  = "Allow"
+      actions = ["ssm:GetParameter", "ssm:GetParameters"]
+      resources = ["*"]
+    }
+  }
+}
+
+variable "lambda_layers_config" {
+  description = "Configuration for Lambda layers"
+  type = map(object({
+    enabled = optional(bool, true)
+    type    = optional(string, "managed")  # "managed" or "custom"
+    arn     = optional(string)
+    version = optional(string)
+    region  = optional(string)
+  }))
+  default = {}
+
+  validation {
+    condition = alltrue([
+      for k, v in var.lambda_layers_config :
+      v.type == "custom" || v.type == "managed"
+    ])
+    error_message = "Layer type must be either 'managed' or 'custom'."
+  }
 }

@@ -1,6 +1,6 @@
 
-## Provision a SQS queue if required 
-## Provision the SNS topic for the budgets 
+## Provision a SQS queue if required
+## Provision the SNS topic for the budgets
 module "sns" {
   count   = var.create_sns_topic ? 1 : 0
   source  = "terraform-aws-modules/sns/aws"
@@ -11,7 +11,7 @@ module "sns" {
   tags                          = var.tags
 }
 
-## Provision any email notifications if required 
+## Provision any email notifications if required
 resource "aws_sns_topic_subscription" "email" {
   for_each = local.enable_email ? toset(var.email.addresses) : toset([])
 
@@ -22,7 +22,7 @@ resource "aws_sns_topic_subscription" "email" {
   depends_on = [module.sns]
 }
 
-## Provision the sns topic subscriptions if required 
+## Provision the sns topic subscriptions if required
 resource "aws_sns_topic_subscription" "subscribers" {
   for_each = var.subscribers
 
@@ -44,7 +44,6 @@ resource "aws_sns_topic_subscription" "subscribers" {
 module "notify" {
   source = "./modules/notify"
 
-  accounts_id_to_name                    = var.accounts_id_to_name
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention
   create_sns_topic                       = false
@@ -57,6 +56,30 @@ module "notify" {
   recreate_missing_package               = false
   sns_topic_name                         = var.sns_topic_name
   tags                                   = var.tags
+
+  # Additional IAM Policies to be attached to notify lambda
+  lambda_policy_config = {
+      ssm = {
+        enabled = true  # Set to false to disable this policy
+        effect  = "Allow"
+        actions = ["ssm:GetParameter", "ssm:GetParameters"]
+        resources = ["arn:${data.aws_partition.current.partition}:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.id}:parameter/lza/configuration/aws_organisations/*"]
+      }
+  }
+
+  # Additional IAM Policies to be attached to notify lambda
+  lambda_layers_config = {
+    powertools = {
+      enabled = true
+      type    = "managed"
+      version = "79"
+    }
+    parameters_secrets = {
+      enabled = true
+      type    = "managed"
+      version = "12"
+    }
+  }
 
   depends_on = [module.sns]
 }

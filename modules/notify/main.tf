@@ -36,20 +36,20 @@ locals {
     }
   }
 
-  ## We need to ensure the account names are ordered 
-  account_by_ids = [
-    for name in sort(keys(var.accounts_id_to_name)) : {
-      id   = name
-      name = var.accounts_id_to_name[name]
-    }
-  ]
+  # ## We need to ensure the account names are ordered
+  # account_by_ids = [
+  #   for name in sort(keys(var.accounts_id_to_name)) : {
+  #     id   = name
+  #     name = var.accounts_id_to_name[name]
+  #   }
+  # ]
 
-  accounts_id_to_name_python_dictonary = templatefile(
-    "${path.module}/mapAccountIdToName-python-dict.tftpl",
-    {
-      accounts_id_to_name = local.account_by_ids
-    }
-  )
+  # accounts_id_to_name_python_dictonary = templatefile(
+  #   "${path.module}/mapAccountIdToName-python-dict.tftpl",
+  #   {
+  #     accounts_id_to_name = local.account_by_ids
+  #   }
+  # )
   notification_emblems_python = templatefile(
     "${path.module}/notification-emblems-python.tftpl",
     {
@@ -102,10 +102,10 @@ resource "aws_sns_topic_subscription" "sns_notify_teams" {
   filter_policy_scope = local.subscription_policies["teams"].scope
 }
 
-resource "local_file" "notify_account_names_dict_python" {
-  content  = local.accounts_id_to_name_python_dictonary
-  filename = "${path.module}/functions/src/account_id_name_mappings.py"
-}
+# resource "local_file" "notify_account_names_dict_python" {
+#   content  = local.accounts_id_to_name_python_dictonary
+#   filename = "${path.module}/functions/src/account_id_name_mappings.py"
+# }
 
 resource "local_file" "notification_emblems_python" {
   content  = local.notification_emblems_python
@@ -148,7 +148,17 @@ module "lambda" {
   tags                               = var.tags
   timeout                            = 10
 
-  ## Logging related 
+  ## Additional Policy Requirements
+  attach_policy_statements = length(local.enabled_policies) > 0
+  policy_statements = {
+    for policy_name, policy in local.enabled_policies : policy_name => {
+      effect    = policy.effect
+      actions   = policy.actions
+      resources = policy.resources
+    }
+  }
+
+  ## Logging related
   use_existing_cloudwatch_log_group = false
   cloudwatch_logs_kms_key_id        = var.cloudwatch_log_group_kms_key_id
   cloudwatch_logs_retention_in_days = var.cloudwatch_log_group_retention_in_days
@@ -169,7 +179,6 @@ module "lambda" {
       prefix_in_zip    = ""
       patterns         = <<END
         msg_parser\.py
-        account_id_name_mappings\.py
         notification_emblems\.py
         !.*msg_render_.*\.py
         !.*notify_.*\.py
@@ -179,17 +188,14 @@ module "lambda" {
   ]
 
 
-  # utilise the AWS lambda PowerTools layer - must match the lamdba architecture
-  #  using the Powertools for logging, supports managing the log level via standard Layer monitoring
-  #  & logging log levels.
-  layers = [
-    "arn:aws:lambda:${data.aws_region.current.name}:017000801446:layer:${var.powertools_layer_arn_suffix}"
-  ]
+  layers = local.enabled_layers
 
   environment_variables = (merge(
     local.lambda_env_vars[each.value],
     {
       POWERTOOLS_SERVICE_NAME = var.aws_powertools_service_name
+      PARAMETERS_SECRETS_EXTENSION_LOG_LEVEL = "INFO"
+      ORGANISATIONS_ACCOUNTS_ID_TO_NAME_PARAMETER_ARN = ""
     }
   ))
 
@@ -201,7 +207,7 @@ module "lambda" {
   }
 
   depends_on = [
-    local_file.notify_account_names_dict_python,
+    # local_file.notify_account_names_dict_python,
     local_file.notification_emblems_python
   ]
 }
