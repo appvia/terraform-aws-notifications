@@ -28,10 +28,10 @@ resource "aws_sns_topic_subscription" "sns_notify_teams" {
   filter_policy_scope = local.subscription_policies["teams"].scope
 }
 
-resource "local_file" "notify_account_names_dict_python" {
-  content  = local.accounts_id_to_name_python_dictonary
-  filename = "${path.module}/functions/src/account_id_name_mappings.py"
-}
+# resource "local_file" "notify_account_names_dict_python" {
+#   content  = local.accounts_id_to_name_python_dictonary
+#   filename = "${path.module}/functions/src/account_id_name_mappings.py"
+# }
 
 #trivy:ignore:avd-aws-0067
 module "lambda" {
@@ -59,15 +59,16 @@ module "lambda" {
   store_on_s3                        = var.lambda_function_store_on_s3
   tags                               = var.tags
   timeout                            = 10
-  trigger_on_package_timestamp       = var.trigger_on_package_timestamp
 
-  ## Related to the IAM
-  create_role               = true
-  lambda_role               = var.lambda_role
-  role_name                 = format("%s-%s", var.iam_role_name_prefix, var.delivery_channels[each.value].lambda_name)
-  role_path                 = var.iam_role_path
-  role_permissions_boundary = var.iam_role_boundary_policy_arn
-  role_tags                 = var.tags
+  ## Additional Policy Requirements
+  attach_policy_statements = length(local.enabled_policies) > 0
+  policy_statements = {
+    for policy_name, policy in local.enabled_policies : policy_name => {
+      effect    = policy.effect
+      actions   = policy.actions
+      resources = policy.resources
+    }
+  }
 
   ## Logging related
   use_existing_cloudwatch_log_group = false
@@ -83,7 +84,6 @@ module "lambda" {
       prefix_in_zip    = ""
       patterns         = <<END
         msg_parser\.py
-        account_id_name_mappings\.py
         notification_emblems\.py
         !.*msg_render_.*\.py
         !.*notify_.*\.py
@@ -92,17 +92,14 @@ module "lambda" {
     }
   ]
 
-  # utilise the AWS lambda PowerTools layer - must match the lamdba architecture
-  #  using the Powertools for logging, supports managing the log level via standard Layer monitoring
-  #  & logging log levels.
-  layers = [
-    "arn:aws:lambda:${local.region}:017000801446:layer:${var.powertools_layer_arn_suffix}"
-  ]
+  layers = local.enabled_layers
 
   environment_variables = (merge(
     local.lambda_env_vars[each.value],
     {
       POWERTOOLS_SERVICE_NAME = var.aws_powertools_service_name
+      PARAMETERS_SECRETS_EXTENSION_LOG_LEVEL = "INFO"
+      ORGANISATIONS_ACCOUNTS_ID_TO_NAME_PARAMETER_ARN = ""
     }
   ))
 
@@ -114,6 +111,6 @@ module "lambda" {
   }
 
   depends_on = [
-    local_file.notify_account_names_dict_python,
+    # local_file.notify_account_names_dict_python,
   ]
 }

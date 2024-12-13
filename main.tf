@@ -44,10 +44,6 @@ resource "aws_sns_topic_subscription" "subscribers" {
 module "notify" {
   source = "./modules/notify"
 
-  aws_partition                          = data.aws_partition.current.partition
-  aws_region                             = data.aws_region.current.name
-  aws_account_id                         = data.aws_caller_identity.current.account_id
-  accounts_id_to_name                    = var.accounts_id_to_name
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention
   create_sns_topic                       = false
@@ -59,7 +55,30 @@ module "notify" {
   recreate_missing_package               = false
   sns_topic_name                         = var.sns_topic_name
   tags                                   = var.tags
-  trigger_on_package_timestamp           = false
+
+  # Additional IAM Policies to be attached to notify lambda
+  lambda_policy_config = {
+      ssm = {
+        enabled = true  # Set to false to disable this policy
+        effect  = "Allow"
+        actions = ["ssm:GetParameter", "ssm:GetParameters"]
+        resources = ["arn:${data.aws_partition.current.partition}:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.id}:parameter/lza/configuration/aws_organisations/*"]
+      }
+  }
+
+  # Additional IAM Policies to be attached to notify lambda
+  lambda_layers_config = {
+    powertools = {
+      enabled = true
+      type    = "managed"
+      version = "79"
+    }
+    parameters_secrets = {
+      enabled = true
+      type    = "managed"
+      version = "12"
+    }
+  }
 
   depends_on = [module.sns]
 }
