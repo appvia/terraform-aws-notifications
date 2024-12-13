@@ -241,9 +241,9 @@ variable "lambda_policy_config" {
   }))
   default = {
     ssm = {
-      enabled = false
-      effect  = "Allow"
-      actions = ["ssm:GetParameter", "ssm:GetParameters"]
+      enabled   = false
+      effect    = "Allow"
+      actions   = ["ssm:GetParameter", "ssm:GetParameters"]
       resources = ["*"]
     }
   }
@@ -253,7 +253,7 @@ variable "lambda_layers_config" {
   description = "Configuration for Lambda layers"
   type = map(object({
     enabled = optional(bool, true)
-    type    = optional(string, "managed")  # "managed" or "custom"
+    type    = optional(string, "managed") # "managed" or "custom"
     arn     = optional(string)
     version = optional(string)
     region  = optional(string)
