@@ -58,12 +58,12 @@ module "notify" {
 
   # Additional IAM Policies to be attached to notify lambda
   lambda_policy_config = {
-      ssm = {
-        enabled = true  # Set to false to disable this policy
-        effect  = "Allow"
-        actions = ["ssm:GetParameter", "ssm:GetParameters"]
-        resources = ["arn:${data.aws_partition.current.partition}:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.id}:parameter/lza/configuration/aws_organisations/*"]
-      }
+    ssm = {
+      enabled   = true # Set to false to disable this policy
+      effect    = "Allow"
+      actions   = ["ssm:GetParameter", "ssm:GetParameters"]
+      resources = ["arn:${data.aws_partition.current.partition}:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.id}:parameter/lza/configuration/aws_organisations/*"]
+    }
   }
 
   # Additional IAM Policies to be attached to notify lambda
