@@ -102,7 +102,7 @@ locals {
         config.type == "managed" ? (
           "arn:aws:lambda:${config.region != null ? config.region : data.aws_region.current.name}:${local.aws_managed_layers[config.name].account_id}:layer:${
             local.aws_managed_layers[config.name].arch_specific ?
-            replace(local.aws_managed_layers[config.name].name_pattern, "%ARCH%", title(var.architecture)) :
+            replace(local.aws_managed_layers[config.name].name_pattern, "%ARCH%", local.architectures[var.architecture]) :
             local.aws_managed_layers[config.name].name_pattern
           }${config.version != null ? ":${config.version}" : ""}"
         ) : null
