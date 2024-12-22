@@ -158,12 +158,6 @@ variable "iam_role_path" {
   default     = null
 }
 
-variable "iam_policy_path" {
-  description = "Path of policies to that should be added to IAM role for Lambda Function"
-  type        = string
-  default     = null
-}
-
 variable "lambda_function_store_on_s3" {
   description = "Whether to store produced artifacts on S3 or locally."
   type        = bool
