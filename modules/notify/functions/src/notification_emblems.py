@@ -14,5 +14,5 @@ __GREEN__ = ""
 """
 To use an image content for icon
 """
-__ATTENTION_URL__="${error-icon-url}"
-__WARNING_URL__="${warning-icon-url}"
+__ATTENTION_URL__="https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png"
+__WARNING_URL__="https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"

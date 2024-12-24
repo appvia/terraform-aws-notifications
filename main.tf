@@ -44,6 +44,9 @@ resource "aws_sns_topic_subscription" "subscribers" {
 module "notify" {
   source = "./modules/notify"
 
+  aws_partition                          = data.aws_partition.current.partition
+  aws_region                             = data.aws_region.current.name
+  aws_account_id                         = data.aws_caller_identity.current.account_id
   accounts_id_to_name                    = var.accounts_id_to_name
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention
@@ -53,7 +56,6 @@ module "notify" {
   enable_teams                           = var.enable_teams
   identity_center_role                   = var.identity_center_role
   identity_center_start_url              = var.identity_center_start_url
-  post_icons_url                         = var.post_icons_url
   recreate_missing_package               = false
   sns_topic_name                         = var.sns_topic_name
   tags                                   = var.tags

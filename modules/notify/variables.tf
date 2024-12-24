@@ -3,6 +3,21 @@ variable "architecture" {
   type        = string
   default     = "arm64"
 }
+variable "aws_partition" {
+  description = "The partition in which the resource is located. A partition is a group of AWS Regions. Each AWS account is scoped to one partition."
+  type        = string
+  default     = "aws"
+}
+
+variable "aws_region" {
+  description = "The AWS region to deploy to"
+  type        = string
+}
+
+variable "aws_account_id" {
+  description = "The AWS account ID"
+  type        = string
+}
 
 variable "python_runtime" {
   description = "The lambda python runtime"
@@ -34,18 +49,6 @@ variable "lambda_source_path" {
   default     = null
 }
 
-variable "lambda_dead_letter_target_arn" {
-  description = "The ARN of an SNS topic or SQS queue to notify when an invocation fails."
-  type        = string
-  default     = null
-}
-
-variable "lambda_attach_dead_letter_policy" {
-  description = "Controls whether SNS/SQS dead letter notification policy should be added to IAM role for Lambda Function"
-  type        = bool
-  default     = false
-}
-
 variable "sns_topic_name" {
   description = "The name of the SNS topic to create"
   type        = string
@@ -55,54 +58,6 @@ variable "sns_topic_kms_key_id" {
   description = "ARN of the KMS key used for enabling SSE on the topic"
   type        = string
   default     = ""
-}
-
-variable "enable_sns_topic_delivery_status_logs" {
-  description = "Whether to enable SNS topic delivery status logs"
-  type        = bool
-  default     = false
-}
-
-variable "sns_topic_lambda_feedback_role_arn" {
-  description = "IAM role for SNS topic delivery status logs.  If this is set then a role will not be created for you."
-  type        = string
-  default     = ""
-}
-
-variable "sns_topic_feedback_role_name" {
-  description = "Name of the IAM role to use for SNS topic delivery status logging"
-  type        = string
-  default     = null
-}
-
-variable "sns_topic_feedback_role_description" {
-  description = "Description of IAM role to use for SNS topic delivery status logging"
-  type        = string
-  default     = null
-}
-
-variable "sns_topic_feedback_role_path" {
-  description = "Path of IAM role to use for SNS topic delivery status logging"
-  type        = string
-  default     = null
-}
-
-variable "sns_topic_feedback_role_force_detach_policies" {
-  description = "Specifies to force detaching any policies the IAM role has before destroying it."
-  type        = bool
-  default     = true
-}
-
-variable "sns_topic_feedback_role_permissions_boundary" {
-  description = "The ARN of the policy that is used to set the permissions boundary for the IAM role used by SNS topic delivery status logging"
-  type        = string
-  default     = null
-}
-
-variable "sns_topic_lambda_feedback_sample_rate" {
-  description = "The percentage of successful deliveries to log"
-  type        = number
-  default     = 100
 }
 
 variable "kms_key_arn" {
@@ -217,18 +172,6 @@ variable "accounts_id_to_name" {
   description = "A mapping of account id and account name - used by notification lamdba to map an account ID to a human readable name"
   type        = map(string)
   default     = {}
-}
-
-variable "post_icons_url" {
-  description = "URLs (not base64 encoded!) to publically available icons for highlighting posts of error and/or warning status. Ideally 50px square."
-  type = object({
-    error_url   = string
-    warning_url = string
-  })
-  default = {
-    error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png"
-    warning_url = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"
-  }
 }
 
 variable "identity_center_start_url" {

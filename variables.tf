@@ -79,11 +79,11 @@ variable "slack" {
   description = "The configuration for Slack notifications"
   type = object({
     lambda_name = optional(string, "slack-notify")
-    # The name of the lambda function to create 
+    # The name of the lambda function to create
     lambda_description = optional(string, "Lambda function to send slack notifications")
     # The description for the slack lambda
     secret_name = optional(string)
-    # An optional secret name in secrets manager to use for the slack configuration 
+    # An optional secret name in secrets manager to use for the slack configuration
     webhook_url = optional(string)
     # The webhook url to post to
     filter_policy = optional(string)
@@ -98,11 +98,11 @@ variable "teams" {
   description = "The configuration for teams notifications"
   type = object({
     lambda_name = optional(string, "teams-notify")
-    # The name of the lambda function to create 
+    # The name of the lambda function to create
     lambda_description = optional(string, "Lambda function to send teams notifications")
     # The description for the teams lambda
     secret_name = optional(string)
-    # An optional secret name in secrets manager to use for the slack configuration 
+    # An optional secret name in secrets manager to use for the slack configuration
     webhook_url = optional(string)
     # The webhook url to post to
     filter_policy = optional(string)
@@ -149,18 +149,6 @@ variable "accounts_id_to_name" {
   description = "A mapping of account id and account name - used by notification lamdba to map an account ID to a human readable name"
   type        = map(string)
   default     = {}
-}
-
-variable "post_icons_url" {
-  description = "URLs (not base64 encoded!) to publically available icons for highlighting posts of error and/or warning status. Ideally 50px square. Set to non-existent URLs to disable icons"
-  type = object({
-    error_url   = string
-    warning_url = string
-  })
-  default = {
-    error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png"
-    warning_url = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"
-  }
 }
 
 variable "identity_center_start_url" {

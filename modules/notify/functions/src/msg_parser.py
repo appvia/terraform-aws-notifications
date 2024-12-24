@@ -133,10 +133,10 @@ def parse_cloudwatch_alarm(message: Dict[str, Any], snsRegion: str) -> Dict[str,
     old_state = message["OldStateValue"]
     alarm_arn = message["AlarmArn"]
     alarm_arn_region = message["AlarmArn"].split(":")[3]
-    
+
     cloudwatch_service_url = get_target_url(account_id=account_id, absoluteUrl=get_service_url(region=alarm_arn_region, service="cloudwatch"))
     cloudwatch_url = f"{cloudwatch_service_url}#alarm:alarmFilter=ANY;name={urllib.parse.quote(name)}"
-        
+
     return {
         "action": action,
         "priority": priority,
@@ -177,7 +177,7 @@ def parse_guardduty_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str
     detail = message["detail"]
     service = detail.get("service", {})
     region =  message['region']
-    
+
     severity_score = detail.get("severity")
     if severity_score < 4.0:
         severity = "Low"
@@ -198,7 +198,6 @@ def parse_guardduty_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str
     guard_duty_id = detail['id']
 
     guardduty_url = get_target_url(account_id=account_id, absoluteUrl=get_service_url(region=region, service="guardduty"))
-
 
     atDT = datetime.fromisoformat(service["eventLastSeen"])
     atEpoch = atDT.timestamp()
@@ -452,7 +451,7 @@ def parse_security_hub_finding(message: Dict[str, Any], snsRegion: str) -> Dict[
     # not done any real investigztion into the service url yet!!!!!!
     service_url = get_target_url(account_id=account_id, absoluteUrl=get_service_url(region=region, service="securityhub"))
     url = f"{service_url}#findings?search=GeneratorId%3D%255Coperator%255C%253AEQUALS%255C%253A{urllib.parse.quote(source)}"
-    
+
     # light touch parse on each resource
     resources:list[Dict[str, Any]] = []
     for resource in message["Resources"]:
@@ -547,7 +546,7 @@ def parse_cost_anomaly(message: Dict[str, Any]) -> Dict[str, Any]:
     originatingAccountId = message["accountId"]
     originatingUrl = message["anomalyDetailsLink"]
     url = get_target_url(account_id=originatingAccountId, absoluteUrl=originatingUrl)
-    
+
     # start and end
     startedAt = message["anomalyStartDate"]
     startedAtDT = datetime.fromisoformat(startedAt)
@@ -629,7 +628,7 @@ def get_message_payload(
             message = json.loads(message)
         except json.JSONDecodeError:
             pass
-            
+
     message = cast(Dict[str, Any], message)
 
     # to handle manual posting of messages via SNS, handle the case where subject is not defined
@@ -659,18 +658,18 @@ def get_message_payload(
 
     elif subject.startswith("Savings Plans Coverage Alert:"):
         parsedMsg = parse_aws_savings_plan(subject=subject, message=str(message))
-    
+
     elif subject.startswith("AWS Cost Management:"):
         parsedMsg = parse_cost_anomaly(message=message)
-    
+
     else:
         parsedMsg = {
             "action": AwsAction.UNKNOWN.value,
         }
-        
+
     metricType = parsedMsg["action"]
     metrics.add_metric(name=f"{metricType}", unit=MetricUnit.Count, value=1)
-                       
+
     return AwsParsedMessage(parsed=parsedMsg, original=message, actionType=parsedMsg["action"])
 
 def parse_sns(
@@ -723,5 +722,5 @@ def parse_sns(
                 info=response_info,
                 record=record,
             )
-    
+
     return is_no_error
