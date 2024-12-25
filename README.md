@@ -48,11 +48,6 @@ module "notifications" {
     "123456789" = "audit"
   }
 
-  post_icons_url = {
-    error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png"
-    warning_url = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"
-  }
-
   # To redirect event URL in post through Identity Center, e.g.:
   identity_center_start_url = "<your start url>"
   identity_center_role      = "<your role - consistent across all accounts - namely read only>
