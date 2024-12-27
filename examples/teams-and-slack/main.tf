@@ -57,10 +57,10 @@ module "notifications" {
   # uncomment to override the warning and error icons that will be shown against each post
   #  The URLs must be public, and must resolve to transparent PNG ideally.
   #  appvia recommend images that are 50px by 50px.
-  post_icons_url = {
-    error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/feat/SA-251-notify-teams/resources/posts-attention-icon.png"
-    warning_url = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/feat/SA-251-notify-teams/resources/posts-warning-icon.png"
-  }
+  # post_icons_url = {
+  #   error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/feat/SA-251-notify-teams/resources/posts-attention-icon.png"
+  #   warning_url = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/feat/SA-251-notify-teams/resources/posts-warning-icon.png"
+  # }
 
   # Override the number of the slack lambda logs are retained for.
   #
