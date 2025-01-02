@@ -78,13 +78,13 @@ locals {
   # AWS Managed Layer ARN patterns with architecture support
   aws_managed_layers = {
     powertools = {
-      account_id = "017000801446"
-      name_pattern = "AWSLambdaPowertoolsPythonV2-%ARCH%"
+      account_id    = "017000801446"
+      name_pattern  = "AWSLambdaPowertoolsPythonV2-%ARCH%"
       arch_specific = true
     }
     parameters_secrets = {
-      account_id = "133256977650"
-      name_pattern = "AWS-Parameters-and-Secrets-Lambda-Extension-%ARCH%"
+      account_id    = "133256977650"
+      name_pattern  = "AWS-Parameters-and-Secrets-Lambda-Extension-%ARCH%"
       arch_specific = true
     }
     # Add more AWS managed layers as needed
