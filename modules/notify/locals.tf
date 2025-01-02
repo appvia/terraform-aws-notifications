@@ -37,20 +37,20 @@ locals {
     }
   }
 
-  ## We need to ensure the account names are ordered
-  account_by_ids = [
-    for name in sort(keys(var.accounts_id_to_name)) : {
-      id   = name
-      name = var.accounts_id_to_name[name]
-    }
-  ]
+  # ## We need to ensure the account names are ordered
+  # account_by_ids = [
+  #   for name in sort(keys(var.accounts_id_to_name)) : {
+  #     id   = name
+  #     name = var.accounts_id_to_name[name]
+  #   }
+  # ]
 
-  accounts_id_to_name_python_dictonary = templatefile(
-    "${path.module}/mapAccountIdToName-python-dict.tftpl",
-    {
-      accounts_id_to_name = local.account_by_ids
-    }
-  )
+  # accounts_id_to_name_python_dictonary = templatefile(
+  #   "${path.module}/mapAccountIdToName-python-dict.tftpl",
+  #   {
+  #     accounts_id_to_name = local.account_by_ids
+  #   }
+  # )
 
   # the enable_[slack|teams] variable controls the subscription between SNS and lambda only; it is
   #  feasible that we want to keep the infrastructure (lambda, lambda role, log group et al) while suspending
@@ -100,7 +100,7 @@ locals {
         config.arn,
         # If it's a managed layer, construct the ARN using the managed layer pattern
         config.type == "managed" ? (
-          "arn:aws:lambda:${config.region != null ? config.region : data.aws_region.current.name}:${local.aws_managed_layers[config.name].account_id}:layer:${
+          "arn:aws:lambda:${config.region != null ? config.region : local.region}:${local.aws_managed_layers[config.name].account_id}:layer:${
             local.aws_managed_layers[config.name].arch_specific ?
             replace(local.aws_managed_layers[config.name].name_pattern, "%ARCH%", local.architectures[var.architecture]) :
             local.aws_managed_layers[config.name].name_pattern

@@ -94,7 +94,6 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.0.0 |
-| <a name="provider_local"></a> [local](#provider\_local) | >= 2.5.0 |
 
 ## Inputs
 
@@ -126,7 +125,6 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 | <a name="input_lambda_policy_config"></a> [lambda\_policy\_config](#input\_lambda\_policy\_config) | Map of policy configurations | <pre>map(object({<br/>    enabled   = bool<br/>    effect    = string<br/>    actions   = list(string)<br/>    resources = list(string)<br/>  }))</pre> | <pre>{<br/>  "ssm": {<br/>    "actions": [<br/>      "ssm:GetParameter",<br/>      "ssm:GetParameters"<br/>    ],<br/>    "effect": "Allow",<br/>    "enabled": false,<br/>    "resources": [<br/>      "*"<br/>    ]<br/>  }<br/>}</pre> | no |
 | <a name="input_lambda_role"></a> [lambda\_role](#input\_lambda\_role) | IAM role attached to the Lambda Function.  If this is set then a role will not be created for you. | `string` | `""` | no |
 | <a name="input_lambda_source_path"></a> [lambda\_source\_path](#input\_lambda\_source\_path) | The source path of the custom Lambda function | `string` | `null` | no |
-| <a name="input_post_icons_url"></a> [post\_icons\_url](#input\_post\_icons\_url) | URLs (not base64 encoded!) to publically available icons for highlighting posts of error and/or warning status. Ideally 50px square. | <pre>object({<br/>    error_url   = string<br/>    warning_url = string<br/>  })</pre> | <pre>{<br/>  "error_url": "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png",<br/>  "warning_url": "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"<br/>}</pre> | no |
 | <a name="input_python_runtime"></a> [python\_runtime](#input\_python\_runtime) | The lambda python runtime | `string` | `"python3.12"` | no |
 | <a name="input_recreate_missing_package"></a> [recreate\_missing\_package](#input\_recreate\_missing\_package) | Whether to recreate missing Lambda package if it is missing locally or not | `bool` | `true` | no |
 | <a name="input_reserved_concurrent_executions"></a> [reserved\_concurrent\_executions](#input\_reserved\_concurrent\_executions) | The amount of reserved concurrent executions for this lambda function. A value of 0 disables lambda from being triggered and -1 removes any concurrency limitations | `number` | `-1` | no |

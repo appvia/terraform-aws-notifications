@@ -1,6 +1,7 @@
 
 ## Find the current AWS account ID
 data "aws_caller_identity" "current" {}
+
 ## Find the current AWS region
 data "aws_region" "current" {}
 
@@ -58,14 +59,12 @@ data "aws_iam_policy_document" "current" {
 }
 
 ## Find the slack secret if required
-## Find the slack secret if required
 data "aws_secretsmanager_secret" "slack" {
   count = local.enable_slack_secret ? 1 : 0
 
   name = var.slack.secret_name
 }
 
-## Find the latest version of the slack secret if required
 ## Find the latest version of the slack secret if required
 data "aws_secretsmanager_secret_version" "slack" {
   count = local.enable_slack_secret ? 1 : 0

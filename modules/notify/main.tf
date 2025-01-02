@@ -59,6 +59,15 @@ module "lambda" {
   store_on_s3                        = var.lambda_function_store_on_s3
   tags                               = var.tags
   timeout                            = 10
+  trigger_on_package_timestamp       = var.trigger_on_package_timestamp
+
+  ## Related to the IAM
+  create_role               = true
+  lambda_role               = var.lambda_role
+  role_name                 = format("%s-%s", var.iam_role_name_prefix, var.delivery_channels[each.value].lambda_name)
+  role_path                 = var.iam_role_path
+  role_permissions_boundary = var.iam_role_boundary_policy_arn
+  role_tags                 = var.tags
 
   ## Additional Policy Requirements
   attach_policy_statements = length(local.enabled_policies) > 0

@@ -145,17 +145,6 @@ variable "enable_teams" {
   default     = false
 }
 
-variable "post_icons_url" {
-  description = "URLs (not base64 encoded!) to publically available icons for highlighting posts of error and/or warning status. Ideally 50px square. Set to non-existent URLs to disable icons"
-  type = object({
-    error_url   = string
-    warning_url = string
-  })
-  default = {
-    error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png"
-    warning_url = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-warning-icon.png"
-  }
-}
 
 variable "identity_center_start_url" {
   description = "The start URL of your Identity Center instance"
