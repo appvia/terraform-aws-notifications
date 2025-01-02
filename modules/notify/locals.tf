@@ -26,6 +26,33 @@ locals {
     }
   }
 
+  lambda_env_layer_parameters_secrets = {
+    SSM_PARAMETER_STORE_TIMEOUT_MILLIS           = "1000"
+    SECRETS_MANAGER_TIMEOUT_MILLIS               = "1000"
+    SSM_PARAMETER_STORE_TTL                      = "300"
+    SECRETS_MANAGER_TTL                          = "300"
+    PARAMETERS_SECRETS_EXTENSION_CACHE_ENABLED   = "true"
+    PARAMETERS_SECRETS_EXTENSION_CACHE_SIZE      = "1000"
+    PARAMETERS_SECRETS_EXTENSION_HTTP_PORT       = "2773"
+    PARAMETERS_SECRETS_EXTENSION_MAX_CONNECTIONS = "3"
+    PARAMETERS_SECRETS_EXTENSION_LOG_LEVEL       = "debug"
+  }
+
+  lambda_env_layers_powertools = {
+    POWERTOOLS_SERVICE_NAME = var.aws_powertools_service_name
+  }
+
+  layer_env_mapping = {
+    "powertools"         = local.lambda_env_layers_powertools
+    "parameters-secrets" = local.lambda_env_layer_parameters_secrets
+  }
+
+  # Build environments maintaining specific order
+  layer_environments = merge([
+    for layer in local.enabled_layers :
+    lookup(local.layer_env_mapping, layer, {})
+  ]...)
+
   subscription_policies = {
     "slack" = {
       filter = try(var.delivery_channels["slack"].filter_policy, null)
@@ -63,6 +90,7 @@ locals {
 
   distributions = toset([for x in ["slack", "teams"] : x if local.create_distribution[x] == true])
 
+  ## Lambda Layer
   # Filter only enabled policies
   enabled_policies = {
     for k, v in var.lambda_policy_config : k => v

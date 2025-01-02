@@ -103,14 +103,10 @@ module "lambda" {
 
   layers = local.enabled_layers
 
-  environment_variables = (merge(
-    local.lambda_env_vars[each.value],
-    {
-      POWERTOOLS_SERVICE_NAME                         = var.aws_powertools_service_name
-      PARAMETERS_SECRETS_EXTENSION_LOG_LEVEL          = "INFO"
-      ORGANISATIONS_ACCOUNTS_ID_TO_NAME_PARAMETER_ARN = ""
-    }
-  ))
+  environment_variables = merge(
+    local.layer_environments,
+    local.lambda_env_vars[each.value]
+  )
 
   allowed_triggers = {
     AllowExecutionFromSNS = {
