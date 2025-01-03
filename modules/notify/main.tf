@@ -94,6 +94,7 @@ module "lambda" {
       patterns         = <<END
         msg_parser\.py
         notification_emblems\.py
+        ssm_param\.py
         !.*msg_render_.*\.py
         !.*notify_.*\.py
         .*${each.value}\.py
@@ -105,10 +106,12 @@ module "lambda" {
   layers = local.enabled_layers
 
   ## Lambda environment variables
-  environment_variables = merge(
-    local.layer_env_vars,
-    local.lambda_env_vars[each.value]
-  )
+  environment_variables = {
+    for k, v in merge(
+      local.layer_env_vars,
+      local.lambda_env_vars[each.value]
+    ) : k => tostring(v)
+  }
 
   allowed_triggers = {
     AllowExecutionFromSNS = {

@@ -36,6 +36,7 @@ locals {
     PARAMETERS_SECRETS_EXTENSION_HTTP_PORT       = "2773"
     PARAMETERS_SECRETS_EXTENSION_MAX_CONNECTIONS = "3"
     PARAMETERS_SECRETS_EXTENSION_LOG_LEVEL       = "debug"
+    AWS_ORGANISATIONS_ACCOUNTS_ID_TO_NAME_PARAMETER_ARN = "arn:aws:ssm:eu-west-2:012140491173:parameter/lza/configuration/aws_organisations/accounts_id_to_name_mapping_test"
   }
 
   lambda_env_vars_layers_powertools = {
@@ -43,14 +44,19 @@ locals {
   }
 
   layer_env_vars_mapping = {
-    "powertools"         = local.lambda_env_vars_layers_powertools
-    "parameters-secrets" = local.lambda_env_vars_layer_parameters_secrets
+    powertools         = local.lambda_env_vars_layers_powertools
+    parameters_secrets = local.lambda_env_vars_layer_parameters_secrets
   }
 
-  # Build environments maintaining specific order
+  enabled_layer_names = [
+    for name, layer in local.processed_layers :
+    name
+    if layer.enabled && layer.arn != null
+  ]
+
   layer_env_vars = merge([
-    for layer in local.enabled_layers :
-    lookup(local.layer_env_vars_mapping, layer, {})
+    for layer_name in local.enabled_layer_names :
+    lookup(local.layer_env_vars_mapping, layer_name, {})
   ]...)
 
   subscription_policies = {
@@ -115,7 +121,6 @@ locals {
       name_pattern  = "AWS-Parameters-and-Secrets-Lambda-Extension-%ARCH%"
       arch_specific = true
     }
-    # Add more AWS managed layers as needed
   }
 
   # Process layer ARNs based on configuration
@@ -123,16 +128,16 @@ locals {
     for name, config in var.lambda_layers_config :
     name => {
       enabled = try(config.enabled, true)
-      arn = try(
-        # If ARN is directly provided, use it
-        config.arn,
-        # If it's a managed layer, construct the ARN using the managed layer pattern
-        config.type == "managed" ? (
-          "arn:aws:lambda:${config.region != null ? config.region : local.region}:${local.aws_managed_layers[config.name].account_id}:layer:${
-            local.aws_managed_layers[config.name].arch_specific ?
-            replace(local.aws_managed_layers[config.name].name_pattern, "%ARCH%", local.architectures[var.architecture]) :
-            local.aws_managed_layers[config.name].name_pattern
-          }${config.version != null ? ":${config.version}" : ""}"
+      arn = (
+        try(config.arn, null) != null ? config.arn :
+        try(config.type, "") == "managed" ? (
+          format("arn:%s:lambda:%s:%s:layer:%s:%s",
+            local.partition,
+            local.region,
+            local.aws_managed_layers[name].account_id,
+            replace(local.aws_managed_layers[name].name_pattern, "%ARCH%", local.architectures[var.architecture]),
+            config.version
+          )
         ) : null
       )
     }
