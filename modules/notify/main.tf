@@ -101,10 +101,12 @@ module "lambda" {
     }
   ]
 
+  ## Lambda layers
   layers = local.enabled_layers
 
+  ## Lambda environment variables
   environment_variables = merge(
-    local.layer_environments,
+    local.layer_env_vars,
     local.lambda_env_vars[each.value]
   )
 

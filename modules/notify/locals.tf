@@ -26,7 +26,7 @@ locals {
     }
   }
 
-  lambda_env_layer_parameters_secrets = {
+  lambda_env_vars_layer_parameters_secrets = {
     SSM_PARAMETER_STORE_TIMEOUT_MILLIS           = "1000"
     SECRETS_MANAGER_TIMEOUT_MILLIS               = "1000"
     SSM_PARAMETER_STORE_TTL                      = "300"
@@ -38,19 +38,19 @@ locals {
     PARAMETERS_SECRETS_EXTENSION_LOG_LEVEL       = "debug"
   }
 
-  lambda_env_layers_powertools = {
+  lambda_env_vars_layers_powertools = {
     POWERTOOLS_SERVICE_NAME = var.aws_powertools_service_name
   }
 
-  layer_env_mapping = {
-    "powertools"         = local.lambda_env_layers_powertools
-    "parameters-secrets" = local.lambda_env_layer_parameters_secrets
+  layer_env_vars_mapping = {
+    "powertools"         = local.lambda_env_vars_layers_powertools
+    "parameters-secrets" = local.lambda_env_vars_layer_parameters_secrets
   }
 
   # Build environments maintaining specific order
-  layer_environments = merge([
+  layer_env_vars = merge([
     for layer in local.enabled_layers :
-    lookup(local.layer_env_mapping, layer, {})
+    lookup(local.layer_env_vars_mapping, layer, {})
   ]...)
 
   subscription_policies = {
