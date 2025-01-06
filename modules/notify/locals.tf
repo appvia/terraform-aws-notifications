@@ -106,7 +106,7 @@ locals {
   # CPU architecture mapping
   architectures = {
     x86_64 = "amd64"
-    arm64  = "arm64"
+    arm64  = "Arm64"
   }
 
   # AWS Managed Layer ARN patterns with architecture support
