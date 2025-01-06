@@ -28,11 +28,6 @@ resource "aws_sns_topic_subscription" "sns_notify_teams" {
   filter_policy_scope = local.subscription_policies["teams"].scope
 }
 
-# resource "local_file" "notify_account_names_dict_python" {
-#   content  = local.accounts_id_to_name_python_dictonary
-#   filename = "${path.module}/functions/src/account_id_name_mappings.py"
-# }
-
 #trivy:ignore:avd-aws-0067
 module "lambda" {
   for_each = local.distributions
@@ -110,7 +105,7 @@ module "lambda" {
     for k, v in merge(
       local.layer_env_vars,
       local.lambda_env_vars[each.value]
-    ) : k => tostring(v)
+    ) : k => v == null ? null : tostring(v)
   }
 
   allowed_triggers = {
@@ -120,7 +115,4 @@ module "lambda" {
     }
   }
 
-  depends_on = [
-    # local_file.notify_account_names_dict_python,
-  ]
 }
