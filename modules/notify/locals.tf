@@ -35,12 +35,14 @@ locals {
     PARAMETERS_SECRETS_EXTENSION_CACHE_SIZE      = "1000"
     PARAMETERS_SECRETS_EXTENSION_HTTP_PORT       = "2773"
     PARAMETERS_SECRETS_EXTENSION_MAX_CONNECTIONS = "3"
-    PARAMETERS_SECRETS_EXTENSION_LOG_LEVEL       = "debug"
-    AWS_ORGANISATIONS_ACCOUNTS_ID_TO_NAME_PARAMETER_ARN = "arn:aws:ssm:eu-west-2:012140491173:parameter/lza/configuration/aws_organisations/accounts_id_to_name_mapping_test"
+    PARAMETERS_SECRETS_EXTENSION_LOG_LEVEL       = "INFO"
+    PARAMETER_ARN_ACCOUNTS_ID_TO_NAME_MAPPING    = try(var.parameter_arn_accounts_id_to_name_mapping, "")
   }
 
   lambda_env_vars_layers_powertools = {
-    POWERTOOLS_SERVICE_NAME = var.aws_powertools_service_name
+    POWERTOOLS_SERVICE_NAME      = try(var.powertools_service_name, "service_undefined")
+    POWERTOOLS_LOG_LEVEL         = "INFO"
+    POWERTOOLS_METRICS_NAMESPACE = null
   }
 
   layer_env_vars_mapping = {

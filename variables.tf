@@ -159,7 +159,7 @@ variable "identity_center_role" {
 }
 
 variable "powertools_service_name" {
-  description = "The name to use when defining a metric namespace"
+  description = "Sets service name used for tracing namespace, metrics dimension and structured logging for the AWS Powertools Lambda Layer"
   type        = string
   default     = "appvia-notifications"
 }
