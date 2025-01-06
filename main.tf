@@ -44,9 +44,9 @@ resource "aws_sns_topic_subscription" "subscribers" {
 module "notify" {
   source = "./modules/notify"
 
+  aws_account_id                         = data.aws_caller_identity.current.account_id
   aws_partition                          = data.aws_partition.current.partition
   aws_region                             = data.aws_region.current.name
-  aws_account_id                         = data.aws_caller_identity.current.account_id
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention
   create_sns_topic                       = false
@@ -55,11 +55,11 @@ module "notify" {
   enable_teams                           = var.enable_teams
   identity_center_role                   = var.identity_center_role
   identity_center_start_url              = var.identity_center_start_url
+  powertools_service_name = var.powertools_service_name
   recreate_missing_package               = false
   sns_topic_name                         = var.sns_topic_name
   tags                                   = var.tags
   trigger_on_package_timestamp           = false
-
   # Additional IAM Policies to be attached to notify lambda
   lambda_policy_config = {
     ssm = {

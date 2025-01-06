@@ -157,3 +157,9 @@ variable "identity_center_role" {
   type        = string
   default     = null
 }
+
+variable "powertools_service_name" {
+  description = "The name to use when defining a metric namespace"
+  type        = string
+  default     = "appvia-notifications"
+}

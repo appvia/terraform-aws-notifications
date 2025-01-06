@@ -156,8 +156,8 @@ variable "delivery_channels" {
   default = null
 }
 
-variable "aws_powertools_service_name" {
-  description = "The service name to use"
+variable "powertools_service_name" {
+  description = "The name to use when defining a metric namespace"
   type        = string
   default     = "appvia-notifications"
 }
