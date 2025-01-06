@@ -55,18 +55,20 @@ module "notify" {
   enable_teams                           = var.enable_teams
   identity_center_role                   = var.identity_center_role
   identity_center_start_url              = var.identity_center_start_url
-  powertools_service_name = var.powertools_service_name
+  accounts_id_to_name_parameter_arn      = var.accounts_id_to_name_parameter_arn
+  powertools_service_name                = var.powertools_service_name
   recreate_missing_package               = false
   sns_topic_name                         = var.sns_topic_name
   tags                                   = var.tags
   trigger_on_package_timestamp           = false
+
   # Additional IAM Policies to be attached to notify lambda
   lambda_policy_config = {
     ssm = {
       enabled   = true
       effect    = "Allow"
       actions   = ["ssm:GetParameter", "ssm:GetParameters"]
-      resources = ["arn:${data.aws_partition.current.partition}:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.id}:parameter/lza/configuration/aws_organisations/*"]
+      resources = [var.accounts_id_to_name_parameter_arn]
     }
     layers = {
       enabled   = true

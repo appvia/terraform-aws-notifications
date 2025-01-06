@@ -36,7 +36,7 @@ locals {
     PARAMETERS_SECRETS_EXTENSION_HTTP_PORT       = "2773"
     PARAMETERS_SECRETS_EXTENSION_MAX_CONNECTIONS = "3"
     PARAMETERS_SECRETS_EXTENSION_LOG_LEVEL       = "INFO"
-    PARAMETER_ARN_ACCOUNTS_ID_TO_NAME_MAPPING    = try(var.parameter_arn_accounts_id_to_name_mapping, "")
+    ACCOUNTS_ID_TO_NAME_PARAMETER_ARN            = try(var.accounts_id_to_name_parameter_arn, "")
   }
 
   lambda_env_vars_layers_powertools = {

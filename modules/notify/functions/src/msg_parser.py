@@ -39,10 +39,10 @@ KMS_CLIENT = boto3.client("kms", region_name=REGION)
 
 def get_account_mappings() -> dict:
     try:
-        parameter_arn = os.environ.get("AWS_ORGANISATIONS_ACCOUNTS_ID_TO_NAME_PARAMETER_ARN")
+        parameter_arn = os.environ.get("ACCOUNTS_ID_TO_NAME_PARAMETER_ARN")
         if not parameter_arn:
             logger.error(
-                "Missing required environment variable: AWS_ORGANISATIONS_ACCOUNTS_ID_TO_NAME_PARAMETER_ARN"
+                "Missing required environment variable: ACCOUNTS_ID_TO_NAME_PARAMETER_ARN"
             )
             return {}
 
