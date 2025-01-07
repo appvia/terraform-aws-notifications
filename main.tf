@@ -44,6 +44,7 @@ resource "aws_sns_topic_subscription" "subscribers" {
 module "notify" {
   source = "./modules/notify"
 
+  accounts_id_to_name_parameter_arn      = var.accounts_id_to_name_parameter_arn
   aws_account_id                         = data.aws_caller_identity.current.account_id
   aws_partition                          = data.aws_partition.current.partition
   aws_region                             = data.aws_region.current.name
@@ -55,7 +56,6 @@ module "notify" {
   enable_teams                           = var.enable_teams
   identity_center_role                   = var.identity_center_role
   identity_center_start_url              = var.identity_center_start_url
-  accounts_id_to_name_parameter_arn      = var.accounts_id_to_name_parameter_arn
   powertools_service_name                = var.powertools_service_name
   recreate_missing_package               = false
   sns_topic_name                         = var.sns_topic_name
@@ -68,7 +68,7 @@ module "notify" {
       enabled   = true
       effect    = "Allow"
       actions   = ["ssm:GetParameter", "ssm:GetParameters"]
-      resources = [var.accounts_id_to_name_parameter_arn]
+      resources = [coalesce(var.accounts_id_to_name_parameter_arn,"*")]
     }
     layers = {
       enabled   = true
