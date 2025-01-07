@@ -75,7 +75,7 @@ But given we cannot filter on subject, we have to inspect the message body:
   ]
 }
 ```
- 
+
 We simply need to ensure "FindingId" property exists; the policy is very simple
 ```
 {
@@ -92,6 +92,8 @@ tags = {
   "tag1" = "value1"
 }
 sns_topic_name="<your SNS topic name>"
+powertools_service_name="my-service-namespace"
+accounts_id_to_name_parameter_arn="arn:aws:ssm:eu-west-2:1234567890:parameter/myparam"
 primary_teams_webhook="<your webhook url>
 primary_slack_webhook="<your webhook url>
 security_hub_teams_webhook="<your webhook url>
@@ -127,6 +129,8 @@ No providers.
 | <a name="input_security_hub_slack_webhook"></a> [security\_hub\_slack\_webhook](#input\_security\_hub\_slack\_webhook) | The URL of the slack webhook to post Security Hub only events | `string` | n/a | yes |
 | <a name="input_security_hub_teams_webhook"></a> [security\_hub\_teams\_webhook](#input\_security\_hub\_teams\_webhook) | The URL of the teams webhook to post Security Hub only events | `string` | n/a | yes |
 | <a name="input_sns_topic_name"></a> [sns\_topic\_name](#input\_sns\_topic\_name) | The name of the SNS topic to create | `string` | n/a | yes |
+| <a name="input_accounts_id_to_name_parameter_arn"></a> [accounts\_id\_to\_name\_parameter\_arn](#input\_accounts\_id\_to\_name\_parameter\_arn) | The ARN of your parameter containing the your account ID to name mapping. This ARN will be attached to lambda execution role as a resource, therefore a valid resource must exist. e.g 'arn:aws:ssm:eu-west-2:0123456778:parameter/myorg/configmaps/accounts\_id\_to\_name\_mapping' to enable the lambda retrieve values from ssm. | `string` | `null` | no |
+| <a name="input_powertools_service_name"></a> [powertools\_service\_name](#input\_powertools\_service\_name) | Sets service name used for tracing namespace, metrics dimension and structured logging for the AWS Powertool Lambda Layer | `string` | `"appvia-notifications-dev"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | `null` | no |
 
 ## Outputs

@@ -31,11 +31,8 @@ module "notifications" {
   }
 
   # many of the events will include the account id where the event originate from
-  # List each account ID here along with a pseudonym that will appear also in the posts 
-  accounts_id_to_name = {
-    "12345678"     = "mgmt",
-    "735598076380" = "audit"
-  }
+  # List each account ID here along with a pseudonym that will appear also in the posts
+  accounts_id_to_name_parameter_arn = var.accounts_id_to_name_parameter_arn
 
   # uncomment to override the warning and error icons that will be shown against each post
   #  The URLs must be public, and must resolve to transparent PNG ideally.
@@ -52,4 +49,45 @@ module "notifications" {
   cloudwatch_log_group_retention = 1
 
   # other overrides, see "Customisations/Overrides" in README.md
+  powertools_service_name = var.powertools_service_name
 }
+
+# resource "aws_cloudwatch_metric_alarm" "test" {
+#   alarm_name          = "test-alarm"
+#   comparison_operator = "GreaterThanThreshold"
+#   evaluation_periods  = 1
+#   metric_name        = "TestMetric"
+#   namespace          = "var.powertools_service_name"
+#   period             = 60
+#   statistic          = "Sum"
+#   threshold          = 0
+#   alarm_description  = "This is a test alarm"
+#   alarm_actions      = [module.notifications.sns_topic_arn]
+
+#   dimensions = {
+#     Environment = "Test"
+#   }
+
+#   tags = (merge(
+#     {
+#       Environment = "teams-dev"
+#       Mode        = "teams posts"
+#     },
+#     var.tags,
+#   ))
+# }
+
+# # For testing with metric data
+# resource "null_resource" "put_metric_data" {
+#   provisioner "local-exec" {
+#     command = <<EOF
+#       aws cloudwatch put-metric-data \
+#         --namespace var.powertools_service_name \
+#         --metric-name TestMetric \
+#         --value 2 \
+#         --dimensions Environment=Test
+#     EOF
+#   }
+
+#   depends_on = [aws_cloudwatch_metric_alarm.test]
+# }

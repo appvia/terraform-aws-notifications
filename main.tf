@@ -68,7 +68,7 @@ module "notify" {
       enabled   = true
       effect    = "Allow"
       actions   = ["ssm:GetParameter", "ssm:GetParameters"]
-      resources = [coalesce(var.accounts_id_to_name_parameter_arn,"*")]
+      resources = [coalesce(var.accounts_id_to_name_parameter_arn, "*")]
     }
     layers = {
       enabled   = true

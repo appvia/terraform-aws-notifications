@@ -44,16 +44,12 @@ module "primary_notifications" {
     webhook_url = var.primary_slack_webhook
     # secret_name        = "name of AWS secret with slack webhook_url"
     lambda_name        = "primary_slack_posts"
-    lambda_description = "The default posting of notifications to teams"
+    lambda_description = "The default posting of notifications to slack"
   }
 
   # many of the events will include the account id where the event originate from
-  # List each account ID here along with a pseudonym that will appear also in the posts 
-  accounts_id_to_name = {
-    "12345678"     = "mgmt",
-    "123456789"    = "audit",
-    "735598076380" = "workload1"
-  }
+  # List each account ID here along with a pseudonym that will appear also in the posts
+  accounts_id_to_name_parameter_arn = var.accounts_id_to_name_parameter_arn
   # uncomment to override the warning and error icons that will be shown against each post
   #  The URLs must be public, and must resolve to transparent PNG ideally.
   #  appvia recommend images that are 50px by 50px.
@@ -122,12 +118,9 @@ module "security_hub_notifications" {
   }
 
   # many of the events will include the account id where the event originate from
-  # List each account ID here along with a pseudonym that will appear also in the posts 
-  accounts_id_to_name = {
-    "12345678"     = "mgmt",
-    "123456789"    = "audit",
-    "735598076380" = "workload1"
-  }
+  # List each account ID here along with a pseudonym that will appear also in the posts
+  accounts_id_to_name_parameter_arn = var.accounts_id_to_name_parameter_arn
+
   # uncomment to override the warning and error icons that will be shown against each post
   #  The URLs must be public, and must resolve to transparent PNG ideally.
   #  appvia recommend images that are 50px by 50px.
@@ -143,4 +136,5 @@ module "security_hub_notifications" {
   cloudwatch_log_group_retention = 3
 
   # other overrides, see "Customisations/Overrides" in README.md
+  powertools_service_name = var.powertools_service_name
 }
