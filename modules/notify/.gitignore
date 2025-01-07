@@ -1,2 +1,4 @@
 .coverage
 *.lock
+.mypy_cache
+.pytest_cache

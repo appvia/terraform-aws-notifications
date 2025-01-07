@@ -4,6 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+aws-lambda-powertools = "*"
 
 [dev-packages]
 boto3 = "~=1.34"
