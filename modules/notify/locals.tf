@@ -72,21 +72,6 @@ locals {
     }
   }
 
-  # ## We need to ensure the account names are ordered
-  # account_by_ids = [
-  #   for name in sort(keys(var.accounts_id_to_name)) : {
-  #     id   = name
-  #     name = var.accounts_id_to_name[name]
-  #   }
-  # ]
-
-  # accounts_id_to_name_python_dictonary = templatefile(
-  #   "${path.module}/mapAccountIdToName-python-dict.tftpl",
-  #   {
-  #     accounts_id_to_name = local.account_by_ids
-  #   }
-  # )
-
   # the enable_[slack|teams] variable controls the subscription between SNS and lambda only; it is
   #  feasible that we want to keep the infrastructure (lambda, lambda role, log group et al) while suspending
   #  the posts.
@@ -103,12 +88,6 @@ locals {
   enabled_policies = {
     for k, v in var.lambda_policy_config : k => v
     if v.enabled
-  }
-
-  # CPU architecture mapping
-  architectures = {
-    x86_64 = "amd64"
-    arm64  = "arm64"
   }
 
   # Python Runtime
