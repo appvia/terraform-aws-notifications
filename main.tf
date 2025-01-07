@@ -78,12 +78,22 @@ module "notify" {
     }
   }
 
-  # Additional lambda layers to be attached to notify lambda
+  # Required lambda layers to be attached to notify lambda. Layers included by default are AWS Powertools v3 and AWS Parameter & Secrets Extension.
+  # Alternatively you can provide an ARN directly by using create a new layer and pass in the ARN e.g.
+  # lambda_layers = {
+  #   custom_layer = {
+  #     enabled     = true
+  #     type        = "custom"
+  #     arn         = "arn:aws:lambda:us-east-1:123456789012:layer:my-custom-layer:1"
+  #     version     = "1.0.0"
+  #     region      = "us-east-1"
+  #   }
+
   lambda_layers_config = {
     powertools = {
       enabled = true
       type    = "managed"
-      version = "79"
+      version = "3"
     }
     parameters_secrets = {
       enabled = true

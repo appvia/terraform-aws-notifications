@@ -108,20 +108,38 @@ locals {
   # CPU architecture mapping
   architectures = {
     x86_64 = "amd64"
-    arm64  = "Arm64"
+    arm64  = "arm64"
+  }
+
+  # Python Runtime
+  python_runtime = {
+    "python3.13" = "python313"
+    "python3.12" = "python312"
+    "python3.11" = "python311"
+    "python3.10" = "python310"
+    "python3.9"  = "python39"
+    "python3.8"  = "python38"
   }
 
   # AWS Managed Layer ARN patterns with architecture support
   aws_managed_layers = {
     powertools = {
       account_id    = "017000801446"
-      name_pattern  = "AWSLambdaPowertoolsPythonV2-%ARCH%"
+      name_pattern  = "AWSLambdaPowertoolsPythonV3-%PYTHONRUNTIME%-%ARCH%"
       arch_specific = true
+      arch_format = {
+        x86_64 = "x86_64"
+        arm64  = "arm64" # lowercase for powertools
+      }
     }
     parameters_secrets = {
       account_id    = "133256977650"
       name_pattern  = "AWS-Parameters-and-Secrets-Lambda-Extension-%ARCH%"
       arch_specific = true
+      arch_format = {
+        x86_64 = "X86_64" # Title case if needed
+        arm64  = "Arm64"  # Title case if needed
+      }
     }
   }
 
@@ -129,26 +147,36 @@ locals {
   processed_layers = {
     for name, config in var.lambda_layers_config :
     name => {
-      enabled = try(config.enabled, true)
-      arn = (
-        try(config.arn, null) != null ? config.arn :
-        try(config.type, "") == "managed" ? (
-          format("arn:%s:lambda:%s:%s:layer:%s:%s",
-            local.partition,
-            local.region,
-            local.aws_managed_layers[name].account_id,
-            replace(local.aws_managed_layers[name].name_pattern, "%ARCH%", local.architectures[var.architecture]),
-            config.version
-          )
+      enabled = coalesce(try(config.enabled, null), true)
+      arn = coalesce(
+        try(config.arn, null),
+        try(config.type, "") == "managed" ?
+        format("arn:%s:lambda:%s:%s:layer:%s:%s",
+          local.partition,
+          local.region,
+          local.aws_managed_layers[name].account_id,
+          (
+            local.aws_managed_layers[name].arch_specific ?
+            replace(
+              replace(
+                local.aws_managed_layers[name].name_pattern,
+                "%PYTHONRUNTIME%",
+                local.python_runtime[var.python_runtime]
+              ),
+              "%ARCH%",
+              local.aws_managed_layers[name].arch_format[var.architecture]
+            ) :
+            local.aws_managed_layers[name].name_pattern
+          ),
+          config.version
         ) : null
       )
     }
   }
 
-  # Generate final list of enabled layer ARNs
   enabled_layers = [
-    for name, layer in local.processed_layers :
-    layer.arn
-    if layer.enabled && layer.arn != null
+    for name, config in local.processed_layers :
+    config.arn
+    if config.enabled && config.arn != null
   ]
 }
