@@ -60,9 +60,7 @@ module "appvia_notification" {
   enable_slack = true
   enable_teams = true
 
- accounts_id_to_name_parameter_arn = var.accounts_id_to_name_parameter_arn    "12345678"  = "mgmt",
-    "123456789" = "audit"
-  }
+  accounts_id_to_name_parameter_arn = var.accounts_id_to_name_parameter_arn
 
   post_icons_url = {
     error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png"
@@ -98,11 +96,11 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_accounts_id_to_name_parameter_arn"></a> [accounts\_id\_to\_name\_parameter\_arn](#input\_accounts\_id\_to\_name\_parameter\_arn) | The ARN of your parameter containing the your account ID to name mapping. This ARN will be attached to lambda execution role as a resource, therefore a valid resource must exist. e.g 'arn:aws:ssm:eu-west-2:0123456778:parameter/myorg/configmaps/accounts\_id\_to\_name\_mapping' | `string` | n/a | yes |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | The AWS account ID | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | The AWS region to deploy to | `string` | n/a | yes |
 | <a name="input_sns_topic_name"></a> [sns\_topic\_name](#input\_sns\_topic\_name) | The name of the SNS topic to create | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | n/a | yes |
+| <a name="input_accounts_id_to_name_parameter_arn"></a> [accounts\_id\_to\_name\_parameter\_arn](#input\_accounts\_id\_to\_name\_parameter\_arn) | The ARN of your parameter containing the your account ID to name mapping. This ARN will be attached to lambda execution role as a resource, therefore a valid resource must exist. e.g 'arn:aws:ssm:eu-west-2:0123456778:parameter/myorg/configmaps/accounts\_id\_to\_name\_mapping' to enable the lambda retrieve values from ssm. | `string` | `null` | no |
 | <a name="input_architecture"></a> [architecture](#input\_architecture) | Instruction set architecture for your Lambda function. Valid values are "x86\_64" or "arm64". | `string` | `"arm64"` | no |
 | <a name="input_aws_partition"></a> [aws\_partition](#input\_aws\_partition) | The partition in which the resource is located. A partition is a group of AWS Regions. Each AWS account is scoped to one partition. | `string` | `"aws"` | no |
 | <a name="input_cloudwatch_log_group_kms_key_id"></a> [cloudwatch\_log\_group\_kms\_key\_id](#input\_cloudwatch\_log\_group\_kms\_key\_id) | The ARN of the KMS Key to use when encrypting log data for Lambda | `string` | `null` | no |

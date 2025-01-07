@@ -84,13 +84,13 @@ module "notifications" {
 #     Environment = "Test"
 #   }
 
-  # tags = (merge(
-  #   {
-  #     Environment = "teams-and-slack-dev"
-  #     Mode        = "teams and slack posts"
-  #   },
-  #   var.tags,
-  # ))
+# tags = (merge(
+#   {
+#     Environment = "teams-and-slack-dev"
+#     Mode        = "teams and slack posts"
+#   },
+#   var.tags,
+# ))
 
 # # For testing with metric data
 # resource "null_resource" "put_metric_data" {

@@ -47,9 +47,7 @@ module "notifications" {
     webhook_url = var.slack_webhook
   }
 
- accounts_id_to_name_parameter_arn = var.accounts_id_to_name_parameter_arn    "12345678"  = "mgmt",
-    "123456789" = "audit"
-  }
+ accounts_id_to_name_parameter_arn = var.accounts_id_to_name_parameter_arn
 
   # To redirect event URL in post through Identity Center, e.g.:
   identity_center_start_url = "<your start url>"
@@ -98,9 +96,9 @@ Frequently (quartley at least) check and upgrade:
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_accounts_id_to_name_parameter_arn"></a> [accounts\_id\_to\_name\_parameter\_arn](#input\_accounts\_id\_to\_name\_parameter\_arn) | The ARN of your parameter containing the your account ID to name mapping. This ARN will be attached to lambda execution role as a resource, therefore a valid resource must exist. e.g 'arn:aws:ssm:eu-west-2:0123456778:parameter/myorg/configmaps/accounts\_id\_to\_name\_mapping' | `string` | n/a | yes |
 | <a name="input_sns_topic_name"></a> [sns\_topic\_name](#input\_sns\_topic\_name) | The name of the source sns topic where events are published | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | n/a | yes |
+| <a name="input_accounts_id_to_name_parameter_arn"></a> [accounts\_id\_to\_name\_parameter\_arn](#input\_accounts\_id\_to\_name\_parameter\_arn) | The ARN of your parameter containing the your account ID to name mapping. This ARN will be attached to lambda execution role as a resource, therefore a valid resource must exist. e.g 'arn:aws:ssm:eu-west-2:0123456778:parameter/myorg/configmaps/accounts\_id\_to\_name\_mapping' to enable the lambda retrieve values from ssm. | `string` | `null` | no |
 | <a name="input_allowed_aws_principals"></a> [allowed\_aws\_principals](#input\_allowed\_aws\_principals) | Optional, list of AWS accounts able to publish via the SNS topic (when creating topic) e.g 123456789012 | `list(string)` | `[]` | no |
 | <a name="input_allowed_aws_services"></a> [allowed\_aws\_services](#input\_allowed\_aws\_services) | Optional, list of AWS services able to publish via the SNS topic (when creating topic) e.g cloudwatch.amazonaws.com | `list(string)` | `[]` | no |
 | <a name="input_cloudwatch_log_group_kms_key_id"></a> [cloudwatch\_log\_group\_kms\_key\_id](#input\_cloudwatch\_log\_group\_kms\_key\_id) | The KMS key id to use for encrypting the cloudwatch log group (default is none) | `string` | `null` | no |
