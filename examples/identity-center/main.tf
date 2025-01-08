@@ -18,8 +18,8 @@ module "notifications" {
   }
 
   # To redirect event URL in post through Identity Center, e.g.:
-  # 
-  # 
+  #
+  #
   identity_center_start_url = var.identity_center_start_url
   identity_center_role      = var.identity_center_role
 
@@ -37,11 +37,7 @@ module "notifications" {
   }
 
   # many of the events will include the account id where the event originate from
-  # List each account ID here along with a pseudonym that will appear also in the posts 
-  accounts_id_to_name = {
-    "12345678"     = "mgmt",
-    "735598076380" = "audit"
-  }
+  # List each account ID here along with a pseudonym that will appear also in the posts
 
   # uncomment to override the warning and error icons that will be shown against each post
   #  The URLs must be public, and must resolve to transparent PNG ideally.

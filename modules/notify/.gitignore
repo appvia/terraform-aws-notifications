@@ -1,2 +1,5 @@
 .coverage
 *.lock
+.mypy_cache
+.pytest_cache
+/functions/tests/.int.env

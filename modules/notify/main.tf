@@ -28,11 +28,6 @@ resource "aws_sns_topic_subscription" "sns_notify_teams" {
   filter_policy_scope = local.subscription_policies["teams"].scope
 }
 
-resource "local_file" "notify_account_names_dict_python" {
-  content  = local.accounts_id_to_name_python_dictonary
-  filename = "${path.module}/functions/src/account_id_name_mappings.py"
-}
-
 #trivy:ignore:avd-aws-0067
 module "lambda" {
   for_each = local.distributions
@@ -69,6 +64,16 @@ module "lambda" {
   role_permissions_boundary = var.iam_role_boundary_policy_arn
   role_tags                 = var.tags
 
+  ## Additional Policy Requirements
+  attach_policy_statements = length(local.enabled_policies) > 0
+  policy_statements = {
+    for policy_name, policy in local.enabled_policies : policy_name => {
+      effect    = policy.effect
+      actions   = policy.actions
+      resources = policy.resources
+    }
+  }
+
   ## Logging related
   use_existing_cloudwatch_log_group = false
   cloudwatch_logs_kms_key_id        = var.cloudwatch_log_group_kms_key_id
@@ -83,8 +88,8 @@ module "lambda" {
       prefix_in_zip    = ""
       patterns         = <<END
         msg_parser\.py
-        account_id_name_mappings\.py
         notification_emblems\.py
+        ssm_param\.py
         !.*msg_render_.*\.py
         !.*notify_.*\.py
         .*${each.value}\.py
@@ -92,19 +97,16 @@ module "lambda" {
     }
   ]
 
-  # utilise the AWS lambda PowerTools layer - must match the lamdba architecture
-  #  using the Powertools for logging, supports managing the log level via standard Layer monitoring
-  #  & logging log levels.
-  layers = [
-    "arn:aws:lambda:${local.region}:017000801446:layer:${var.powertools_layer_arn_suffix}"
-  ]
+  ## Lambda layers
+  layers = local.enabled_layers
 
-  environment_variables = (merge(
-    local.lambda_env_vars[each.value],
-    {
-      POWERTOOLS_SERVICE_NAME = var.aws_powertools_service_name
-    }
-  ))
+  ## Lambda environment variables
+  environment_variables = {
+    for k, v in merge(
+      local.layer_env_vars,
+      local.lambda_env_vars[each.value]
+    ) : k => v == null ? null : tostring(v)
+  }
 
   allowed_triggers = {
     AllowExecutionFromSNS = {
@@ -113,7 +115,4 @@ module "lambda" {
     }
   }
 
-  depends_on = [
-    local_file.notify_account_names_dict_python,
-  ]
 }

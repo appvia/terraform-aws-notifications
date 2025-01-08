@@ -79,21 +79,30 @@ Integration tests require setting up a live Slack webhook
 To run the unit tests:
 
 1.  Set up a dedicated slack channel as a test sandbox with it's own webhook. See [Slack Incoming Webhooks docs](https://api.slack.com/messaging/webhooks) for details.
-2.  From within the `examples/notify-slack-simple/` directory, update the `slack_*` variables to use your values:
+2.  As per the README within the `examples/slack` directory, create a local.tfvars and update `slack_*` variables to use your values:
 
 ```hcl
-  slack_webhook_url = "https://hooks.slack.com/services/AAA/BBB/CCC"
-  slack_channel     = "aws-notification"
-  slack_username    = "reporter"
+  slack_webhook="<your url>
+  sns_topic_name="<your SNS topic name>"
+  powertools_service_name="my-service-namespace"
+  accounts_id_to_name_parameter_arn="arn:aws:ssm:eu-west-2:1234567890:parameter/myparam"
 ```
 
-3. Deploy the resources in the `examples/notify-slack-simple/` project using Terraform
+3. Deploy the resources in the `examples/slack` project using Terraform
 
 ```bash
-  $ terraform init && terraform apply -y
+  $ terraform plan --var-file=./local.tfvars --outfile=plan
+  $ terraform apply "plan"
 ```
 
-4.  From within the `functions/` directory, execute the integration tests locally:
+4.  From within the `functions/tests` directory, create `.init.env` and populate with the appropriate values for the following env keys.
+
+```bash
+REGION=eu-west-2
+SLACK_LAMBDA_FUNCTION_NAME=lambda-test
+SNS_TOPIC_ARN=arn:aws:sns:eu-west-2:1234567890:test
+```
+execute the integration tests locally:
 
 ```bash
   $ pipenv run python integration_test.py
@@ -104,7 +113,8 @@ Within the Slack channel that is associated to the webhook URL provided, you sho
 5. Do not forget to clean up your provisioned resources by returning to the `example/notify-slack-simple/` directory and destroying using Terraform:
 
 ```bash
-  $ terraform destroy -y
+  $ terraform plan --var-file=./local.tfvars --outfile=plan --destroy
+  $ terraform apply "plan"
 ```
 
 ## Supporting Additional Events

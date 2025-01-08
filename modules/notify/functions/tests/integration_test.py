@@ -47,7 +47,7 @@ def invoke_lambda_handler():
         with open(message, "r") as mfile:
             msg = mfile.read()
         response = lambda_client.invoke(
-            FunctionName=slack_lambda_function_name,
+            FunctionName=SLACK_LAMBDA_FUNCTION_NAME,
             InvocationType="Event",
             Payload=msg,
         )
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
     # Not using .get() so it fails loudly if not set (`KeyError`)
     REGION = os.environ["REGION"]
-    slack_lambda_function_name = os.environ["slack_lambda_function_name"]
+    SLACK_LAMBDA_FUNCTION_NAME = os.environ["SLACK_LAMBDA_FUNCTION_NAME"]
     SNS_TOPIC_ARN = os.environ["SNS_TOPIC_ARN"]
 
     invoke_lambda_handler()

@@ -60,10 +60,7 @@ module "appvia_notification" {
   enable_slack = true
   enable_teams = true
 
-  accounts_id_to_name = {
-    "12345678"  = "mgmt",
-    "123456789" = "audit"
-  }
+  accounts_id_to_name_parameter_arn = var.accounts_id_to_name_parameter_arn
 
   post_icons_url = {
     error_url   = "https://raw.githubusercontent.com/appvia/terraform-aws-notifications/main/resources/posts-attention-icon.png"
@@ -94,7 +91,6 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.0.0 |
-| <a name="provider_local"></a> [local](#provider\_local) | >= 2.5.0 |
 
 ## Inputs
 
@@ -104,10 +100,9 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | The AWS region to deploy to | `string` | n/a | yes |
 | <a name="input_sns_topic_name"></a> [sns\_topic\_name](#input\_sns\_topic\_name) | The name of the SNS topic to create | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | n/a | yes |
-| <a name="input_accounts_id_to_name"></a> [accounts\_id\_to\_name](#input\_accounts\_id\_to\_name) | A mapping of account id and account name - used by notification lamdba to map an account ID to a human readable name | `map(string)` | `{}` | no |
+| <a name="input_accounts_id_to_name_parameter_arn"></a> [accounts\_id\_to\_name\_parameter\_arn](#input\_accounts\_id\_to\_name\_parameter\_arn) | The ARN of your parameter containing the your account ID to name mapping. This ARN will be attached to lambda execution role as a resource, therefore a valid resource must exist. e.g 'arn:aws:ssm:eu-west-2:0123456778:parameter/myorg/configmaps/accounts\_id\_to\_name\_mapping' to enable the lambda retrieve values from ssm. | `string` | `null` | no |
 | <a name="input_architecture"></a> [architecture](#input\_architecture) | Instruction set architecture for your Lambda function. Valid values are "x86\_64" or "arm64". | `string` | `"arm64"` | no |
 | <a name="input_aws_partition"></a> [aws\_partition](#input\_aws\_partition) | The partition in which the resource is located. A partition is a group of AWS Regions. Each AWS account is scoped to one partition. | `string` | `"aws"` | no |
-| <a name="input_aws_powertools_service_name"></a> [aws\_powertools\_service\_name](#input\_aws\_powertools\_service\_name) | The service name to use | `string` | `"appvia-notifications"` | no |
 | <a name="input_cloudwatch_log_group_kms_key_id"></a> [cloudwatch\_log\_group\_kms\_key\_id](#input\_cloudwatch\_log\_group\_kms\_key\_id) | The ARN of the KMS Key to use when encrypting log data for Lambda | `string` | `null` | no |
 | <a name="input_cloudwatch_log_group_retention_in_days"></a> [cloudwatch\_log\_group\_retention\_in\_days](#input\_cloudwatch\_log\_group\_retention\_in\_days) | Specifies the number of days you want to retain log events in log group for Lambda. | `number` | `0` | no |
 | <a name="input_create_sns_topic"></a> [create\_sns\_topic](#input\_create\_sns\_topic) | Whether to create new SNS topic | `bool` | `true` | no |
@@ -123,9 +118,11 @@ Subsumed by appvia's GNU V3 license; [see license](../../LICENSE).
 | <a name="input_lambda_function_ephemeral_storage_size"></a> [lambda\_function\_ephemeral\_storage\_size](#input\_lambda\_function\_ephemeral\_storage\_size) | Amount of ephemeral storage (/tmp) in MB your Lambda Function can use at runtime. Valid value between 512 MB to 10,240 MB (10 GB). | `number` | `512` | no |
 | <a name="input_lambda_function_s3_bucket"></a> [lambda\_function\_s3\_bucket](#input\_lambda\_function\_s3\_bucket) | S3 bucket to store artifacts | `string` | `null` | no |
 | <a name="input_lambda_function_store_on_s3"></a> [lambda\_function\_store\_on\_s3](#input\_lambda\_function\_store\_on\_s3) | Whether to store produced artifacts on S3 or locally. | `bool` | `false` | no |
+| <a name="input_lambda_layers_config"></a> [lambda\_layers\_config](#input\_lambda\_layers\_config) | Configuration for Lambda layers | <pre>map(object({<br/>    enabled = optional(bool, true)<br/>    type    = optional(string, "managed") # "managed" or "custom"<br/>    arn     = optional(string)<br/>    version = optional(string)<br/>    region  = optional(string)<br/>  }))</pre> | `{}` | no |
+| <a name="input_lambda_policy_config"></a> [lambda\_policy\_config](#input\_lambda\_policy\_config) | Map of policy configurations | <pre>map(object({<br/>    enabled   = bool<br/>    effect    = string<br/>    actions   = list(string)<br/>    resources = list(string)<br/>  }))</pre> | <pre>{<br/>  "ssm": {<br/>    "actions": [<br/>      "ssm:GetParameter",<br/>      "ssm:GetParameters"<br/>    ],<br/>    "effect": "Allow",<br/>    "enabled": false,<br/>    "resources": [<br/>      "*"<br/>    ]<br/>  }<br/>}</pre> | no |
 | <a name="input_lambda_role"></a> [lambda\_role](#input\_lambda\_role) | IAM role attached to the Lambda Function.  If this is set then a role will not be created for you. | `string` | `""` | no |
 | <a name="input_lambda_source_path"></a> [lambda\_source\_path](#input\_lambda\_source\_path) | The source path of the custom Lambda function | `string` | `null` | no |
-| <a name="input_powertools_layer_arn_suffix"></a> [powertools\_layer\_arn\_suffix](#input\_powertools\_layer\_arn\_suffix) | The suffix of the ARN to use for AWS Powertools lambda layer (must match the architecture:https://docs.powertools.aws.dev/lambda/python/latest/. | `string` | `"AWSLambdaPowertoolsPythonV2-Arm64:79"` | no |
+| <a name="input_powertools_service_name"></a> [powertools\_service\_name](#input\_powertools\_service\_name) | The name to use when defining a metric namespace | `string` | `"appvia-notifications"` | no |
 | <a name="input_python_runtime"></a> [python\_runtime](#input\_python\_runtime) | The lambda python runtime | `string` | `"python3.12"` | no |
 | <a name="input_recreate_missing_package"></a> [recreate\_missing\_package](#input\_recreate\_missing\_package) | Whether to recreate missing Lambda package if it is missing locally or not | `bool` | `true` | no |
 | <a name="input_reserved_concurrent_executions"></a> [reserved\_concurrent\_executions](#input\_reserved\_concurrent\_executions) | The amount of reserved concurrent executions for this lambda function. A value of 0 disables lambda from being triggered and -1 removes any concurrency limitations | `number` | `-1` | no |

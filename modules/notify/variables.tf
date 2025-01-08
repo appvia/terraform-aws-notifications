@@ -25,12 +25,6 @@ variable "python_runtime" {
   default     = "python3.12"
 }
 
-variable "powertools_layer_arn_suffix" {
-  description = "The suffix of the ARN to use for AWS Powertools lambda layer (must match the architecture:https://docs.powertools.aws.dev/lambda/python/latest/."
-  type        = string
-  default     = "AWSLambdaPowertoolsPythonV2-Arm64:79"
-}
-
 variable "create_sns_topic" {
   description = "Whether to create new SNS topic"
   type        = bool
@@ -162,17 +156,12 @@ variable "delivery_channels" {
   default = null
 }
 
-variable "aws_powertools_service_name" {
-  description = "The service name to use"
+variable "powertools_service_name" {
+  description = "The name to use when defining a metric namespace"
   type        = string
   default     = "appvia-notifications"
 }
 
-variable "accounts_id_to_name" {
-  description = "A mapping of account id and account name - used by notification lamdba to map an account ID to a human readable name"
-  type        = map(string)
-  default     = {}
-}
 
 variable "identity_center_start_url" {
   description = "The start URL of your Identity Center instance"
@@ -186,8 +175,57 @@ variable "identity_center_role" {
   default     = null
 }
 
+variable "lambda_policy_config" {
+  description = "Map of policy configurations"
+  type = map(object({
+    enabled   = bool
+    effect    = string
+    actions   = list(string)
+    resources = list(string)
+  }))
+  default = {
+    ssm = {
+      enabled   = false
+      effect    = "Allow"
+      actions   = ["ssm:GetParameter", "ssm:GetParameters"]
+      resources = ["*"]
+    }
+  }
+}
+
+variable "lambda_layers_config" {
+  description = "Configuration for Lambda layers"
+  type = map(object({
+    enabled = optional(bool, true)
+    type    = optional(string, "managed") # "managed" or "custom"
+    arn     = optional(string)
+    version = optional(string)
+    region  = optional(string)
+  }))
+  default = {}
+
+  validation {
+    condition = alltrue([
+      for k, v in var.lambda_layers_config :
+      v.type == "custom" || v.type == "managed"
+    ])
+    error_message = "Layer type must be either 'managed' or 'custom'."
+  }
+}
+
 variable "trigger_on_package_timestamp" {
   description = "Whether to recreate the Lambda package if the timestamp changes"
   type        = bool
   default     = true
+}
+
+variable "accounts_id_to_name_parameter_arn" {
+  description = "The ARN of your parameter containing the your account ID to name mapping. This ARN will be attached to lambda execution role as a resource, therefore a valid resource must exist. e.g 'arn:aws:ssm:eu-west-2:0123456778:parameter/myorg/configmaps/accounts_id_to_name_mapping' to enable the lambda retrieve values from ssm."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.accounts_id_to_name_parameter_arn == null ? true : can(regex("^arn:[^:]+:ssm:[a-z0-9-]+:[0-9]{12}:parameter/.+$", var.accounts_id_to_name_parameter_arn))
+    error_message = "The accounts_id_to_name_parameter_arn must be a valid SSM parameter ARN."
+  }
 }

@@ -1,25 +1,25 @@
+import array
 import base64
 import json
 import os
-import urllib.parse
 import re
-import array
-from math import floor
-from enum import Enum
-from typing import Any, Dict, Optional, Union, cast, Callable
+import urllib.parse
 from datetime import datetime
+from enum import Enum
+from math import floor
+from typing import Any, Callable, Dict, Optional, Union, cast
 
 import boto3
-from aws_lambda_powertools import Logger
-from aws_lambda_powertools import Metrics
+from aws_lambda_powertools import Logger, Metrics
+from aws_lambda_powertools.metrics import MetricUnit
 from aws_lambda_powertools.utilities.typing import LambdaContext
+
+from render import Render
+from ssm_param import get_parameter
+
 logger = Logger()
 powertools_namespace = os.environ["POWERTOOLS_SERVICE_NAME"]
 metrics = Metrics(namespace=powertools_namespace)
-from aws_lambda_powertools.metrics import MetricUnit
-
-from render import Render
-from account_id_name_mappings import ACCOUNT_ID_TO_NAME
 
 # Set default region if not provided
 REGION = os.environ.get("AWS_REGION", "us-east-1")
@@ -36,8 +36,28 @@ if IDENTITY_CENTER_URL.endswith("console"):
 # Create client so its cached/frozen between invocations
 KMS_CLIENT = boto3.client("kms", region_name=REGION)
 
+
+def get_account_mappings() -> dict:
+    try:
+        parameter_arn = os.environ.get("ACCOUNTS_ID_TO_NAME_PARAMETER_ARN")
+        if not parameter_arn:
+            logger.error(
+                "Missing required environment variable: ACCOUNTS_ID_TO_NAME_PARAMETER_ARN"
+            )
+            return {}
+
+        return get_parameter(parameter_arn)
+    except Exception as e:
+        logger.exception(f"Error retrieving account mappings: {e}")
+        return {}
+
+
+ACCOUNT_ID_TO_NAME = get_account_mappings()
+
+
 class AwsService(Enum):
     """AWS service supported by function"""
+
     cloudwatch = "cloudwatch"
     guardduty = "guardduty"
     securityhub = "securityhub"
@@ -56,6 +76,7 @@ def decrypt_url(encrypted_url: str) -> str:
         return decrypted_payload["Plaintext"].decode()
     except Exception as e:
         raise e
+
 
 def get_service_url(region: str, service: str) -> str:
     """Get the appropriate service URL for the region
@@ -78,6 +99,7 @@ def get_service_url(region: str, service: str) -> str:
         print(f"Service {service} is currently not supported")
         raise
 
+
 def get_target_url(account_id: str, absoluteUrl: str = None) -> str:
     """Redirect via identity center if defined
 
@@ -93,6 +115,7 @@ def get_target_url(account_id: str, absoluteUrl: str = None) -> str:
 
 class AwsAction(Enum):
     """The individual AWS service types parsed"""
+
     CLOUDWATCH = "CloudWatch"
     GUARDDUTY = "GuardDuty"
     HEALTH_CHECK = "Health"
@@ -104,12 +127,14 @@ class AwsAction(Enum):
     COST_ANOMALY = "CostAnomaly"
     UNKNOWN = "Unknown"
 
+
 class CloudWatchAlarmPriority(Enum):
     """Maps CloudWatch notification state to a normalised priority"""
 
     OK = "NO_ERROR"
     INSUFFICIENT_DATA = "WARNING"
     ALARM = "ERROR"
+
 
 def parse_cloudwatch_alarm(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
     """Parse CloudWatch alarm event into CloudWatch facts format
@@ -127,14 +152,17 @@ def parse_cloudwatch_alarm(message: Dict[str, Any], snsRegion: str) -> Dict[str,
     atEpoch = atDT.timestamp()
     description = message["AlarmDescription"]
     account_id = message["AWSAccountId"]
-    account_name = ACCOUNT_ID_TO_NAME.get(account_id, '')
+    account_name = ACCOUNT_ID_TO_NAME.get(account_id, "")
     reason = message["NewStateReason"]
     state = message["NewStateValue"]
     old_state = message["OldStateValue"]
     alarm_arn = message["AlarmArn"]
     alarm_arn_region = message["AlarmArn"].split(":")[3]
 
-    cloudwatch_service_url = get_target_url(account_id=account_id, absoluteUrl=get_service_url(region=alarm_arn_region, service="cloudwatch"))
+    cloudwatch_service_url = get_target_url(
+        account_id=account_id,
+        absoluteUrl=get_service_url(region=alarm_arn_region, service="cloudwatch"),
+    )
     cloudwatch_url = f"{cloudwatch_service_url}#alarm:alarmFilter=ANY;name={urllib.parse.quote(name)}"
 
     return {
@@ -153,7 +181,7 @@ def parse_cloudwatch_alarm(message: Dict[str, Any], snsRegion: str) -> Dict[str,
         "region": alarmRegion,
         "topic_region": snsRegion,
         "alarm_arn": alarm_arn,
-        "alarm_arn_region": alarm_arn_region
+        "alarm_arn_region": alarm_arn_region,
     }
 
 
@@ -176,7 +204,7 @@ def parse_guardduty_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str
 
     detail = message["detail"]
     service = detail.get("service", {})
-    region =  message['region']
+    region = message["region"]
 
     severity_score = detail.get("severity")
     if severity_score < 4.0:
@@ -187,17 +215,20 @@ def parse_guardduty_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str
         severity = "High"
 
     priority = GuardDutylarmPriority[severity].value
-    title = detail.get('title')
-    description = detail['description']
-    type = detail['type']
-    first_seen = service['eventFirstSeen']
-    last_seen = service['eventLastSeen']
-    account_id = detail['accountId']
-    account_name = ACCOUNT_ID_TO_NAME.get(account_id, '')
-    count = service['count']
-    guard_duty_id = detail['id']
+    title = detail.get("title")
+    description = detail["description"]
+    type = detail["type"]
+    first_seen = service["eventFirstSeen"]
+    last_seen = service["eventLastSeen"]
+    account_id = detail["accountId"]
+    account_name = ACCOUNT_ID_TO_NAME.get(account_id, "")
+    count = service["count"]
+    guard_duty_id = detail["id"]
 
-    guardduty_url = get_target_url(account_id=account_id, absoluteUrl=get_service_url(region=region, service="guardduty"))
+    guardduty_url = get_target_url(
+        account_id=account_id,
+        absoluteUrl=get_service_url(region=region, service="guardduty"),
+    )
 
     atDT = datetime.fromisoformat(service["eventLastSeen"])
     atEpoch = atDT.timestamp()
@@ -209,8 +240,8 @@ def parse_guardduty_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str
         "description": description,
         "region": region,
         "type": type,
-        "first_seen": first_seen,       # ISO timestamp
-        "last_seen": last_seen,         # ISO timestamp
+        "first_seen": first_seen,  # ISO timestamp
+        "last_seen": last_seen,  # ISO timestamp
         "severity": severity,
         "severity_score": severity_score,
         "account_id": account_id,
@@ -220,6 +251,7 @@ def parse_guardduty_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str
         "id": guard_duty_id,
         "at_epoch": atEpoch,
     }
+
 
 class AwsHealthCategoryPriroity(Enum):
     """Maps AWS Health eventTypeCategory to to a normalised priority"""
@@ -242,19 +274,17 @@ def parse_aws_health(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
     resources = ",".join(message.setdefault("resources", ["<unknown>"]))
     service = detail.get("service", "<unknown>")
     account_id = message["account"]
-    account_name = ACCOUNT_ID_TO_NAME.get(account_id, '')
+    account_name = ACCOUNT_ID_TO_NAME.get(account_id, "")
     category = detail["eventTypeCategory"]
-    code = detail.get('eventTypeCode')
-    description = detail['eventDescription'][0]['latestDescription']
-    start_time = detail.get('startTime', '<unknown>')
-    end_time = detail.get('endTime', '<unknown>')
+    code = detail.get("eventTypeCode")
+    description = detail["eventDescription"][0]["latestDescription"]
+    start_time = detail.get("startTime", "<unknown>")
+    end_time = detail.get("endTime", "<unknown>")
 
     # the originating region for the Health Check is in the detail.eventArn
     eventArn = detail["eventArn"]
     eventRegion = eventArn.split(":")[3]
-    aws_health_url = (
-        f"https://phd.aws.amazon.com/phd/home?region={eventRegion}#/dashboard/open-issues"
-    )
+    aws_health_url = f"https://phd.aws.amazon.com/phd/home?region={eventRegion}#/dashboard/open-issues"
 
     priority = AwsHealthCategoryPriroity[detail["eventTypeCategory"]].value
 
@@ -271,8 +301,8 @@ def parse_aws_health(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
         "account_name": account_name,
         "url": aws_health_url,
         "at_epoch": atEpoch,
-        "start_time": start_time,   # Locale timestamp TZ=GMT
-        "end_time": end_time,       # Locale timestamp TZ=GMT
+        "start_time": start_time,  # Locale timestamp TZ=GMT
+        "end_time": end_time,  # Locale timestamp TZ=GMT
         "code": code,
         "service": service,
         "resources": resources,
@@ -306,12 +336,14 @@ def aws_backup_field_parser(message: str) -> Dict[str, str]:
 
     return fields
 
+
 class AwsBackupPriroity(Enum):
     """Maps AWS Backup status to to a normalised priority"""
 
     COMPLETED = "NO_ERROR"
     EXPIRED = "WARNING"
     FAILED = "ERROR"
+
 
 def parse_aws_backup(message: str, messageAttributes: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -325,9 +357,9 @@ def parse_aws_backup(message: str, messageAttributes: Dict[str, Any]) -> Dict[st
     description = message.split(".")[0]
     backup_fields = aws_backup_field_parser(message)
 
-    start_time = messageAttributes["StartTime"]["Value"]       # ISO timestamp
+    start_time = messageAttributes["StartTime"]["Value"]  # ISO timestamp
     account_id = messageAttributes["AccountId"]["Value"]
-    account_name = ACCOUNT_ID_TO_NAME.get(account_id, '')
+    account_name = ACCOUNT_ID_TO_NAME.get(account_id, "")
     backup_id = messageAttributes["Id"]["Value"]
     status = messageAttributes["State"]["Value"]
     region = backup_fields["Resource ARN"].split(":")[3]
@@ -352,6 +384,7 @@ def parse_aws_backup(message: str, messageAttributes: Dict[str, Any]) -> Dict[st
         "description": description,
     }
 
+
 def parse_aws_budget(subject: str, message: str) -> Dict[str, Any]:
     """
     Parse AWS Budget alert into normalised facts
@@ -370,6 +403,7 @@ def parse_aws_budget(subject: str, message: str) -> Dict[str, Any]:
         "subject": parsedSubject,
         "info": message,
     }
+
 
 def parse_aws_savings_plan(subject: str, message: str) -> Dict[str, Any]:
     """
@@ -390,6 +424,7 @@ def parse_aws_savings_plan(subject: str, message: str) -> Dict[str, Any]:
         "info": message,
     }
 
+
 class SecurityHubPriority(Enum):
     """Maps SecurityHub severity state to a normalised 3 level priority"""
 
@@ -399,7 +434,10 @@ class SecurityHubPriority(Enum):
     HIGH = "HIGH"
     CRITICAL = "CRITICAL"
 
-def parse_security_hub_finding(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
+
+def parse_security_hub_finding(
+    message: Dict[str, Any], snsRegion: str
+) -> Dict[str, Any]:
     """Format Secuirty Hub finding event into Security Hub finding facts format
 
     :params message: SNS message body containing Security Hub event
@@ -449,16 +487,21 @@ def parse_security_hub_finding(message: Dict[str, Any], snsRegion: str) -> Dict[
     region = message["FindingId"].split(":")[3]
 
     # not done any real investigztion into the service url yet!!!!!!
-    service_url = get_target_url(account_id=account_id, absoluteUrl=get_service_url(region=region, service="securityhub"))
+    service_url = get_target_url(
+        account_id=account_id,
+        absoluteUrl=get_service_url(region=region, service="securityhub"),
+    )
     url = f"{service_url}#findings?search=GeneratorId%3D%255Coperator%255C%253AEQUALS%255C%253A{urllib.parse.quote(source)}"
 
     # light touch parse on each resource
-    resources:list[Dict[str, Any]] = []
+    resources: list[Dict[str, Any]] = []
     for resource in message["Resources"]:
-        resources.append({
-            "type": resource["Type"],
-            "id": resource["Id"],
-        })
+        resources.append(
+            {
+                "type": resource["Type"],
+                "id": resource["Id"],
+            }
+        )
 
     return {
         "action": AwsAction.SECURITY_HUB.value,
@@ -466,22 +509,19 @@ def parse_security_hub_finding(message: Dict[str, Any], snsRegion: str) -> Dict[
         "severity": severity,
         "source": source,
         "description": description,
-
         "account_id": account_id,
         "account_name": account_name,
         "region": region,
-
         "ruleProvider": provider,
         "providerVersion": version,
         "providerCategory": category,
         "ruleId": rule_id,
-
         "resources": resources,
-
         "url": url,
         # "at": at,
         # "at_epoch": floor(atEpoch),
     }
+
 
 def parse_dms_notification(message: Dict[str, Any], snsRegion: str) -> Dict[str, Any]:
     """Format DMS notification event into DMS Notification facts format
@@ -520,9 +560,11 @@ def parse_dms_notification(message: Dict[str, Any], snsRegion: str) -> Dict[str,
 
 class CostAnomalyPriority(Enum):
     """Maps Cost Anomaly severity state to a normalised 3 level priority"""
+
     GOOD = "GOOD"
     WARNING = "WARNING"
     ERROR = "ERROR"
+
 
 def parse_cost_anomaly(message: Dict[str, Any]) -> Dict[str, Any]:
     """Format Cost Anomaly event into facts
@@ -578,35 +620,34 @@ def parse_cost_anomaly(message: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "action": AwsAction.COST_ANOMALY.value,
         "priority": priority,
-
         "started": startedAt,
         "ended": endedAt,
-
         "anomaly_id": anomaly_id,
         "monitor_name": monitor_name,
-
         "expected_spend": expected_spend,
         "actual_spend": actual_spend,
         "total_impact": total_impact,
-
         "account_id": account_id,
         "account_name": account_name,
         "region": region,
         "service": service,
         "usage": usage,
-
         "url": url,
     }
+
 
 class AwsParsedMessage:
     parsedMsg: Dict[str, Any]
     originalMsg: Dict[str, Any]
     actionType: str
 
-    def __init__(self, parsed: Dict[str,Any], original: Dict[str,Any], actionType: str) -> Any:
+    def __init__(
+        self, parsed: Dict[str, Any], original: Dict[str, Any], actionType: str
+    ) -> Any:
         self.parsedMsg = parsed
         self.originalMsg = original
         self.actionType = actionType
+
 
 def get_message_payload(
     message: Union[str, Dict],
@@ -633,7 +674,7 @@ def get_message_payload(
 
     # to handle manual posting of messages via SNS, handle the case where subject is not defined
     if subject == None:
-        subject = ''
+        subject = ""
 
     if "AlarmName" in message:
         parsedMsg = parse_cloudwatch_alarm(message, snsRegion=region)
@@ -644,14 +685,18 @@ def get_message_payload(
     elif subject == "DMS Notification Message":
         parsedMsg = parse_dms_notification(message=message, snsRegion=region)
 
-    elif (isinstance(message, Dict) and message.get("detail-type") == "GuardDuty Finding"):
+    elif (
+        isinstance(message, Dict) and message.get("detail-type") == "GuardDuty Finding"
+    ):
         parsedMsg = parse_guardduty_finding(message=message, snsRegion=region)
 
     elif isinstance(message, Dict) and message.get("detail-type") == "AWS Health Event":
         parsedMsg = parse_aws_health(message=message, snsRegion=region)
 
     elif subject == "Notification from AWS Backup":
-        parsedMsg = parse_aws_backup(message=str(message), messageAttributes=messageAttributes)
+        parsedMsg = parse_aws_backup(
+            message=str(message), messageAttributes=messageAttributes
+        )
 
     elif subject.startswith("AWS Budgets:"):
         parsedMsg = parse_aws_budget(subject=subject, message=str(message))
@@ -670,7 +715,10 @@ def get_message_payload(
     metricType = parsedMsg["action"]
     metrics.add_metric(name=f"{metricType}", unit=MetricUnit.Count, value=1)
 
-    return AwsParsedMessage(parsed=parsedMsg, original=message, actionType=parsedMsg["action"])
+    return AwsParsedMessage(
+        parsed=parsedMsg, original=message, actionType=parsedMsg["action"]
+    )
+
 
 def parse_sns(
     snsRecords: Union[str, Dict],
@@ -690,10 +738,10 @@ def parse_sns(
         messageAttributes = sns["MessageAttributes"]
 
         parserResults = get_message_payload(
-          message=message,
-          region=region,
-          messageAttributes=messageAttributes,
-          subject=subject,
+            message=message,
+            region=region,
+            messageAttributes=messageAttributes,
+            subject=subject,
         )
 
         if parserResults.actionType == AwsAction.UNKNOWN.value:
@@ -703,9 +751,9 @@ def parse_sns(
             )
 
         payload = renderer.payload(
-          parsedMessage=parserResults.parsedMsg,
-          originalMessage=parserResults.originalMsg,
-          subject=subject,
+            parsedMessage=parserResults.parsedMsg,
+            originalMessage=parserResults.originalMsg,
+            subject=subject,
         )
         response = vendor_send_to_function(payload=payload)
 
@@ -715,10 +763,7 @@ def parse_sns(
             response_info = json.loads(response)["info"]
             logger.error(
                 "Unexpected vendor response",
-                code={
-                    "expected": rendererSuccessCode,
-                    "received": response_code
-                },
+                code={"expected": rendererSuccessCode, "received": response_code},
                 info=response_info,
                 record=record,
             )

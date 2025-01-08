@@ -9,13 +9,15 @@
 
 import ast
 import os
-
 import sys
-sys.path.append('src')
 
-import notify_slack
+sys.path.append("src")
+
 import msgParser
 import pytest
+
+import msg_parser
+import notify_slack
 
 
 def test_sns_get_slack_message_payload_snapshots(snapshot, monkeypatch):
@@ -117,7 +119,9 @@ def test_environment_variables_missing():
     """
     with pytest.raises(KeyError):
         # will raise before parsing/validation
-        notify_slack.get_slack_message_payload(parsedMsg={}, originalMessage={}, subject="bar")
+        notify_slack.get_slack_message_payload(
+            parsedMsg={}, originalMessage={}, subject="bar"
+        )
 
 
 @pytest.mark.parametrize(

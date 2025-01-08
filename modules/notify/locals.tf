@@ -1,4 +1,3 @@
-
 locals {
   ## The region we are deploying to
   region = var.aws_region
@@ -27,6 +26,41 @@ locals {
     }
   }
 
+  lambda_env_vars_layer_parameters_secrets = {
+    SSM_PARAMETER_STORE_TIMEOUT_MILLIS           = "1000"
+    SECRETS_MANAGER_TIMEOUT_MILLIS               = "1000"
+    SSM_PARAMETER_STORE_TTL                      = "300"
+    SECRETS_MANAGER_TTL                          = "300"
+    PARAMETERS_SECRETS_EXTENSION_CACHE_ENABLED   = "true"
+    PARAMETERS_SECRETS_EXTENSION_CACHE_SIZE      = "1000"
+    PARAMETERS_SECRETS_EXTENSION_HTTP_PORT       = "2773"
+    PARAMETERS_SECRETS_EXTENSION_MAX_CONNECTIONS = "3"
+    PARAMETERS_SECRETS_EXTENSION_LOG_LEVEL       = "INFO"
+    ACCOUNTS_ID_TO_NAME_PARAMETER_ARN            = try(var.accounts_id_to_name_parameter_arn, "")
+  }
+
+  lambda_env_vars_layers_powertools = {
+    POWERTOOLS_SERVICE_NAME      = try(var.powertools_service_name, "service_undefined")
+    POWERTOOLS_LOG_LEVEL         = "INFO"
+    POWERTOOLS_METRICS_NAMESPACE = null
+  }
+
+  layer_env_vars_mapping = {
+    powertools         = local.lambda_env_vars_layers_powertools
+    parameters_secrets = local.lambda_env_vars_layer_parameters_secrets
+  }
+
+  enabled_layer_names = [
+    for name, layer in local.processed_layers :
+    name
+    if layer.enabled && layer.arn != null
+  ]
+
+  layer_env_vars = merge([
+    for layer_name in local.enabled_layer_names :
+    lookup(local.layer_env_vars_mapping, layer_name, {})
+  ]...)
+
   subscription_policies = {
     "slack" = {
       filter = try(var.delivery_channels["slack"].filter_policy, null)
@@ -38,21 +72,6 @@ locals {
     }
   }
 
-  ## We need to ensure the account names are ordered
-  account_by_ids = [
-    for name in sort(keys(var.accounts_id_to_name)) : {
-      id   = name
-      name = var.accounts_id_to_name[name]
-    }
-  ]
-
-  accounts_id_to_name_python_dictonary = templatefile(
-    "${path.module}/mapAccountIdToName-python-dict.tftpl",
-    {
-      accounts_id_to_name = local.account_by_ids
-    }
-  )
-
   # the enable_[slack|teams] variable controls the subscription between SNS and lambda only; it is
   #  feasible that we want to keep the infrastructure (lambda, lambda role, log group et al) while suspending
   #  the posts.
@@ -63,4 +82,80 @@ locals {
   }
 
   distributions = toset([for x in ["slack", "teams"] : x if local.create_distribution[x] == true])
+
+  ## Lambda Layer
+  # Filter only enabled policies
+  enabled_policies = {
+    for k, v in var.lambda_policy_config : k => v
+    if v.enabled
+  }
+
+  # Python Runtime
+  python_runtime = {
+    "python3.13" = "python313"
+    "python3.12" = "python312"
+    "python3.11" = "python311"
+    "python3.10" = "python310"
+    "python3.9"  = "python39"
+    "python3.8"  = "python38"
+  }
+
+  # AWS Managed Layer ARN patterns with architecture support
+  aws_managed_layers = {
+    powertools = {
+      account_id    = "017000801446"
+      name_pattern  = "AWSLambdaPowertoolsPythonV3-%PYTHONRUNTIME%-%ARCH%"
+      arch_specific = true
+      arch_format = {
+        x86_64 = "x86_64"
+        arm64  = "arm64" # lowercase for powertools
+      }
+    }
+    parameters_secrets = {
+      account_id    = "133256977650"
+      name_pattern  = "AWS-Parameters-and-Secrets-Lambda-Extension-%ARCH%"
+      arch_specific = true
+      arch_format = {
+        x86_64 = "X86_64" # Title case if needed
+        arm64  = "Arm64"  # Title case if needed
+      }
+    }
+  }
+
+  # Process layer ARNs based on configuration
+  processed_layers = {
+    for name, config in var.lambda_layers_config :
+    name => {
+      enabled = coalesce(try(config.enabled, null), true)
+      arn = coalesce(
+        try(config.arn, null),
+        try(config.type, "") == "managed" ?
+        format("arn:%s:lambda:%s:%s:layer:%s:%s",
+          local.partition,
+          local.region,
+          local.aws_managed_layers[name].account_id,
+          (
+            local.aws_managed_layers[name].arch_specific ?
+            replace(
+              replace(
+                local.aws_managed_layers[name].name_pattern,
+                "%PYTHONRUNTIME%",
+                local.python_runtime[var.python_runtime]
+              ),
+              "%ARCH%",
+              local.aws_managed_layers[name].arch_format[var.architecture]
+            ) :
+            local.aws_managed_layers[name].name_pattern
+          ),
+          config.version
+        ) : null
+      )
+    }
+  }
+
+  enabled_layers = [
+    for name, config in local.processed_layers :
+    config.arn
+    if config.enabled && config.arn != null
+  ]
 }
