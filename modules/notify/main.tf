@@ -32,7 +32,7 @@ resource "aws_sns_topic_subscription" "sns_notify_teams" {
 module "lambda" {
   for_each = local.distributions
   source   = "terraform-aws-modules/lambda/aws"
-  version  = "7.20.0"
+  version  = "7.20.1"
 
   architectures                      = [var.architecture]
   attach_cloudwatch_logs_policy      = true
