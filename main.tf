@@ -60,7 +60,7 @@ module "notify" {
   recreate_missing_package               = false
   sns_topic_name                         = var.sns_topic_name
   tags                                   = var.tags
-  trigger_on_package_timestamp           = false
+  trigger_on_package_timestamp           = true
 
   # Additional IAM Policies to be attached to notify lambda
   lambda_policy_config = {
