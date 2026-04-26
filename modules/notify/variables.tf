@@ -153,7 +153,8 @@ variable "delivery_channels" {
     filter_policy_scope = optional(string)
     # If filter policy provided this is the scope of that policy; either "MessageAttributes" (default) or "MessageBody"
   }))
-  default = null
+  default   = null
+  sensitive = false
 }
 
 variable "powertools_service_name" {
